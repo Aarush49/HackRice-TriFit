@@ -3,6 +3,8 @@ import { View, Text, StyleSheet, Image, TouchableOpacity } from 'react-native';
 import { MaterialCommunityIcons, Ionicons } from '@expo/vector-icons';
 import { COLORS } from '../theme';
 
+const coachMayaAvatar = require('../../assets/coach_maya.png');
+
 export default function Header({ onOpenProfile, onOpenCoach, onOpenAuth, currentUser, streakDays = 0, xpPoints = 0 }) {
   return (
     <View style={styles.container}>
@@ -35,8 +37,9 @@ export default function Header({ onOpenProfile, onOpenCoach, onOpenAuth, current
           activeOpacity={0.8}
         >
           <Image
-            source={{
-              uri: 'https://lh3.googleusercontent.com/aida-public/AB6AXuCNF6DrCWxMm5Lv1YkzwT2KVsurMoDrkDXgPAkoqmIC1Hcawc03Tu0S4b5z4t8OxsjsvqazCQkgNUKUOPKGxly21xtC-gahcc4q0ouhxWImTdz35f8wcCPy33ybK6REvfjcZkTPtS-r0yOcaRp1m6dt7AfXcD3D_RYh4JqLpuD0NRX4Jl0NKoPHuUkL8fTyeFOi6PSebBb2Ipdg5QMjLrHtCuiA_P2bFXg5n9nXK_yZ3L8lkwLSiWrj',
+            source={coachMayaAvatar}
+            defaultSource={{
+              uri: 'https://lh3.googleusercontent.com/aida/AEtjO1VR4ud4NrEUCaCWlQGD4c8eO2MrSv_6iYhnM2zStshG0169JigIilqBI804BakKIqYsc4DudCRGLgD43AwKvhxYvTzeypmlZrJKwITjHERcX8pzi6a-IolGYS3wz-so_zxhnJIzzPb7oZ-G9WK7CFLki1I3PidjtySauGDogkX0J2LOzcKUGvQaFTJQwvbtxxpByJd0bA7yQSigP-vIhgIKTkjrgW5-9e75QQigtO-USq2wrK8ScpQuT7A',
             }}
             style={styles.avatarImg}
           />

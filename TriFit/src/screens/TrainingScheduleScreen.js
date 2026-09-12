@@ -104,25 +104,6 @@ export default function TrainingScheduleScreen({ currentUser, userProfile, onSta
       contentContainerStyle={styles.scrollContent}
       showsVerticalScrollIndicator={false}
     >
-      {/* 1. Step 2 of 4 Progress Header from Build Plan */}
-      <View style={styles.progressHeader}>
-        <View style={styles.progressTopRow}>
-          <View style={styles.stepBadge}>
-            <Ionicons name="sparkles" size={14} color={COLORS.primary} />
-            <Text style={styles.stepText}>Step 2 of 4: Your Target Race</Text>
-          </View>
-          <Text style={styles.readyPct}>50% ready</Text>
-        </View>
-
-        {/* 4 Segmented Progress Bar */}
-        <View style={styles.progressBarRow}>
-          <View style={[styles.progressSegment, styles.segmentFilled]} />
-          <View style={[styles.progressSegment, styles.segmentFilledActive]} />
-          <View style={styles.progressSegment} />
-          <View style={styles.progressSegment} />
-        </View>
-      </View>
-
       {/* Target Race & Timeline Countdown Banner */}
       <View style={styles.targetEventCard}>
         <View style={styles.targetEventTopRow}>

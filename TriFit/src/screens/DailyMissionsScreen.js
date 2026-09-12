@@ -7,8 +7,10 @@ import {
   TouchableOpacity,
   Image,
   useWindowDimensions,
+  Animated,
 } from 'react-native';
-import { Ionicons, MaterialCommunityIcons, FontAwesome5, Feather } from '@expo/vector-icons';
+import Svg, { Circle } from 'react-native-svg';
+import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { COLORS } from '../theme';
 
@@ -17,356 +19,336 @@ export default function DailyMissionsScreen({
   userProfile,
   onStartRun,
   onOpenCoach,
-  xp,
+  xp = 420,
   setXp,
-  streakDays = 0,
+  streakDays = 14,
 }) {
   const { width } = useWindowDimensions();
-  const isWide = width >= 860;
+  const isWide = width >= 768;
 
-  // Format today's date (e.g., "Friday, September 11, 2026")
-  const dateStr = new Intl.DateTimeFormat('en-US', {
-    weekday: 'long',
-    month: 'long',
-    day: 'numeric',
-    year: 'numeric',
-  }).format(new Date());
+  // Track completed side habits
+  const [completedHabits, setCompletedHabits] = useState({});
+  const [activeScale] = useState(new Animated.Value(1));
 
-  const athleteName = (currentUser?.name || userProfile?.name || 'Aarush').toUpperCase();
+  const toggleHabit = (id, habitXp) => {
+    setCompletedHabits((prev) => {
+      const isDone = !!prev[id];
+      const nextState = { ...prev, [id]: !isDone };
+      if (setXp) {
+        setXp((currentXp) => (isDone ? Math.max(0, currentXp - habitXp) : currentXp + habitXp));
+      }
+      return nextState;
+    });
+  };
 
-  const streakCount = streakDays || 0;
-  const targetRaceTitle = userProfile?.race_type
-    ? `${userProfile.race_type.toUpperCase()} TARGET`
-    : 'London Hyrox Open';
-
-  // Calculate real days left if target date is set
-  let daysLeftDisplay = '68D LEFT';
-  if (userProfile?.race_date) {
-    const parsed = new Date(userProfile.race_date);
-    if (!isNaN(parsed.getTime())) {
-      const diffDays = Math.ceil((parsed - new Date()) / (1000 * 60 * 60 * 24));
-      daysLeftDisplay = diffDays > 0 ? `${diffDays}D LEFT` : 'RACE DAY!';
+  const handleStartWorkout = () => {
+    Animated.sequence([
+      Animated.timing(activeScale, { toValue: 0.96, duration: 100, useNativeDriver: true }),
+      Animated.timing(activeScale, { toValue: 1, duration: 100, useNativeDriver: true }),
+    ]).start();
+    if (onStartRun) {
+      onStartRun();
     }
-  }
+  };
 
-  const todayDow = (new Date().getDay() + 6) % 7; // 0 = Mon, 6 = Sun
+  const completedCount = 1 + Object.values(completedHabits).filter(Boolean).length;
+  const targetRace = userProfile?.race_type ? userProfile.race_type.toUpperCase() : 'HYROX BUILD';
+  const planDay = streakDays > 0 ? streakDays : 14;
 
   return (
-    <ScrollView style={styles.container} contentContainerStyle={styles.content}>
-      {/* 1. Top Greeting & Target Race Countdown */}
-      <View style={styles.topGreetingSection}>
-        <View style={styles.headlineRow}>
-          <Ionicons name="sunny" size={26} color="#F59E0B" />
-          <Text style={styles.headlineTitle}>
-            Day {streakCount > 0 ? streakCount : 1} <Text style={styles.orangeDot}>•</Text> Zone In!
-          </Text>
+    <ScrollView
+      style={styles.container}
+      contentContainerStyle={[styles.content, isWide && styles.wideContent]}
+      showsVerticalScrollIndicator={false}
+    >
+      {/* 1. Subheader: Category Pill + Headline */}
+      <View style={styles.headerRow}>
+        <View style={styles.headerLeft}>
+          <View style={styles.categoryRow}>
+            <View style={styles.categoryPill}>
+              <Ionicons name="flash" size={11} color="#0f766e" />
+              <Text style={styles.categoryPillText}>{targetRace}</Text>
+            </View>
+            <Text style={styles.categorySub}>Zone 2 &amp; Power</Text>
+          </View>
+          <Text style={styles.headingTitle}>Today’s Mission</Text>
         </View>
 
-        {/* Target Race Countdown Pill */}
-        <LinearGradient
-          colors={['#e0f2fe', '#ecfeff', '#fef3c7']}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 0 }}
-          style={styles.targetRaceCountdownPill}
-        >
-          <View style={styles.raceInfoLeft}>
-            <View style={styles.raceTimerIconBox}>
-              <MaterialCommunityIcons name="timer" size={20} color="#0284c7" />
-            </View>
-            <Text style={styles.raceNameText} numberOfLines={1}>{targetRaceTitle}</Text>
-          </View>
-
-          <View style={styles.daysLeftBadge}>
-            <Text style={styles.daysLeftText}>{daysLeftDisplay}</Text>
-            <Ionicons name="flag" size={13} color="#ffffff" />
-          </View>
-        </LinearGradient>
+        <View style={styles.dayBadge}>
+          <Ionicons name="calendar-outline" size={13} color={COLORS.primary} />
+          <Text style={styles.dayBadgeText}>Day {planDay} of 90</Text>
+        </View>
       </View>
 
-      {/* 2. Daily Consistency & Streak Tracker */}
-      <View style={styles.streakSection}>
-        <View style={styles.streakHeader}>
-          <View style={styles.streakTitleRow}>
-            <View style={styles.fireBox}>
-              <MaterialCommunityIcons name="fire" size={22} color="#ffffff" />
-            </View>
-            <View>
-              <Text style={styles.streakTitle}>Streak</Text>
-              <Text style={styles.streakSub}>Consistency over grit</Text>
-            </View>
-          </View>
-          <View style={styles.streakNumberBadge}>
-            <Text style={styles.streakNumberText}>{streakCount} Days 🔥</Text>
-          </View>
-        </View>
-
-        {/* Days Row */}
-        <View style={styles.daysRow}>
-          {['M', 'T', 'W', 'T', 'F', 'S', 'S'].map((day, idx) => {
-            const isCompleted = streakCount > 0 && idx < (streakCount % 7 || 7);
-            const isToday = idx === todayDow;
-            return (
-              <View key={idx} style={styles.dayCol}>
-                <Text style={[styles.dayLetter, isToday && styles.todayLetter]}>{day}</Text>
-                {isCompleted ? (
-                  <LinearGradient colors={['#f97316', '#fbbf24']} style={styles.dayBubbleDone}>
-                    <Ionicons name="checkmark" size={14} color="#ffffff" />
-                  </LinearGradient>
-                ) : isToday ? (
-                  <LinearGradient colors={['#06b6d4', '#0ea5e9']} style={styles.dayBubbleToday}>
-                    <Ionicons name="flash" size={16} color="#ffffff" />
-                  </LinearGradient>
-                ) : (
-                  <View style={styles.dayBubbleEmpty}>
-                    <View style={styles.emptyDot} />
-                  </View>
-                )}
+      {/* 2. Bento 1: Daily Readiness & Progress Gauge Card */}
+      <View style={styles.readinessCard}>
+        <View style={styles.readinessTopRow}>
+          {/* Circular Gauge */}
+          <View style={styles.gaugeContainer}>
+            <View style={styles.svgRingWrapper}>
+              <Svg width={56} height={56} viewBox="0 0 48 48">
+                <Circle
+                  cx="24"
+                  cy="24"
+                  r="20"
+                  stroke="#f1f5f9"
+                  strokeWidth="4.5"
+                  fill="none"
+                />
+                <Circle
+                  cx="24"
+                  cy="24"
+                  r="20"
+                  stroke="#008378"
+                  strokeWidth="4.5"
+                  strokeDasharray="125.66"
+                  strokeDashoffset="15"
+                  strokeLinecap="round"
+                  fill="none"
+                  transform="rotate(-90 24 24)"
+                />
+              </Svg>
+              <View style={styles.gaugeInnerLabel}>
+                <Text style={styles.gaugePercent}>88%</Text>
+                <Text style={styles.gaugeStatus}>READY</Text>
               </View>
-            );
-          })}
+            </View>
+
+            <View style={styles.readinessInfo}>
+              <View style={styles.stateTitleRow}>
+                <Text style={styles.stateTitle}>Optimum State</Text>
+                <MaterialCommunityIcons name="check-decagram" size={16} color="#10b981" />
+              </View>
+              <View style={styles.metricPillsRow}>
+                <View style={styles.metricPillGreen}>
+                  <Ionicons name="heart" size={11} color="#15803d" />
+                  <Text style={styles.metricPillGreenText}>HRV +4ms</Text>
+                </View>
+                <View style={styles.metricPillTeal}>
+                  <Ionicons name="moon" size={11} color="#0f766e" />
+                  <Text style={styles.metricPillTealText}>8.2h Sleep</Text>
+                </View>
+              </View>
+            </View>
+          </View>
+
+          {/* Right Quests Progress Indicator */}
+          <View style={styles.questsSummary}>
+            <View style={styles.questsBadge}>
+              <Text style={styles.questsBadgeText}>{completedCount} / 3 Quests</Text>
+            </View>
+            <Text style={styles.xpGainedSub}>+120 XP today</Text>
+          </View>
         </View>
 
-        {/* Milestone Banner */}
-        <LinearGradient colors={['#fef3c7', '#fffbeb', '#fed7aa']} style={styles.milestoneCard}>
-          <View style={styles.trophyIconBox}>
-            <MaterialCommunityIcons name="trophy" size={22} color="#ffffff" />
+        {/* 3-Column Micro-Gauge Strip */}
+        <View style={styles.microGaugeStrip}>
+          <View style={styles.microGaugeCol}>
+            <View style={styles.microGaugeHeader}>
+              <Text style={styles.microGaugeTitle}>CARDIO</Text>
+              <MaterialCommunityIcons name="check-circle" size={13} color="#10b981" />
+            </View>
+            <Text style={styles.microGaugeVal}>45 / 45m</Text>
+            <View style={styles.progressBarTrack}>
+              <View style={[styles.progressBarFill, { width: '100%', backgroundColor: '#10b981' }]} />
+            </View>
           </View>
-          <View style={styles.milestoneTextWrap}>
-            <Text style={styles.milestoneTag}>NEXT MILESTONE</Text>
-            <Text style={styles.milestoneDesc}>
-              {streakCount === 0
-                ? 'Complete your first run to start building your streak! 🏆'
-                : `${Math.max(1, 3 - (streakCount % 3))} more days to win the `}
-              {streakCount > 0 && <Text style={styles.boldText}>Golden Kettlebell</Text>}
-              {streakCount > 0 && '! 🏆'}
+
+          <View style={styles.microGaugeCol}>
+            <View style={styles.microGaugeHeader}>
+              <Text style={styles.microGaugeTitle}>STRENGTH</Text>
+              <Text style={[styles.microGaugeHeaderRight, { color: '#f97316' }]}>35m</Text>
+            </View>
+            <Text style={styles.microGaugeVal}>0 / 35m</Text>
+            <View style={styles.progressBarTrack}>
+              <View style={[styles.progressBarFill, { width: '20%', backgroundColor: '#f97316' }]} />
+            </View>
+          </View>
+
+          <View style={styles.microGaugeCol}>
+            <View style={styles.microGaugeHeader}>
+              <Text style={styles.microGaugeTitle}>MOBILITY</Text>
+              <Text style={styles.microGaugeHeaderRight}>15m</Text>
+            </View>
+            <Text style={styles.microGaugeVal}>
+              {completedHabits['habit_1'] ? 'Done' : 'Pending'}
             </Text>
+            <View style={styles.progressBarTrack}>
+              <View
+                style={[
+                  styles.progressBarFill,
+                  {
+                    width: completedHabits['habit_1'] ? '100%' : '0%',
+                    backgroundColor: '#06b6d4',
+                  },
+                ]}
+              />
+            </View>
           </View>
-        </LinearGradient>
+        </View>
       </View>
 
-      {/* 3. Today's Missions Section */}
-      <View style={styles.missionsSection}>
-        <View style={styles.sectionHeader}>
-          <View style={styles.sectionTitleRow}>
-            <Ionicons name="rocket" size={22} color="#f97316" />
-            <Text style={styles.sectionTitle}>Today’s Missions</Text>
-          </View>
-          <View style={styles.readyBadge}>
-            <Text style={styles.readyBadgeText}>1 / 3 Ready</Text>
-          </View>
-        </View>
-
-        {/* 1. Completed Quest */}
-        <View style={styles.questCardCompleted}>
-          <View style={styles.questLeft}>
-            <View style={styles.checkIconBox}>
-              <Ionicons name="checkmark" size={20} color="#ffffff" />
-            </View>
-            <View style={styles.questTextWrap}>
-              <Text style={styles.doneLabel}>DONE • 15M</Text>
-              <Text style={styles.questTitleDone}>Morning Mobility Quest</Text>
-            </View>
-          </View>
-          <View style={styles.xpBadgeCompleted}>
-            <Ionicons name="flash" size={12} color="#f59e0b" />
-            <Text style={styles.xpTextCompleted}>+50 XP</Text>
-          </View>
-        </View>
-
-        {/* 2. Active Quest Card */}
-        <LinearGradient
-          colors={['#ffffff', '#f0fdfa']}
-          style={styles.activeQuestCard}
-        >
-          <View style={styles.activeTopRow}>
-            <View style={styles.activeBadge}>
-              <Ionicons name="star" size={12} color="#ea580c" />
-              <Text style={styles.activeBadgeText}>ACTIVE QUEST</Text>
-            </View>
-            <View style={styles.timeBadge}>
-              <Ionicons name="time" size={14} color="#0f766e" />
-              <Text style={styles.timeBadgeText}>35 Mins</Text>
-            </View>
-          </View>
-
-          <View style={styles.questMainRow}>
-            <View style={styles.runIconBox}>
-              <FontAwesome5 name="running" size={22} color="#ffffff" />
-            </View>
-            <View style={styles.questDetail}>
-              <Text style={styles.activeQuestTitle}>Zone 2 Aero Run</Text>
-              <Text style={styles.activeQuestSub}>Easy conversational pace</Text>
-            </View>
-          </View>
-
-          {/* Running Trail Graphic with HR overlay */}
-          <View style={styles.trailGraphicContainer}>
-            <Image
-              source={{
-                uri: 'https://lh3.googleusercontent.com/aida-public/AB6AXuBY1wWjlUnEJjbhQpJnG1F1eoDvkRqkBV2gf_3fClppSTCxYDutB1IoWuWV458J4AC8CZjFApFQv3Jvdakn7vb0BdgOl4M6ubTOLi6ulaEyzti69wX9OP-DhOKJoyBL10ZNC6QpQqHDksQ-Xa4k46i47ozQMYRGE5TfP810V5xGNelBFn3tWDEhzEB2zR5PpZjDytstgVIiyXysKlrMHQXxk6I5GHVR6BXI0eBtgC3EbETQYTaSon-A',
-              }}
-              style={styles.trailImage}
-            />
-            <View style={styles.hrBadgeOverlay}>
-              <Ionicons name="heart" size={12} color="#f43f5e" />
-              <Text style={styles.hrOverlayLabel}>128–142 BPM</Text>
-            </View>
-          </View>
-
-          {/* Start Button */}
-          <View style={styles.questControls}>
-            <TouchableOpacity
-              style={styles.startBtn}
-              onPress={onStartRun}
-              activeOpacity={0.85}
+      {/* Main Active Mission Card (Priority Workout) */}
+      <LinearGradient
+        colors={['#ffffff', '#f0fdfa']}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 0, y: 1 }}
+        style={styles.workoutCard}
+      >
+        <View style={styles.workoutCardHeader}>
+          <View style={styles.workoutInfoLeft}>
+            <LinearGradient
+              colors={['#008378', '#10b981']}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
+              style={styles.workoutIconBox}
             >
-              <LinearGradient
-                colors={['#008378', '#059669', '#10b981']}
-                start={{ x: 0, y: 0 }}
-                end={{ x: 1, y: 0 }}
-                style={styles.startBtnGradient}
-              >
-                <Ionicons name="play" size={20} color="#ffffff" />
-                <Text style={styles.startBtnText}>Start Run • +120 XP</Text>
-              </LinearGradient>
-            </TouchableOpacity>
-          </View>
-        </LinearGradient>
-
-        {/* 3. Locked Mission */}
-        <View style={styles.lockedQuestCard}>
-          <View style={styles.questLeft}>
-            <View style={styles.lockBox}>
-              <Ionicons name="lock-closed" size={18} color="#64748b" />
-            </View>
-            <View style={styles.questTextWrap}>
-              <View style={styles.lockedHeaderRow}>
-                <Text style={styles.lockedTag}>10M RECOVERY</Text>
-                <Text style={styles.unlockSub}>Unlocks after run</Text>
+              <MaterialCommunityIcons name="dumbbell" size={20} color="#ffffff" />
+            </LinearGradient>
+            <View style={styles.workoutTitles}>
+              <View style={styles.workoutBadgeRow}>
+                <View style={styles.priorityPill}>
+                  <Text style={styles.priorityPillText}>PRIORITY WORKOUT</Text>
+                </View>
+                <Text style={styles.durationBullet}>• 35 min</Text>
               </View>
-              <Text style={styles.lockedTitle}>Foam Roll & Breathe</Text>
+              <Text style={styles.workoutName} numberOfLines={1}>
+                Hyrox Sled &amp; Grip Prep
+              </Text>
             </View>
           </View>
-          <MaterialCommunityIcons name="spa" size={22} color="#a855f7" />
-        </View>
-      </View>
 
-      {/* 4. Summary & Performance Cards Grid */}
-      <View style={[styles.dashboardGrid, isWide && styles.dashboardGridWide]}>
-        {/* CARD 1: WEEKLY SUMMARY */}
-        <View style={[styles.summaryCard, isWide && styles.cardFlex1]}>
-          <Text style={styles.cardHeaderLabel}>WEEKLY SUMMARY</Text>
-          <Text style={styles.planTitle} numberOfLines={1} ellipsizeMode="tail">
-            Middle Distance Low Volume Base...
-          </Text>
-
-          <View style={styles.metricsColsRow}>
-            {/* TOTAL */}
-            <View style={styles.metricCol}>
-              <View style={styles.colHeaderRow}>
-                <Ionicons name="calendar-outline" size={13} color="#0284c7" />
-                <Text style={styles.colHeaderLabel}>TOTAL</Text>
-              </View>
-              <View style={styles.metricValGroup}>
-                <Text style={styles.metricValBold}>0:00 <Text style={styles.metricValSub}>/2:41h</Text></Text>
-                <Text style={styles.metricValBold}>0 <Text style={styles.metricValSub}>/151 load</Text></Text>
-                <Text style={styles.metricValBold}>0km <Text style={styles.metricValSub}>/5.2km</Text></Text>
-              </View>
-            </View>
-
-            {/* BIKE */}
-            <View style={styles.metricCol}>
-              <View style={styles.colHeaderRow}>
-                <MaterialCommunityIcons name="bike" size={14} color="#d97706" />
-                <Text style={styles.colHeaderLabel}>BIKE</Text>
-              </View>
-              <View style={styles.metricValGroup}>
-                <Text style={styles.metricValBold}>0:00 <Text style={styles.metricValSub}>/1:49h</Text></Text>
-                <Text style={styles.metricValBold}>0 <Text style={styles.metricValSub}>/87 load</Text></Text>
-              </View>
-            </View>
-
-            {/* RUN */}
-            <View style={styles.metricCol}>
-              <View style={styles.colHeaderRow}>
-                <FontAwesome5 name="running" size={13} color="#ea580c" />
-                <Text style={styles.colHeaderLabel}>RUN</Text>
-              </View>
-              <View style={styles.metricValGroup}>
-                <Text style={styles.metricValBold}>0:00 <Text style={styles.metricValSub}>/0:52h</Text></Text>
-                <Text style={styles.metricValBold}>0 <Text style={styles.metricValSub}>/63 load</Text></Text>
-                <Text style={styles.metricValBold}>0km <Text style={styles.metricValSub}>/5.2km</Text></Text>
-              </View>
-            </View>
+          <View style={styles.xpRewardBadge}>
+            <Ionicons name="flash" size={12} color="#0f766e" />
+            <Text style={styles.xpRewardText}>+85 XP</Text>
           </View>
         </View>
 
-        {/* CARD 2: WEEKLY PERFORMANCE */}
-        <View style={[styles.summaryCard, isWide && styles.cardFlex1]}>
-          <View style={styles.cardHeaderBetween}>
-            <Text style={styles.cardHeaderLabel}>WEEKLY PERFORMANCE</Text>
-            <TouchableOpacity activeOpacity={0.7} style={styles.detailsBtn}>
-              <Text style={styles.detailsText}>Details</Text>
-              <Feather name="external-link" size={12} color="#64748b" />
-            </TouchableOpacity>
+        {/* Workout Highlights Strip */}
+        <View style={styles.highlightsRow}>
+          <View style={styles.highlightPill}>
+            <Text style={styles.highlightText}>Power Endurance</Text>
           </View>
-
-          {/* 3 Metric Figures */}
-          <View style={styles.perfMetricsRow}>
-            <View style={styles.perfCol}>
-              <View style={styles.perfNumRow}>
-                <Text style={styles.perfMinus}>— </Text>
-                <Text style={styles.perfNum}>25</Text>
-              </View>
-              <View style={styles.perfLabelWrap}>
-                <Text style={styles.perfLabel}>FITNESS</Text>
-                <Ionicons name="help-circle-outline" size={12} color="#94a3b8" />
-              </View>
-            </View>
-
-            <View style={styles.perfDivider} />
-
-            <View style={styles.perfCol}>
-              <View style={styles.perfNumRow}>
-                <Text style={styles.perfMinus}>— </Text>
-                <Text style={styles.perfNum}>22</Text>
-              </View>
-              <View style={styles.perfLabelWrap}>
-                <Text style={styles.perfLabel}>FATIGUE</Text>
-                <Ionicons name="help-circle-outline" size={12} color="#94a3b8" />
-              </View>
-            </View>
-
-            <View style={styles.perfDivider} />
-
-            <View style={styles.perfCol}>
-              <View style={styles.perfNumRow}>
-                <Text style={styles.perfMinus}>— </Text>
-                <Text style={styles.perfNum}>0</Text>
-              </View>
-              <View style={styles.perfLabelWrap}>
-                <Text style={styles.perfLabel}>FORM</Text>
-                <Ionicons name="help-circle-outline" size={12} color="#94a3b8" />
-              </View>
-            </View>
+          <View style={styles.highlightPill}>
+            <Text style={styles.highlightText}>Low Joint Strain</Text>
           </View>
-
-          {/* Status Box */}
-          <View style={styles.readinessBox}>
-            <Text style={styles.readinessStatus}>Ready to Train</Text>
-            <Text style={styles.readinessDesc}>
-              Fitness and fatigue are in balance. Good conditions for training.
+          <View style={[styles.highlightPill, styles.highlightPillTeal]}>
+            <Text style={[styles.highlightText, { color: '#0d9488', fontWeight: '700' }]}>
+              Maya Audio Cues
             </Text>
           </View>
         </View>
-      </View>
 
-      {/* 5. Encouragement Banner */}
-      <View style={styles.encouragementBanner}>
-        <Ionicons name="heart" size={20} color="#10b981" />
-        <Text style={styles.encouragementText}>
-          Speed is built on easy miles. Enjoy it, {athleteName}! 🏃💨
-        </Text>
+        {/* Chunky Vibrant CTA */}
+        <Animated.View style={{ transform: [{ scale: activeScale }] }}>
+          <TouchableOpacity
+            onPress={handleStartWorkout}
+            activeOpacity={0.9}
+            style={styles.startWorkoutTouch}
+          >
+            <LinearGradient
+              colors={['#008378', '#059669', '#10b981']}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 0 }}
+              style={styles.startWorkoutGradient}
+            >
+              <Ionicons name="play" size={18} color="#ffffff" style={{ marginRight: 4 }} />
+              <Text style={styles.startWorkoutText}>Start Workout</Text>
+            </LinearGradient>
+          </TouchableOpacity>
+        </Animated.View>
+      </LinearGradient>
+
+      {/* 5. Compact 2-Column Daily Habits / Recovery Quests Grid */}
+      <View style={styles.habitsSection}>
+        <View style={styles.habitsHeader}>
+          <Text style={styles.habitsTitle}>DAILY HABITS &amp; SIDE QUESTS</Text>
+          <Text style={styles.habitsSub}>+50 XP remaining</Text>
+        </View>
+
+        <View style={styles.habitsGrid}>
+          {/* Habit Card 1 */}
+          <View style={styles.habitCard}>
+            <View style={styles.habitContent}>
+              <View style={styles.habitTopRow}>
+                <View style={[styles.habitIconBox, { backgroundColor: '#e0f2fe' }]}>
+                  <MaterialCommunityIcons name="shower-head" size={16} color="#0284c7" />
+                </View>
+                <View style={styles.habitXpBadge}>
+                  <Text style={styles.habitXpText}>+20 XP</Text>
+                </View>
+              </View>
+
+              <Text style={styles.habitCardTitle}>Cold Shower &amp; Breath</Text>
+              <Text style={styles.habitCardSub}>3m Reset Protocol</Text>
+            </View>
+
+            <TouchableOpacity
+              onPress={() => toggleHabit('habit_1', 20)}
+              activeOpacity={0.8}
+              style={[
+                styles.habitActionBtn,
+                completedHabits['habit_1'] && styles.habitActionBtnActive,
+              ]}
+            >
+              <Ionicons
+                name={completedHabits['habit_1'] ? 'checkmark-circle' : 'add'}
+                size={13}
+                color={completedHabits['habit_1'] ? '#15803d' : '#0f766e'}
+              />
+              <Text
+                style={[
+                  styles.habitActionText,
+                  completedHabits['habit_1'] && { color: '#15803d' },
+                ]}
+              >
+                {completedHabits['habit_1'] ? 'Completed' : 'Done'}
+              </Text>
+            </TouchableOpacity>
+          </View>
+
+          {/* Habit Card 2 */}
+          <View style={styles.habitCard}>
+            <View style={styles.habitContent}>
+              <View style={styles.habitTopRow}>
+                <View style={[styles.habitIconBox, { backgroundColor: '#ffedd5' }]}>
+                  <Ionicons name="footsteps" size={15} color="#ea580c" />
+                </View>
+                <View style={styles.habitXpBadge}>
+                  <Text style={styles.habitXpText}>+30 XP</Text>
+                </View>
+              </View>
+
+              <Text style={styles.habitCardTitle}>Target 8k Steps</Text>
+              <View style={styles.stepsStatsRow}>
+                <Text style={styles.stepsCount}>
+                  {completedHabits['habit_2'] ? '8.0k / 8.0k' : '6.4k / 8.0k'}
+                </Text>
+                <Text style={styles.stepsPercent}>
+                  {completedHabits['habit_2'] ? '100%' : '80%'}
+                </Text>
+              </View>
+            </View>
+
+            <TouchableOpacity
+              onPress={() => toggleHabit('habit_2', 30)}
+              activeOpacity={0.8}
+              style={[
+                styles.habitActionBtn,
+                completedHabits['habit_2'] && styles.habitActionBtnActiveOrange,
+              ]}
+            >
+              <MaterialCommunityIcons
+                name={completedHabits['habit_2'] ? 'check-circle' : 'sync'}
+                size={13}
+                color="#c2410c"
+              />
+              <Text style={[styles.habitActionText, { color: '#c2410c' }]}>
+                {completedHabits['habit_2'] ? 'Logged' : 'Log'}
+              </Text>
+            </TouchableOpacity>
+          </View>
+        </View>
       </View>
     </ScrollView>
   );
@@ -375,643 +357,595 @@ export default function DailyMissionsScreen({
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: COLORS.background,
+    backgroundColor: '#faf8ff',
   },
   content: {
-    padding: 16,
-    paddingBottom: 40,
-    gap: 18,
-  },
-  topGreetingSection: {
-    gap: 10,
-    paddingTop: 4,
-  },
-  headlineRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-  },
-  headlineTitle: {
-    fontSize: 26,
-    fontWeight: '900',
-    color: '#131b2e',
-    letterSpacing: -0.5,
-  },
-  orangeDot: {
-    color: '#F97316',
-  },
-  targetRaceCountdownPill: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 14,
-    paddingVertical: 10,
-    borderRadius: 20,
-    borderWidth: 1,
-    borderColor: 'rgba(186, 230, 253, 0.6)',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.04,
-    shadowRadius: 3,
-    elevation: 1,
-  },
-  raceInfoLeft: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-    flex: 1,
-    minWidth: 0,
-  },
-  raceTimerIconBox: {
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  raceNameText: {
-    fontSize: 16,
-    fontWeight: '800',
-    color: '#131b2e',
-    letterSpacing: -0.2,
-  },
-  daysLeftBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 5,
-    backgroundColor: '#ea580c',
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 20,
-    shadowColor: '#9a3412',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.3,
-    shadowRadius: 0,
-    elevation: 2,
-    borderBottomWidth: 2.5,
-    borderBottomColor: '#9a3412',
-  },
-  daysLeftText: {
-    fontSize: 12,
-    fontWeight: '900',
-    color: '#ffffff',
-    letterSpacing: 0.4,
-  },
-  streakSection: {
-    backgroundColor: '#ffffff',
-    borderRadius: 22,
-    padding: 16,
-    gap: 14,
-    elevation: 2,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.04,
-    shadowRadius: 6,
-    borderWidth: 1,
-    borderColor: '#e2e8f0',
-  },
-  streakHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-  },
-  streakTitleRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 10,
-  },
-  fireBox: {
-    width: 38,
-    height: 38,
-    borderRadius: 14,
-    backgroundColor: '#f97316',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  streakTitle: {
-    fontSize: 18,
-    fontWeight: '900',
-    color: COLORS.onSurface,
-  },
-  streakSub: {
-    fontSize: 12,
-    fontWeight: '700',
-    color: '#059669',
-  },
-  streakNumberBadge: {
-    backgroundColor: '#ffedd5',
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 16,
-    borderWidth: 1,
-    borderColor: '#fed7aa',
-  },
-  streakNumberText: {
-    fontSize: 16,
-    fontWeight: '900',
-    color: '#ea580c',
-  },
-  daysRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    paddingHorizontal: 4,
-  },
-  dayCol: {
-    alignItems: 'center',
-    gap: 6,
-  },
-  dayLetter: {
-    fontSize: 12,
-    fontWeight: '700',
-    color: '#64748b',
-  },
-  todayLetter: {
-    color: '#0284c7',
-    fontWeight: '900',
-  },
-  dayBubbleDone: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  dayBubbleToday: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  dayBubbleEmpty: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    backgroundColor: '#f1f5f9',
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderWidth: 1,
-    borderColor: '#e2e8f0',
-  },
-  emptyDot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-    backgroundColor: '#cbd5e1',
-  },
-  milestoneCard: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    padding: 14,
-    borderRadius: 18,
-    gap: 12,
-    borderWidth: 1,
-    borderColor: '#fde68a',
-  },
-  trophyIconBox: {
-    width: 40,
-    height: 40,
-    borderRadius: 14,
-    backgroundColor: '#f59e0b',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  milestoneTextWrap: {
-    flex: 1,
-    gap: 2,
-  },
-  milestoneTag: {
-    fontSize: 10,
-    fontWeight: '900',
-    color: '#92400e',
-    letterSpacing: 0.5,
-  },
-  milestoneDesc: {
-    fontSize: 13,
-    color: '#78350f',
-    fontWeight: '600',
-  },
-  boldText: {
-    fontWeight: '900',
-  },
-  missionsSection: {
+    paddingHorizontal: 16,
+    paddingTop: 12,
+    paddingBottom: 32,
     gap: 12,
   },
-  sectionHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-  },
-  sectionTitleRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-  },
-  sectionTitle: {
-    fontSize: 18,
-    fontWeight: '900',
-    color: COLORS.onSurface,
-  },
-  readyBadge: {
-    backgroundColor: '#ccfbf1',
-    paddingHorizontal: 12,
-    paddingVertical: 4,
-    borderRadius: 16,
-    borderWidth: 1,
-    borderColor: '#5eead4',
-  },
-  readyBadgeText: {
-    fontSize: 12,
-    fontWeight: '800',
-    color: '#00685f',
-  },
-  questCardCompleted: {
-    backgroundColor: '#ffffff',
-    borderRadius: 20,
-    padding: 14,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    borderWidth: 1,
-    borderColor: '#e2e8f0',
-    opacity: 0.85,
-  },
-  questLeft: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
-  },
-  checkIconBox: {
-    width: 40,
-    height: 40,
-    borderRadius: 14,
-    backgroundColor: '#10b981',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  questTextWrap: {
-    gap: 2,
-  },
-  doneLabel: {
-    fontSize: 10,
-    fontWeight: '800',
-    color: '#059669',
-    letterSpacing: 0.5,
-  },
-  questTitleDone: {
-    fontSize: 15,
-    fontWeight: '700',
-    color: '#64748b',
-    textDecorationLine: 'line-through',
-  },
-  xpBadgeCompleted: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-    backgroundColor: '#fef3c7',
-    paddingHorizontal: 10,
-    paddingVertical: 5,
-    borderRadius: 16,
-  },
-  xpTextCompleted: {
-    fontSize: 12,
-    fontWeight: '800',
-    color: '#b45309',
-  },
-  activeQuestCard: {
-    borderRadius: 24,
-    padding: 16,
-    borderWidth: 2,
-    borderColor: '#14b8a6',
-    gap: 14,
-    elevation: 4,
-    shadowColor: '#14b8a6',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.15,
-    shadowRadius: 10,
-  },
-  activeTopRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-  },
-  activeBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-    backgroundColor: '#ffedd5',
-    paddingHorizontal: 12,
-    paddingVertical: 4,
-    borderRadius: 16,
-  },
-  activeBadgeText: {
-    fontSize: 11,
-    fontWeight: '900',
-    color: '#c2410c',
-    letterSpacing: 0.5,
-  },
-  timeBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-    backgroundColor: '#ccfbf1',
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: 16,
-  },
-  timeBadgeText: {
-    fontSize: 12,
-    fontWeight: '700',
-    color: '#0f766e',
-  },
-  questMainRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
-  },
-  runIconBox: {
-    width: 48,
-    height: 48,
-    borderRadius: 18,
-    backgroundColor: '#06b6d4',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  questDetail: {
-    gap: 2,
-  },
-  activeQuestTitle: {
-    fontSize: 20,
-    fontWeight: '900',
-    color: COLORS.onSurface,
-  },
-  activeQuestSub: {
-    fontSize: 13,
-    fontWeight: '600',
-    color: '#0d9488',
-  },
-  trailGraphicContainer: {
-    position: 'relative',
-    height: 120,
-    borderRadius: 18,
-    overflow: 'hidden',
-  },
-  trailImage: {
+  wideContent: {
+    maxWidth: 480,
+    alignSelf: 'center',
     width: '100%',
-    height: '100%',
   },
-  hrBadgeOverlay: {
-    position: 'absolute',
-    bottom: 8,
-    left: 8,
-    backgroundColor: 'rgba(0,0,0,0.75)',
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: 14,
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-  },
-  hrOverlayLabel: {
-    color: '#ffffff',
-    fontSize: 11,
-    fontWeight: '800',
-  },
-  questControls: {
-    gap: 10,
-  },
-  toggleRow: {
+
+  /* 1. Subheader */
+  headerRow: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    backgroundColor: 'rgba(255, 255, 255, 0.8)',
-    paddingHorizontal: 14,
-    paddingVertical: 8,
-    borderRadius: 14,
-    borderWidth: 1,
-    borderColor: '#99f6e4',
+    paddingTop: 2,
   },
-  toggleLeft: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
+  headerLeft: {
+    flexDirection: 'column',
   },
-  toggleText: {
-    fontSize: 14,
-    fontWeight: '700',
-    color: COLORS.onSurface,
-  },
-  startBtn: {
-    borderRadius: 18,
-    overflow: 'hidden',
-  },
-  startBtnGradient: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    height: 52,
-    gap: 8,
-  },
-  startBtnText: {
-    color: '#ffffff',
-    fontSize: 16,
-    fontWeight: '900',
-  },
-  lockedQuestCard: {
-    backgroundColor: '#f8fafc',
-    borderRadius: 20,
-    padding: 14,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    borderWidth: 1,
-    borderColor: '#cbd5e1',
-    borderStyle: 'dashed',
-    opacity: 0.8,
-  },
-  lockBox: {
-    width: 38,
-    height: 38,
-    borderRadius: 14,
-    backgroundColor: '#e2e8f0',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  lockedHeaderRow: {
+  categoryRow: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
+    marginBottom: 2,
   },
-  lockedTag: {
-    fontSize: 10,
-    fontWeight: '800',
-    color: '#64748b',
-  },
-  unlockSub: {
-    fontSize: 10,
-    fontWeight: '600',
-    color: '#94a3b8',
-    backgroundColor: '#e2e8f0',
-    paddingHorizontal: 6,
-    paddingVertical: 2,
-    borderRadius: 8,
-  },
-  lockedTitle: {
-    fontSize: 14,
-    fontWeight: '700',
-    color: '#334155',
-  },
-  dashboardGrid: {
-    gap: 14,
-  },
-  dashboardGridWide: {
-    flexDirection: 'row',
-  },
-  cardFlex1: {
-    flex: 1,
-  },
-  summaryCard: {
-    backgroundColor: '#ffffff',
-    borderRadius: 20,
-    padding: 18,
-    borderWidth: 1,
-    borderColor: '#e2e8f0',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.04,
-    shadowRadius: 8,
-    elevation: 2,
-    gap: 12,
-  },
-  cardHeaderLabel: {
-    fontSize: 11,
-    fontWeight: '800',
-    color: '#64748b',
-    letterSpacing: 0.8,
-  },
-  cardHeaderBetween: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-  },
-  detailsBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-  },
-  detailsText: {
-    fontSize: 12,
-    fontWeight: '600',
-    color: '#64748b',
-  },
-  planTitle: {
-    fontSize: 15,
-    fontWeight: '800',
-    color: '#0f172a',
-    letterSpacing: -0.3,
-  },
-  metricsColsRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginTop: 4,
-    gap: 8,
-  },
-  metricCol: {
-    flex: 1,
-    gap: 6,
-  },
-  colHeaderRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-  },
-  colHeaderLabel: {
-    fontSize: 10,
-    fontWeight: '800',
-    color: '#475569',
-    letterSpacing: 0.5,
-  },
-  metricValGroup: {
-    gap: 2,
-  },
-  metricValBold: {
-    fontSize: 12,
-    fontWeight: '800',
-    color: '#0f172a',
-  },
-  metricValSub: {
-    fontSize: 10,
-    fontWeight: '500',
-    color: '#64748b',
-  },
-  perfMetricsRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-around',
-    paddingVertical: 4,
-  },
-  perfCol: {
-    alignItems: 'center',
-    gap: 4,
-  },
-  perfNumRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  perfMinus: {
-    fontSize: 18,
-    fontWeight: '800',
-    color: '#10b981',
-  },
-  perfNum: {
-    fontSize: 22,
-    fontWeight: '900',
-    color: '#0f172a',
-  },
-  perfLabelWrap: {
+  categoryPill: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 3,
+    backgroundColor: '#ccfbf1',
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: 999,
+    borderWidth: 1,
+    borderColor: '#99f6e4',
   },
-  perfLabel: {
+  categoryPillText: {
     fontSize: 10,
     fontWeight: '800',
-    color: '#64748b',
+    color: '#0f766e',
+    textTransform: 'uppercase',
     letterSpacing: 0.5,
   },
-  perfDivider: {
-    width: 1,
-    height: 32,
-    backgroundColor: '#f1f5f9',
-  },
-  readinessBox: {
-    borderTopWidth: 1,
-    borderTopColor: '#f1f5f9',
-    paddingTop: 8,
-    gap: 2,
-  },
-  readinessStatus: {
-    fontSize: 13,
-    fontWeight: '800',
-    color: '#10b981',
-  },
-  readinessDesc: {
-    fontSize: 11,
-    fontWeight: '500',
+  categorySub: {
+    fontSize: 10,
+    fontWeight: '600',
     color: '#64748b',
-    lineHeight: 16,
   },
-  encouragementBanner: {
+  headingTitle: {
+    fontSize: 20,
+    fontWeight: '800',
+    color: '#131b2e',
+    letterSpacing: -0.3,
+  },
+  dayBadge: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#ecfdf5',
+    gap: 4,
+    backgroundColor: '#eaedff',
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 999,
+  },
+  dayBadgeText: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: '#3d4947',
+  },
+
+  /* 2. Bento 1: Daily Readiness & Progress Gauge */
+  readinessCard: {
+    backgroundColor: '#ffffff',
+    borderRadius: 16,
     padding: 14,
+    borderWidth: 1,
+    borderColor: '#eaedff',
+    shadowColor: '#00685f',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.06,
+    shadowRadius: 10,
+    elevation: 2,
+    gap: 12,
+  },
+  readinessTopRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  gaugeContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+  },
+  svgRingWrapper: {
+    width: 56,
+    height: 56,
+    position: 'relative',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  gaugeInnerLabel: {
+    position: 'absolute',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  gaugePercent: {
+    fontSize: 14,
+    fontWeight: '800',
+    color: '#131b2e',
+    lineHeight: 16,
+  },
+  gaugeStatus: {
+    fontSize: 8.5,
+    fontWeight: '800',
+    color: '#008378',
+    letterSpacing: 0.2,
+  },
+  readinessInfo: {
+    flexDirection: 'column',
+    gap: 4,
+  },
+  stateTitleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+  },
+  stateTitle: {
+    fontSize: 15,
+    fontWeight: '800',
+    color: '#131b2e',
+  },
+  metricPillsRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
+  metricPillGreen: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 3,
+    backgroundColor: '#f0fdf4',
+    paddingHorizontal: 7,
+    paddingVertical: 2,
+    borderRadius: 999,
+    borderWidth: 1,
+    borderColor: '#bbf7d0',
+  },
+  metricPillGreenText: {
+    fontSize: 10.5,
+    fontWeight: '700',
+    color: '#15803d',
+  },
+  metricPillTeal: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 3,
+    backgroundColor: '#f0fdfa',
+    paddingHorizontal: 7,
+    paddingVertical: 2,
+    borderRadius: 999,
+    borderWidth: 1,
+    borderColor: '#99f6e4',
+  },
+  metricPillTealText: {
+    fontSize: 10.5,
+    fontWeight: '700',
+    color: '#0f766e',
+  },
+  questsSummary: {
+    alignItems: 'flex-end',
+  },
+  questsBadge: {
+    backgroundColor: '#ffedd5',
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: 999,
+    borderWidth: 1,
+    borderColor: '#fed7aa',
+  },
+  questsBadgeText: {
+    fontSize: 11,
+    fontWeight: '800',
+    color: '#ea580c',
+  },
+  xpGainedSub: {
+    fontSize: 10,
+    fontWeight: '600',
+    color: '#64748b',
+    marginTop: 3,
+  },
+
+  /* Micro-Gauge Strip */
+  microGaugeStrip: {
+    flexDirection: 'row',
+    gap: 8,
+    paddingTop: 8,
+    borderTopWidth: 1,
+    borderTopColor: 'rgba(234, 237, 255, 0.8)',
+  },
+  microGaugeCol: {
+    flex: 1,
+    backgroundColor: 'rgba(242, 243, 255, 0.7)',
+    borderRadius: 10,
+    padding: 8,
+  },
+  microGaugeHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 2,
+  },
+  microGaugeTitle: {
+    fontSize: 9.5,
+    fontWeight: '700',
+    color: '#64748b',
+    letterSpacing: 0.3,
+  },
+  microGaugeHeaderRight: {
+    fontSize: 9.5,
+    fontWeight: '800',
+    color: '#64748b',
+  },
+  microGaugeVal: {
+    fontSize: 12,
+    fontWeight: '900',
+    color: '#131b2e',
+    marginVertical: 1,
+  },
+  progressBarTrack: {
+    width: '100%',
+    height: 5,
+    backgroundColor: '#e2e8f0',
+    borderRadius: 999,
+    overflow: 'hidden',
+    marginTop: 4,
+  },
+  progressBarFill: {
+    height: '100%',
+    borderRadius: 999,
+  },
+
+  /* 3. Coach Maya Banner */
+  coachBanner: {
+    borderRadius: 16,
+    padding: 12,
+    borderWidth: 1,
+    borderColor: 'rgba(110, 231, 183, 0.6)',
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.03,
+    shadowRadius: 4,
+  },
+  coachBannerLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    flex: 1,
+    marginRight: 8,
+  },
+  coachAvatarWrapper: {
+    position: 'relative',
+  },
+  coachAvatar: {
+    width: 36,
+    height: 36,
     borderRadius: 18,
+    borderWidth: 2,
+    borderColor: '#10b981',
+  },
+  coachVerifiedDot: {
+    position: 'absolute',
+    bottom: -2,
+    right: -2,
+    width: 14,
+    height: 14,
+    borderRadius: 7,
+    backgroundColor: '#10b981',
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1.5,
+    borderColor: '#ffffff',
+  },
+  coachTextGroup: {
+    flex: 1,
+  },
+  coachHeaderRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    marginBottom: 2,
+  },
+  coachName: {
+    fontSize: 11,
+    fontWeight: '800',
+    color: '#065f46',
+    textTransform: 'uppercase',
+    letterSpacing: 0.3,
+  },
+  coachFocusBadge: {
+    backgroundColor: '#ffffff',
+    paddingHorizontal: 5,
+    paddingVertical: 1,
+    borderRadius: 4,
     borderWidth: 1,
     borderColor: '#a7f3d0',
+  },
+  coachFocusText: {
+    fontSize: 8.5,
+    fontWeight: '800',
+    color: '#0f766e',
+  },
+  coachMessage: {
+    fontSize: 11.5,
+    fontWeight: '600',
+    color: '#131b2e',
+    lineHeight: 15,
+  },
+  coachAskBtn: {
+    backgroundColor: '#ffffff',
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: '#a7f3d0',
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.04,
+    shadowRadius: 2,
+  },
+  coachAskText: {
+    fontSize: 11,
+    fontWeight: '800',
+    color: '#00685f',
+  },
+
+  /* 4. Priority Workout Card */
+  workoutCard: {
+    borderRadius: 16,
+    padding: 14,
+    borderWidth: 2,
+    borderColor: '#14b8a6',
+    shadowColor: '#14b8a6',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.18,
+    shadowRadius: 12,
+    elevation: 3,
+    gap: 12,
+  },
+  workoutCardHeader: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    justifyContent: 'space-between',
+  },
+  workoutInfoLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    flex: 1,
+  },
+  workoutIconBox: {
+    width: 40,
+    height: 40,
+    borderRadius: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowColor: '#065f46',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.4,
+    shadowRadius: 0,
+  },
+  workoutTitles: {
+    flex: 1,
+  },
+  workoutBadgeRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    marginBottom: 2,
+  },
+  priorityPill: {
+    backgroundColor: '#ffedd5',
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 4,
+  },
+  priorityPillText: {
+    fontSize: 9.5,
+    fontWeight: '800',
+    color: '#ea580c',
+    letterSpacing: 0.4,
+  },
+  durationBullet: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: '#64748b',
+  },
+  workoutName: {
+    fontSize: 16,
+    fontWeight: '800',
+    color: '#131b2e',
+    lineHeight: 20,
+  },
+  xpRewardBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 3,
+    backgroundColor: '#ccfbf1',
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 999,
+    borderWidth: 1,
+    borderColor: '#99f6e4',
+  },
+  xpRewardText: {
+    fontSize: 11,
+    fontWeight: '800',
+    color: '#0f766e',
+  },
+  highlightsRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 6,
+  },
+  highlightPill: {
+    backgroundColor: '#f2f3ff',
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 6,
+    borderWidth: 1,
+    borderColor: '#eaedff',
+  },
+  highlightPillTeal: {
+    borderColor: '#ccfbf1',
+    backgroundColor: '#f0fdfa',
+  },
+  highlightText: {
+    fontSize: 11,
+    fontWeight: '600',
+    color: '#3d4947',
+  },
+  startWorkoutTouch: {
+    width: '100%',
+    borderRadius: 12,
+    borderBottomWidth: 3,
+    borderBottomColor: '#065f46',
+    overflow: 'hidden',
+  },
+  startWorkoutGradient: {
+    height: 44,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  startWorkoutText: {
+    fontSize: 14,
+    fontWeight: '800',
+    color: '#ffffff',
+  },
+
+  /* 5. Daily Habits / Quests Grid */
+  habitsSection: {
+    gap: 8,
+    marginTop: 2,
+  },
+  habitsHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 2,
+  },
+  habitsTitle: {
+    fontSize: 12,
+    fontWeight: '800',
+    color: '#131b2e',
+    letterSpacing: 0.4,
+  },
+  habitsSub: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: '#00685f',
+  },
+  habitsGrid: {
+    flexDirection: 'row',
     gap: 10,
   },
-  encouragementText: {
+  habitCard: {
     flex: 1,
-    fontSize: 13,
+    backgroundColor: '#ffffff',
+    borderRadius: 14,
+    padding: 12,
+    borderWidth: 1,
+    borderColor: '#eaedff',
+    justifyContent: 'space-between',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.04,
+    shadowRadius: 4,
+    elevation: 1,
+  },
+  habitContent: {
+    flex: 1,
+  },
+  habitTopRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 8,
+  },
+  habitIconBox: {
+    width: 28,
+    height: 28,
+    borderRadius: 8,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  habitXpBadge: {
+    backgroundColor: '#fef3c7',
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 4,
+  },
+  habitXpText: {
+    fontSize: 10,
+    fontWeight: '800',
+    color: '#b45309',
+  },
+  habitCardTitle: {
+    fontSize: 12.5,
+    fontWeight: '800',
+    color: '#131b2e',
+    lineHeight: 16,
+  },
+  habitCardSub: {
+    fontSize: 10.5,
+    fontWeight: '600',
+    color: '#64748b',
+    marginTop: 2,
+  },
+  stepsStatsRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginTop: 2,
+  },
+  stepsCount: {
+    fontSize: 10.5,
+    fontWeight: '600',
+    color: '#64748b',
+  },
+  stepsPercent: {
+    fontSize: 10.5,
+    fontWeight: '800',
+    color: '#059669',
+  },
+  habitActionBtn: {
+    marginTop: 10,
+    width: '100%',
+    paddingVertical: 5,
+    backgroundColor: '#f2f3ff',
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#eaedff',
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 4,
+  },
+  habitActionBtnActive: {
+    backgroundColor: '#dcfce7',
+    borderColor: '#bbf7d0',
+  },
+  habitActionBtnActiveOrange: {
+    backgroundColor: '#ffedd5',
+    borderColor: '#fed7aa',
+  },
+  habitActionText: {
+    fontSize: 11,
     fontWeight: '700',
-    color: '#065f46',
+    color: '#0f766e',
   },
 });
