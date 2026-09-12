@@ -14,6 +14,7 @@ import {
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { COLORS } from '../theme';
+import API_BASE_URL from '../config';
 
 export default function CoachMayaModal({ visible, onClose, onLogout, currentUser }) {
   const athleteName = currentUser?.name || currentUser?.username || 'there';
@@ -81,7 +82,7 @@ export default function CoachMayaModal({ visible, onClose, onLogout, currentUser
 
     // Try ElevenLabs backend TTS first
     try {
-      const response = await fetch('http://localhost:8000/api/tts', {
+      const response = await fetch(`${API_BASE_URL}/api/tts`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ text: speechText }),

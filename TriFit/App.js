@@ -14,6 +14,7 @@ import AuthModal from './src/components/AuthModal';
 import TrainingScheduleScreen from './src/screens/TrainingScheduleScreen';
 import ProgressDashboardScreen from './src/screens/ProgressDashboardScreen';
 import { COLORS } from './src/theme';
+import API_BASE_URL from './src/config';
 
 export default function App() {
   const [showSplash, setShowSplash] = useState(true);
@@ -38,7 +39,7 @@ export default function App() {
   const fetchUserStats = async (username) => {
     if (!username) return;
     try {
-      const res = await fetch(`http://localhost:8000/api/user-stats?username=${encodeURIComponent(username)}`);
+      const res = await fetch(`${API_BASE_URL}/api/user-stats?username=${encodeURIComponent(username)}`);
       if (res.ok) {
         const data = await res.json();
         if (data.user) {
@@ -108,7 +109,7 @@ export default function App() {
     setStreakDays((prev) => (prev === 0 ? 1 : prev));
     if (currentUser?.username) {
       try {
-        await fetch('http://localhost:8000/api/add-xp', {
+        await fetch(`${API_BASE_URL}/api/add-xp`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({

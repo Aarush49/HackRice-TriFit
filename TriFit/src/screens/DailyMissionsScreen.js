@@ -13,6 +13,7 @@ import Svg, { Circle } from 'react-native-svg';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { COLORS } from '../theme';
+import API_BASE_URL from '../config';
 import { PopInView, ScrollPopView, BouncyButton } from '../components/AnimatedComponents';
 const getWorkoutTags = (workout_type) => {
   const wtype = (workout_type || '').toLowerCase();
@@ -89,7 +90,7 @@ export default function DailyMissionsScreen({
   const fetchWearableData = async () => {
     const username = currentUser?.username || 'testuser2';
     try {
-      const res = await fetch(`http://localhost:8000/api/wearables/current?username=${username}`);
+      const res = await fetch(`${API_BASE_URL}/api/wearables/current?username=${username}`);
       const data = await res.json();
       if (data.success && data.metrics) {
         setWearableData(data.metrics);
@@ -103,7 +104,7 @@ export default function DailyMissionsScreen({
     setIsSyncing(true);
     const username = currentUser?.username || 'testuser2';
     try {
-      const res = await fetch(`http://localhost:8000/api/wearables/sync-simulated?username=${username}`, { method: 'POST' });
+      const res = await fetch(`${API_BASE_URL}/api/wearables/sync-simulated?username=${username}`, { method: 'POST' });
       const data = await res.json();
       if (data.success && data.wearable) {
         setWearableData(data.wearable);
@@ -120,10 +121,10 @@ export default function DailyMissionsScreen({
       setIsLoading(true);
       const username = currentUser?.username || 'testuser2';
       try {
-        let res = await fetch(`http://localhost:8000/api/plan/current?username=${username}`);
+        let res = await fetch(`${API_BASE_URL}/api/plan/current?username=${username}`);
         let data = await res.json();
         if (!data.success) {
-          res = await fetch(`http://localhost:8000/api/plan/generate?username=${username}`, { method: 'POST' });
+          res = await fetch(`${API_BASE_URL}/api/plan/generate?username=${username}`, { method: 'POST' });
           data = await res.json();
         }
         if (data.success && data.plan && data.plan.plan_data) setAiPlan(data.plan.plan_data);

@@ -15,6 +15,7 @@ import {
 import { MaterialCommunityIcons, Ionicons, Feather, FontAwesome5 } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { COLORS } from '../theme';
+import API_BASE_URL from '../config';
 import { PopInView, ScrollPopView, BouncyButton } from '../components/AnimatedComponents';
 
 export default function TrainingScheduleScreen({ currentUser, userProfile, onStartWorkout, onOpenCoach }) {
@@ -88,11 +89,11 @@ export default function TrainingScheduleScreen({ currentUser, userProfile, onSta
       setIsLoading(true);
       const username = currentUser?.username || 'testuser2';
       try {
-        let res = await fetch(`http://localhost:8000/api/plan/current?username=${username}`);
+        let res = await fetch(`${API_BASE_URL}/api/plan/current?username=${username}`);
         let data = await res.json();
         
         if (!data.success) {
-          res = await fetch(`http://localhost:8000/api/plan/generate?username=${username}`, {
+          res = await fetch(`${API_BASE_URL}/api/plan/generate?username=${username}`, {
             method: 'POST'
           });
           data = await res.json();
@@ -339,7 +340,7 @@ export default function TrainingScheduleScreen({ currentUser, userProfile, onSta
     setIsAdapting(true);
     const username = currentUser?.username || 'testuser2';
     try {
-      const res = await fetch(`http://localhost:8000/api/plan/adjust`, {
+      const res = await fetch(`${API_BASE_URL}/api/plan/adjust`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

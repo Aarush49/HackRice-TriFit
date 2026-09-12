@@ -15,6 +15,7 @@ import {
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { PopInView, BouncyButton } from '../components/AnimatedComponents';
+import API_BASE_URL from '../config';
 
 export default function LoginScreen({ onLoginSuccess }) {
   const [authMode, setAuthMode] = useState('login'); // 'login' | 'signup'
@@ -40,8 +41,6 @@ export default function LoginScreen({ onLoginSuccess }) {
     setName(val);
     if (errorMessage) setErrorMessage('');
   };
-
-  const API_BASE_URL = 'http://localhost:8000';
 
   const handleSubmit = async (method = 'Email Form') => {
     if (method === 'Email Form') {

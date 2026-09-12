@@ -12,8 +12,7 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { COLORS } from '../theme';
-
-const API_BASE_URL = 'http://localhost:8000'; // Change to backend host/IP when deploying
+import API_BASE_URL from '../config';
 
 export default function AuthModal({ visible, onClose, onAuthSuccess }) {
   const [isLogin, setIsLogin] = useState(true);

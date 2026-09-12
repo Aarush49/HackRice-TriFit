@@ -14,6 +14,7 @@ import {
 } from 'react-native';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
+import API_BASE_URL from '../config';
 
 export default function OnboardingQuestionnaireScreen({ onComplete, onBackToLogin, currentUser, token }) {
   const [currentStep, setCurrentStep] = useState(1);
@@ -153,7 +154,7 @@ export default function OnboardingQuestionnaireScreen({ onComplete, onBackToLogi
       };
 
       try {
-        await fetch('http://localhost:8000/onboarding', {
+        await fetch(`${API_BASE_URL}/onboarding`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
