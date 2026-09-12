@@ -923,13 +923,26 @@ const styles = StyleSheet.create({
   modalHeader: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
+    gap: 8,
     marginBottom: 4,
   },
   modalTitle: {
+    flex: 1,
     fontSize: 18,
     fontWeight: '900',
     color: '#131b2e',
+  },
+  modalBackButton: {
+    minHeight: 36,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 2,
+    paddingRight: 8,
+  },
+  modalBackButtonText: {
+    fontSize: 13,
+    fontWeight: '800',
+    color: COLORS.primary,
   },
   modalSub: {
     fontSize: 12,
