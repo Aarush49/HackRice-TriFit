@@ -204,23 +204,28 @@ export function ScrollPopView({
   useEffect(() => {
     if (Platform.OS === 'web' && typeof window !== 'undefined' && 'IntersectionObserver' in window) {
       let observer;
-      const el = viewRef.current;
-      if (el) {
-        observer = new IntersectionObserver(
-          ([entry]) => {
-            if (entry.isIntersecting) {
-              if (delay > 0) {
-                setTimeout(triggerAnimation, delay);
-              } else {
-                triggerAnimation();
+      try {
+        const rawEl = viewRef.current;
+        const el = rawEl instanceof Element ? rawEl : (rawEl?.node || (typeof rawEl?.getDOMNode === 'function' ? rawEl.getDOMNode() : null));
+        if (el && el instanceof Element) {
+          observer = new IntersectionObserver(
+            ([entry]) => {
+              if (entry?.isIntersecting) {
+                if (delay > 0) {
+                  setTimeout(triggerAnimation, delay);
+                } else {
+                  triggerAnimation();
+                }
+                observer?.disconnect();
               }
-              observer.disconnect();
-            }
-          },
-          { threshold, rootMargin: '0px 0px -30px 0px' }
-        );
-        observer.observe(el);
-      } else {
+            },
+            { threshold, rootMargin: '0px 0px -30px 0px' }
+          );
+          observer.observe(el);
+        } else {
+          triggerAnimation();
+        }
+      } catch (err) {
         triggerAnimation();
       }
       return () => {

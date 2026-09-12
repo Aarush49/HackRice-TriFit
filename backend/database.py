@@ -93,9 +93,36 @@ def init_db():
                     zone2_minutes INT DEFAULT 45,
                     synced_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
                 );
+
+                CREATE TABLE IF NOT EXISTS scheduled_events (
+                    id SERIAL PRIMARY KEY,
+                    user_id INT REFERENCES users(id) ON DELETE CASCADE,
+                    username VARCHAR(100) NOT NULL,
+                    event_date DATE NOT NULL,
+                    day_number INT NOT NULL,
+                    day_name VARCHAR(20),
+                    workout_type VARCHAR(150) NOT NULL,
+                    description TEXT,
+                    duration VARCHAR(50) DEFAULT '45 min',
+                    is_completed BOOLEAN DEFAULT FALSE,
+                    completed_at TIMESTAMP,
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                    UNIQUE(username, event_date)
+                );
+
+                -- Seed DemoAccount user and profile (initial streak 0 until workouts completed)
+                INSERT INTO users (username, email, password_hash, xp, streak_days)
+                VALUES ('DemoAccount', 'demo@trifit.io', '$2b$12$eXAMP1eHashForDemoAccountAuthenticationOnly000', 0, 0)
+                ON CONFLICT (username) DO NOTHING;
+
+                INSERT INTO athlete_profiles (user_id, username, race_type, race_date, fitness_level, training_days)
+                SELECT id, 'DemoAccount', 'Hyrox Open / Pro', 'November 15, 2026', 'Intermediate', 5
+                FROM users WHERE username = 'DemoAccount'
+                ON CONFLICT (username) DO NOTHING;
             """)
             conn.commit()
-            print("[DB] Users, Athlete Profiles, Training Plans, and Wearable Metrics tables initialized successfully.")
+            print("[DB] Users, Profiles, Plans, Metrics, and Scheduled Events initialized successfully.")
     except Exception as e:
         conn.rollback()
         print(f"[DB ERROR] {e}")
