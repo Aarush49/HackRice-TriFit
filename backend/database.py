@@ -69,9 +69,18 @@ def init_db():
                     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
                 );
+                
+                CREATE TABLE IF NOT EXISTS training_plans (
+                    id SERIAL PRIMARY KEY,
+                    user_id INT REFERENCES users(id) ON DELETE CASCADE,
+                    username VARCHAR(100) UNIQUE NOT NULL,
+                    plan_data JSONB,
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                );
             """)
             conn.commit()
-            print("[DB] Users and Athlete Profiles tables initialized successfully.")
+            print("[DB] Users, Athlete Profiles, and Training Plans tables initialized successfully.")
     except Exception as e:
         conn.rollback()
         print(f"[DB ERROR] {e}")

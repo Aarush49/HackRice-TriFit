@@ -355,7 +355,7 @@ def generate_gemini_response(
     
     config = types.GenerateContentConfig(system_instruction=system_instruction) if (types and system_instruction) else None
 
-    models_to_try = [model, "gemini-flash-latest", "gemini-2.5-flash-lite", "gemini-2.5-pro"]
+    models_to_try = [model, "gemini-3.5-flash", "gemini-3.1-flash-lite", "gemini-3.1-pro-preview", "gemini-flash-latest"]
     # De-duplicate while preserving order
     models_to_try = list(dict.fromkeys(models_to_try))
 
@@ -483,4 +483,164 @@ Instructions:
         )
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"ElevenLabs TTS generation failed: {str(e)}")
+
+class PlanAdjustmentRequest(BaseModel):
+    username: str
+    feedback: str
+
+@app.post("/api/plan/generate")
+def generate_json_training_plan(username: str):
+    if not gemini_client:
+        raise HTTPException(status_code=500, detail="Gemini API key is missing or client is not initialized.")
+    
+    conn = get_db()
+    try:
+        with conn.cursor(cursor_factory=RealDictCursor) as cur:
+            cur.execute("SELECT * FROM athlete_profiles WHERE username = %s;", (username,))
+            db_profile = cur.fetchone()
+            if not db_profile:
+                raise HTTPException(status_code=404, detail="Athlete profile not found")
+            profile_info = dict(db_profile)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Database error: {e}")
+    finally:
+        conn.close()
+
+    system_instruction = "You are an expert AI Personal Trainer and Triathlon Coach. Your goal is to generate structured training plans in valid JSON format. Always return ONLY a JSON object and no surrounding text or markdown blocks."
+
+    prompt = f"""Create a personalized 4-week training plan for an athlete with the following profile. The plan should be formatted as a valid JSON object.
+- Race Target: {profile_info.get('race_type', 'Sprint Triathlon')} (Target Date: {profile_info.get('race_date', 'Upcoming')})
+- Fitness Level: {profile_info.get('fitness_level', 'Intermediate')}
+- Target Training Days/Week: {profile_info.get('training_days', 4)}
+- Baseline Metrics: {profile_info.get('baseline_metrics', {})}
+- Current Injuries/Limitations: {profile_info.get('injuries', 'None')}
+
+The JSON should have this structure:
+{{
+  "goal": "Prepare for the race",
+  "weeks": [
+    {{
+      "week_number": 1,
+      "focus": "Base building",
+      "days": [
+        {{ "day": "Monday", "workout_type": "Rest", "description": "Active recovery" }},
+        {{ "day": "Tuesday", "workout_type": "Run", "description": "30 min easy run" }}
+      ]
+    }}
+  ]
+}}
+Ensure the output is strictly valid JSON."""
+
+    gemini_text = generate_gemini_response(prompt, system_instruction=system_instruction, model="gemini-3.5-flash")
+    
+    try:
+        cleaned_json = gemini_text.strip()
+        if cleaned_json.startswith("```json"):
+            cleaned_json = cleaned_json[7:]
+        if cleaned_json.startswith("```"):
+            cleaned_json = cleaned_json[3:]
+        if cleaned_json.endswith("```"):
+            cleaned_json = cleaned_json[:-3]
+        plan_data = json.loads(cleaned_json.strip())
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to parse AI response as JSON: {e}\nResponse: {gemini_text}")
+
+    conn = get_db()
+    try:
+        with conn.cursor(cursor_factory=RealDictCursor) as cur:
+            cur.execute("SELECT id FROM users WHERE username = %s;", (username,))
+            u_row = cur.fetchone()
+            if not u_row:
+                raise HTTPException(status_code=404, detail="User not found")
+            
+            cur.execute(
+                """
+                INSERT INTO training_plans (user_id, username, plan_data, updated_at)
+                VALUES (%s, %s, %s, CURRENT_TIMESTAMP)
+                ON CONFLICT (username) DO UPDATE SET
+                    plan_data = EXCLUDED.plan_data,
+                    updated_at = CURRENT_TIMESTAMP
+                RETURNING *;
+                """,
+                (u_row["id"], username, json.dumps(plan_data))
+            )
+            saved_plan = cur.fetchone()
+            conn.commit()
+            return {"success": True, "plan": saved_plan}
+    finally:
+        conn.close()
+
+@app.get("/api/plan/current")
+def get_current_plan(username: str):
+    conn = get_db()
+    try:
+        with conn.cursor(cursor_factory=RealDictCursor) as cur:
+            cur.execute("SELECT * FROM training_plans WHERE username = %s;", (username,))
+            plan = cur.fetchone()
+            if not plan:
+                raise HTTPException(status_code=404, detail="No training plan found")
+            return {"success": True, "plan": plan}
+    finally:
+        conn.close()
+
+@app.post("/api/plan/adjust")
+def adjust_training_plan(data: PlanAdjustmentRequest):
+    if not gemini_client:
+        raise HTTPException(status_code=500, detail="Gemini API key is missing or client is not initialized.")
+    
+    conn = get_db()
+    try:
+        with conn.cursor(cursor_factory=RealDictCursor) as cur:
+            cur.execute("SELECT * FROM training_plans WHERE username = %s;", (data.username,))
+            plan_row = cur.fetchone()
+            if not plan_row:
+                raise HTTPException(status_code=404, detail="No existing training plan found to adjust")
+            current_plan = plan_row["plan_data"]
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Database error: {e}")
+    finally:
+        conn.close()
+
+    system_instruction = "You are an expert AI Personal Trainer. You output ONLY valid JSON objects and no surrounding text or markdown blocks."
+
+    prompt = f"""The athlete has an existing training plan:
+{json.dumps(current_plan)}
+
+The athlete provided the following feedback/adjustment request:
+"{data.feedback}"
+
+Please adjust the training plan to accommodate this feedback while still keeping them on track for their overall goal.
+Output the updated plan in the exact same JSON format as the original. Ensure it is strictly valid JSON."""
+
+    gemini_text = generate_gemini_response(prompt, system_instruction=system_instruction, model="gemini-3.5-flash")
+    
+    try:
+        cleaned_json = gemini_text.strip()
+        if cleaned_json.startswith("```json"):
+            cleaned_json = cleaned_json[7:]
+        if cleaned_json.startswith("```"):
+            cleaned_json = cleaned_json[3:]
+        if cleaned_json.endswith("```"):
+            cleaned_json = cleaned_json[:-3]
+        new_plan_data = json.loads(cleaned_json.strip())
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to parse AI response as JSON: {e}\nResponse: {gemini_text}")
+
+    conn = get_db()
+    try:
+        with conn.cursor(cursor_factory=RealDictCursor) as cur:
+            cur.execute(
+                """
+                UPDATE training_plans
+                SET plan_data = %s, updated_at = CURRENT_TIMESTAMP
+                WHERE username = %s
+                RETURNING *;
+                """,
+                (json.dumps(new_plan_data), data.username)
+            )
+            saved_plan = cur.fetchone()
+            conn.commit()
+            return {"success": True, "plan": saved_plan}
+    finally:
+        conn.close()
 

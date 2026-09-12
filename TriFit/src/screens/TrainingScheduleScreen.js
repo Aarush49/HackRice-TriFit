@@ -7,6 +7,7 @@ import {
   TouchableOpacity,
   Image,
   Animated,
+  ActivityIndicator,
 } from 'react-native';
 import { MaterialCommunityIcons, Ionicons, Feather, FontAwesome5 } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -18,6 +19,37 @@ export default function TrainingScheduleScreen({ currentUser, userProfile, onSta
   const [adaptedPlan, setAdaptedPlan] = useState(null);
   const [targetRace, setTargetRace] = useState(userProfile?.race_type || 'Hyrox Open / Pro');
   const [targetDate, setTargetDate] = useState(userProfile?.race_date || 'November 15, 2025');
+
+  const [aiPlan, setAiPlan] = useState(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isAdapting, setIsAdapting] = useState(false);
+
+  React.useEffect(() => {
+    const fetchOrGeneratePlan = async () => {
+      setIsLoading(true);
+      const username = currentUser?.username || 'testuser2';
+      try {
+        let res = await fetch(`http://localhost:8000/api/plan/current?username=${username}`);
+        let data = await res.json();
+        
+        if (!data.success) {
+          res = await fetch(`http://localhost:8000/api/plan/generate?username=${username}`, {
+            method: 'POST'
+          });
+          data = await res.json();
+        }
+        
+        if (data.success && data.plan && data.plan.plan_data) {
+          setAiPlan(data.plan.plan_data);
+        }
+      } catch (e) {
+        console.error("Failed to fetch plan:", e);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    fetchOrGeneratePlan();
+  }, [currentUser]);
 
   const days = [
     { day: 'M', date: 10, status: 'completed', icon: 'check', iconType: 'ion', bg: '#f1f5f9', iconColor: '#ffffff', iconBg: COLORS.primary },
@@ -90,11 +122,61 @@ export default function TrainingScheduleScreen({ currentUser, userProfile, onSta
     monthWeeks.push(monthDays.slice(i, i + 7));
   }
 
-  const handleAdapt = (type, label) => {
+  const dynamicDays = days.map((d, idx) => {
+    if (aiPlan && aiPlan.weeks && aiPlan.weeks.length > 0) {
+      const aiDay = aiPlan.weeks[0].days[idx];
+      if (aiDay) {
+        let icon = 'run';
+        let iconColor = COLORS.primary;
+        let iconBg = '#ffffff';
+        const wtype = (aiDay.workout_type || '').toLowerCase();
+        
+        if (wtype.includes('rest')) { icon = 'bed'; iconColor = '#64748b'; iconBg = '#e2e8f0'; }
+        else if (wtype.includes('run')) { icon = 'run'; iconColor = COLORS.primary; iconBg = '#89f5e7'; }
+        else if (wtype.includes('swim')) { icon = 'swim'; iconColor = '#0284c7'; iconBg = '#bae6fd'; }
+        else if (wtype.includes('bike') || wtype.includes('cycle')) { icon = 'bike'; iconColor = '#ea580c'; iconBg = '#ffdbca'; }
+        
+        return {
+          ...d,
+          aiWorkoutType: aiDay.workout_type,
+          aiDescription: aiDay.description,
+          icon,
+          iconColor,
+          iconBg,
+          iconType: 'mc'
+        };
+      }
+    }
+    return d;
+  });
+
+  const selectedDayData = dynamicDays.find(d => d.date === selectedDay) || dynamicDays[2];
+
+  const handleAdapt = async (type, label) => {
     if (adaptedPlan === type) {
       setAdaptedPlan(null);
-    } else {
-      setAdaptedPlan(type);
+      return;
+    } 
+    setAdaptedPlan(type);
+    setIsAdapting(true);
+    const username = currentUser?.username || 'testuser2';
+    try {
+      const res = await fetch(`http://localhost:8000/api/plan/adjust`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          username,
+          feedback: `I selected the adaptation: ${label}. Please adjust my plan accordingly.`
+        })
+      });
+      const data = await res.json();
+      if (data.success && data.plan && data.plan.plan_data) {
+        setAiPlan(data.plan.plan_data);
+      }
+    } catch (e) {
+      console.error("Failed to adapt plan:", e);
+    } finally {
+      setIsAdapting(false);
     }
   };
 
@@ -195,7 +277,7 @@ export default function TrainingScheduleScreen({ currentUser, userProfile, onSta
 
           {/* 7 Day Grid */}
           <View style={styles.daysGrid}>
-            {days.map((d) => {
+            {dynamicDays.map((d) => {
               const isSelected = selectedDay === d.date;
               const isToday = d.isToday;
 
@@ -332,6 +414,12 @@ export default function TrainingScheduleScreen({ currentUser, userProfile, onSta
         </View>
 
         {/* Main Today Workout Card */}
+        {isLoading ? (
+          <View style={[styles.workoutCardWrapper, { alignItems: 'center', justifyContent: 'center', height: 200 }]}>
+            <ActivityIndicator size="large" color={COLORS.primary} />
+            <Text style={{ marginTop: 10, color: '#6d7a77' }}>Generating AI Training Plan...</Text>
+          </View>
+        ) : (
         <View style={styles.workoutCardWrapper}>
           <LinearGradient
             colors={['#89f5e7', '#6bd8cb', '#46cdbe']}
@@ -342,26 +430,30 @@ export default function TrainingScheduleScreen({ currentUser, userProfile, onSta
             {/* Top Row: Icon + Title */}
             <View style={styles.workoutMainRow}>
               <View style={styles.workoutIconBox}>
-                <MaterialCommunityIcons name="run" size={28} color={COLORS.primary} />
+                {selectedDayData.iconType === 'ion' ? (
+                  <Ionicons name={selectedDayData.icon} size={28} color={COLORS.primary} />
+                ) : (
+                  <MaterialCommunityIcons name={selectedDayData.icon} size={28} color={COLORS.primary} />
+                )}
               </View>
               <View style={styles.workoutTextWrap}>
                 <Text style={styles.workoutTitle}>
-                  {adaptedPlan === 'walk'
+                  {selectedDayData.aiWorkoutType || (adaptedPlan === 'walk'
                     ? 'Active Walk & Form Recovery'
                     : adaptedPlan === 'ease'
                     ? 'Zone 1-2 Easy Aerobic Recovery'
                     : adaptedPlan === 'rest'
                     ? 'Full Rest & Cellular Regeneration'
-                    : 'Zone 2 Aerobic & Form Drills'}
+                    : 'Zone 2 Aerobic & Form Drills')}
                 </Text>
                 <Text style={styles.workoutSubtitle}>
-                  {adaptedPlan === 'walk'
+                  {selectedDayData.aiDescription || (adaptedPlan === 'walk'
                     ? 'Gentle outdoor walk to keep tendons supple'
                     : adaptedPlan === 'ease'
                     ? 'Dialed back 30% intensity for fresh legs'
                     : adaptedPlan === 'rest'
                     ? 'Sleep, hydrate, and let mitochondria rebuild'
-                    : 'Steady rhythmic breathing + cadence builds'}
+                    : 'Steady rhythmic breathing + cadence builds')}
                 </Text>
               </View>
             </View>
@@ -411,6 +503,7 @@ export default function TrainingScheduleScreen({ currentUser, userProfile, onSta
             </TouchableOpacity>
           </LinearGradient>
         </View>
+        )}
       </View>
 
       {/* 4. Not Feeling 100%? / Quick Plan Adaptations Section */}
