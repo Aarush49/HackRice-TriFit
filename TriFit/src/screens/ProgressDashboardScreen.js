@@ -120,15 +120,6 @@ export default function ProgressDashboardScreen({ currentUser, userProfile, xp =
       {/* Sub-header & Title Block */}
       <PopInView delay={0}>
         <View style={styles.subHeader}>
-          <View style={styles.pillRow}>
-            <View style={styles.programPill}>
-              <MaterialCommunityIcons name="weight-lifter" size={13} color="#9d4300" />
-              <Text style={styles.programPillText}>HYROX BUILD</Text>
-            </View>
-            <View style={styles.levelPill}>
-              <Text style={styles.levelPillText}>Level 7 Athlete</Text>
-            </View>
-          </View>
           <View style={styles.trackBadge}>
             <Ionicons name="checkmark-circle" size={14} color={COLORS.primary} />
             <Text style={styles.trackBadgeText}>Self-Paced Track</Text>
@@ -397,42 +388,9 @@ const styles = StyleSheet.create({
   },
   subHeader: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
+    justifyContent: 'flex-end',
     alignItems: 'center',
     marginTop: 4,
-  },
-  pillRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-  },
-  programPill: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-    backgroundColor: '#ffdbca',
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: 999,
-  },
-  programPillText: {
-    fontSize: 10,
-    fontWeight: '800',
-    color: '#9d4300',
-    letterSpacing: 0.8,
-    textTransform: 'uppercase',
-  },
-  levelPill: {
-    backgroundColor: '#e2e7ff',
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 999,
-  },
-  levelPillText: {
-    fontSize: 10,
-    fontWeight: '700',
-    color: '#3d4947',
-    letterSpacing: 0.5,
   },
   trackBadge: {
     flexDirection: 'row',

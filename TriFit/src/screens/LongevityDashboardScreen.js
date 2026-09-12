@@ -509,18 +509,6 @@ export default function LongevityDashboardScreen({ currentUser, userProfile, onO
       {/* 1. Top Hero Header & Race Phase Badge */}
       <PopInView delay={0}>
         <View style={styles.headerSection}>
-          <View style={styles.badgeRow}>
-            <View style={styles.phasePill}>
-              <MaterialCommunityIcons name="dumbbell" size={13} color="#9d4300" />
-              <Text style={styles.phasePillText}>HYROX BUILD</Text>
-            </View>
-
-            <View style={styles.dietPill}>
-              <Ionicons name="flash" size={13} color="#00685f" />
-              <Text style={styles.dietPillText}>High Carb</Text>
-            </View>
-          </View>
-
           <View style={styles.titleRow}>
             <Text style={styles.mainTitle}>Recovery</Text>
             <Text style={styles.targetSub}>Target: {calorieTarget.toLocaleString()} kcal</Text>
@@ -1503,42 +1491,6 @@ const styles = StyleSheet.create({
   },
   headerSection: {
     gap: 6,
-  },
-  badgeRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-  },
-  phasePill: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-    backgroundColor: '#ffdbca',
-    paddingHorizontal: 10,
-    paddingVertical: 3,
-    borderRadius: 14,
-    borderBottomWidth: 2,
-    borderBottomColor: '#ffb690',
-  },
-  phasePillText: {
-    fontSize: 10,
-    fontWeight: '900',
-    color: '#9d4300',
-    letterSpacing: 0.5,
-  },
-  dietPill: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-    backgroundColor: '#e2e7ff',
-    paddingHorizontal: 10,
-    paddingVertical: 3,
-    borderRadius: 14,
-  },
-  dietPillText: {
-    fontSize: 10,
-    fontWeight: '800',
-    color: '#131b2e',
   },
   titleRow: {
     flexDirection: 'row',
