@@ -11,7 +11,7 @@ import SplashScreen from './src/screens/SplashScreen';
 import CoachMayaModal from './src/components/CoachMayaModal';
 import ActiveRunModal from './src/components/ActiveRunModal';
 import AthleteProfileModal from './src/components/AthleteProfileModal';
-import AuthModal from './src/components/AuthModal';
+import TrainingScheduleScreen from './src/screens/TrainingScheduleScreen';
 import { COLORS } from './src/theme';
 
 export default function App() {
@@ -154,7 +154,10 @@ export default function App() {
           />
         )}
         {activeTab === 'onboarding' && (
-          <OnboardingScreen onCompletePlan={() => setActiveTab('today')} />
+          <TrainingScheduleScreen
+            onStartWorkout={() => setRunVisible(true)}
+            onOpenCoach={() => setCoachVisible(true)}
+          />
         )}
         {activeTab === 'longevity' && (
           <LongevityDashboardScreen
