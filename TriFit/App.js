@@ -11,6 +11,7 @@ import SplashScreen from './src/screens/SplashScreen';
 import CoachMayaModal from './src/components/CoachMayaModal';
 import ActiveRunModal from './src/components/ActiveRunModal';
 import AthleteProfileModal from './src/components/AthleteProfileModal';
+import AuthModal from './src/components/AuthModal';
 import TrainingScheduleScreen from './src/screens/TrainingScheduleScreen';
 import { COLORS } from './src/theme';
 
@@ -153,7 +154,7 @@ export default function App() {
             setXp={setXp}
           />
         )}
-        {activeTab === 'onboarding' && (
+        {activeTab === 'schedule' && (
           <TrainingScheduleScreen
             onStartWorkout={() => setRunVisible(true)}
             onOpenCoach={() => setCoachVisible(true)}
@@ -165,6 +166,9 @@ export default function App() {
             xp={xp}
             setXp={setXp}
           />
+        )}
+        {activeTab === 'plan' && (
+          <OnboardingScreen onCompletePlan={() => setActiveTab('schedule')} />
         )}
       </View>
 

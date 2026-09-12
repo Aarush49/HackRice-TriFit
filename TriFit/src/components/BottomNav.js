@@ -6,8 +6,9 @@ import { COLORS } from '../theme';
 export default function BottomNav({ activeTab, setActiveTab, onOpenCoach }) {
   const tabs = [
     { id: 'today', label: 'Today', icon: 'sparkles', iconFamily: 'Ionicons' },
+    { id: 'schedule', label: 'Schedule', icon: 'calendar-month', iconFamily: 'MaterialCommunityIcons' },
     { id: 'longevity', label: 'Longevity', icon: 'heart-pulse', iconFamily: 'MaterialCommunityIcons' },
-    { id: 'onboarding', label: 'Plan', icon: 'calendar-text', iconFamily: 'MaterialCommunityIcons' },
+    { id: 'plan', label: 'Build Plan', icon: 'flag-checkered', iconFamily: 'MaterialCommunityIcons' },
     { id: 'coach', label: 'Coach', icon: 'chatbubbles', iconFamily: 'Ionicons' },
   ];
 
