@@ -375,29 +375,6 @@ export default function LoginScreen({ onLoginSuccess }) {
           </BouncyButton>
         </PopInView>
 
-        {/* Trust Pillars Footer */}
-        <PopInView delay={280} style={styles.footerSection}>
-          <View style={styles.trustChipsRow}>
-            <View style={styles.trustChip}>
-              <Text style={styles.trustChipEmoji}>🛡️</Text>
-              <Text style={styles.trustChipText}>Privacy First</Text>
-            </View>
-            <View style={styles.trustChip}>
-              <Text style={styles.trustChipEmoji}>🧬</Text>
-              <Text style={styles.trustChipText}>HRV-Guided</Text>
-            </View>
-            <View style={styles.trustChip}>
-              <Text style={styles.trustChipEmoji}>👟</Text>
-              <Text style={styles.trustChipText}>All Levels</Text>
-            </View>
-          </View>
-
-          <Text style={styles.legalText}>
-            By joining TriFit, you agree to our{' '}
-            <Text style={styles.legalLink}>Terms of Service</Text> &{' '}
-            <Text style={styles.legalLink}>Longevity Health Policy</Text>.
-          </Text>
-        </PopInView>
       </ScrollView>
     </KeyboardAvoidingView>
   );
@@ -719,49 +696,5 @@ const styles = StyleSheet.create({
   demoBtnBold: {
     fontWeight: '800',
     color: '#0d9488',
-  },
-  footerSection: {
-    marginTop: 20,
-    gap: 14,
-  },
-  trustChipsRow: {
-    flexDirection: 'row',
-    gap: 8,
-    justifyContent: 'space-between',
-  },
-  trustChip: {
-    flex: 1,
-    backgroundColor: '#ffffff',
-    borderWidth: 1,
-    borderColor: '#e2e8f0',
-    borderRadius: 14,
-    paddingVertical: 10,
-    alignItems: 'center',
-    justifyContent: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.03,
-    shadowRadius: 2,
-  },
-  trustChipEmoji: {
-    fontSize: 15,
-  },
-  trustChipText: {
-    fontSize: 10,
-    fontWeight: '800',
-    color: '#475569',
-    marginTop: 3,
-  },
-  legalText: {
-    fontSize: 11,
-    fontWeight: '500',
-    color: '#94a3b8',
-    textAlign: 'center',
-    lineHeight: 16,
-    paddingHorizontal: 12,
-  },
-  legalLink: {
-    color: '#64748b',
-    textDecorationLine: 'underline',
   },
 });
