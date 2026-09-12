@@ -11,7 +11,7 @@ import CoachMayaModal from './src/components/CoachMayaModal';
 import ActiveRunModal from './src/components/ActiveRunModal';
 import AthleteProfileModal from './src/components/AthleteProfileModal';
 import AuthModal from './src/components/AuthModal';
-import TrainingScheduleScreen, { getSportTrainingPlan } from './src/screens/TrainingScheduleScreen';
+import TrainingScheduleScreen from './src/screens/TrainingScheduleScreen';
 import ProgressDashboardScreen from './src/screens/ProgressDashboardScreen';
 import { COLORS } from './src/theme';
 import API_BASE_URL from './src/config';
@@ -29,51 +29,12 @@ export default function App() {
   const [token, setToken] = useState(null);
   const [xp, setXp] = useState(0);
   const [streakDays, setStreakDays] = useState(0);
-  const [selectedDay, setSelectedDay] = useState(12);
-  const [trainingPlan, setTrainingPlan] = useState(null);
-  const [adaptedPlan, setAdaptedPlan] = useState(null);
-  const [scheduledEvents, setScheduledEvents] = useState([]);
   const [userProfile, setUserProfile] = useState({
     name: '',
     email: '',
     race_type: '',
     race_date: '',
   });
-
-  const fetchScheduledEvents = async (username) => {
-    const user = username || currentUser?.username || 'DemoAccount';
-    try {
-      const res = await fetch(`http://localhost:8000/api/events?username=${user}`);
-      const data = await res.json();
-      if (data.success && data.events) {
-        setScheduledEvents(data.events);
-      }
-    } catch (e) {
-      console.log('Error fetching scheduled events:', e);
-    }
-  };
-
-  React.useEffect(() => {
-    if (!isLoggedIn) return;
-    const fetchSharedPlan = async () => {
-      const username = currentUser?.username || 'DemoAccount';
-      try {
-        let res = await fetch(`http://localhost:8000/api/plan/current?username=${username}`);
-        let data = await res.json();
-        if (data.success && data.plan?.plan_data) {
-          setTrainingPlan(data.plan.plan_data);
-          return;
-        }
-      } catch (e) {
-        console.log('Could not fetch shared plan from backend:', e);
-      }
-      const race = userProfile?.race_type || 'Hyrox Open / Pro';
-      const date = userProfile?.race_date || 'November 15, 2026';
-      setTrainingPlan(getSportTrainingPlan(race, date));
-    };
-    fetchSharedPlan();
-    fetchScheduledEvents(currentUser?.username);
-  }, [isLoggedIn, currentUser?.username, userProfile?.race_type]);
 
   const fetchUserStats = async (username) => {
     if (!username) return;
@@ -115,9 +76,13 @@ export default function App() {
     setCurrentUser(userData || { username: name, email });
     setIsLoggedIn(true);
 
-    const userToFetch = userData?.username || name || 'DemoAccount';
-    await fetchUserStats(userToFetch);
-    await fetchScheduledEvents(userToFetch);
+    if (userData?.isDemo) {
+      // Seed demo stats directly — no backend call needed
+      setXp(userData.user?.xp || 2450);
+      setStreakDays(userData.user?.streak_days || 7);
+    } else {
+      await fetchUserStats(userData?.username || name);
+    }
 
     // Only show onboarding when creating a new account (signup)
     if (userData?.isSignup) {
@@ -140,7 +105,6 @@ export default function App() {
   };
 
   const handleFinishRun = async () => {
-<<<<<<< Updated upstream
     setXp((prev) => prev + 120);
     setStreakDays((prev) => (prev === 0 ? 1 : prev));
     if (currentUser?.username) {
@@ -156,38 +120,8 @@ export default function App() {
         });
       } catch (err) {
         console.log('Error syncing run xp:', err);
-=======
-    const username = currentUser?.username || 'DemoAccount';
-    try {
-      const res = await fetch('http://localhost:8000/api/events/complete', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          username,
-          event_date: '2026-09-12',
-          xp_to_add: 120,
-        }),
-      });
-      const data = await res.json();
-      if (data.success) {
-        if (data.streak_days !== undefined) setStreakDays(data.streak_days);
-        if (data.xp !== undefined) setXp(data.xp);
-        if (data.event) {
-          setScheduledEvents((prev) =>
-            prev.map((e) => (e.event_date === '2026-09-12' ? { ...e, ...data.event } : e))
-          );
-        }
-      } else {
-        setXp((prev) => prev + 120);
-        setStreakDays((prev) => prev + 1);
->>>>>>> Stashed changes
       }
-    } catch (err) {
-      console.log('Error completing event in backend:', err);
-      setXp((prev) => prev + 120);
-      setStreakDays((prev) => prev + 1);
     }
-    fetchScheduledEvents(username);
   };
 
   const handleAuthSuccess = (user, authToken) => {
@@ -301,16 +235,7 @@ export default function App() {
           <DailyMissionsScreen
             currentUser={currentUser}
             userProfile={userProfile}
-            trainingPlan={trainingPlan}
-            adaptedPlan={adaptedPlan}
-            scheduledEvents={scheduledEvents}
-            onUpdateEvents={setScheduledEvents}
-            selectedDay={selectedDay}
-            onSelectDay={setSelectedDay}
-            onUpdatePlan={setTrainingPlan}
-            onUpdateAdaptedPlan={setAdaptedPlan}
             onStartRun={() => setRunVisible(true)}
-            onCompleteWorkout={handleFinishRun}
             onOpenCoach={() => setCoachVisible(true)}
             onNavigateToSchedule={() => setActiveTab('schedule')}
             xp={xp}
@@ -322,17 +247,7 @@ export default function App() {
           <TrainingScheduleScreen
             currentUser={currentUser}
             userProfile={userProfile}
-            trainingPlan={trainingPlan}
-            adaptedPlan={adaptedPlan}
-            scheduledEvents={scheduledEvents}
-            onUpdateEvents={setScheduledEvents}
-            selectedDay={selectedDay}
-            onSelectDay={setSelectedDay}
-            onUpdatePlan={setTrainingPlan}
-            onUpdateAdaptedPlan={setAdaptedPlan}
-            onUpdateProfile={(updated) => setUserProfile((prev) => ({ ...prev, ...updated }))}
             onStartWorkout={() => setRunVisible(true)}
-            onCompleteWorkout={handleFinishRun}
             onOpenCoach={() => setCoachVisible(true)}
           />
         )}
