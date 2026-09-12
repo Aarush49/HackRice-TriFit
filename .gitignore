@@ -1,1 +1,55 @@
-backend/__pycache__/main.cpython-311.pyc
+# Environment & Secrets
+.env
+.env.*
+*.env
+*.env.local
+*.local
+TriFit/.env
+backend/.env
+
+# Dependencies
+node_modules/
+venv/
+.venv/
+env/
+ENV/
+
+# Python
+__pycache__/
+*.py[cod]
+*.class
+.pytest_cache/
+*.mp3
+
+# Expo & React Native
+.expo/
+dist/
+web-build/
+expo-env.d.ts
+.metro-health-check*
+*.orig.*
+*.jks
+*.p8
+*.p12
+*.key
+*.mobileprovision
+
+# Native generated folders
+/ios
+/android
+TriFit/ios
+TriFit/android
+
+# Debug & Logs
+npm-debug.*
+yarn-debug.*
+yarn-error.*
+*.log
+
+# OS & IDE
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+*.pem
+*.tsbuildinfo
