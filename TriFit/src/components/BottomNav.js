@@ -8,7 +8,6 @@ export default function BottomNav({ activeTab, setActiveTab, onOpenCoach }) {
     { id: 'today', label: 'Today', icon: 'sparkles', iconFamily: 'Ionicons' },
     { id: 'longevity', label: 'Longevity', icon: 'heart-pulse', iconFamily: 'MaterialCommunityIcons' },
     { id: 'schedule', label: 'Schedule', icon: 'calendar-month', iconFamily: 'MaterialCommunityIcons' },
-    { id: 'onboarding', label: 'Plan', icon: 'calendar-text', iconFamily: 'MaterialCommunityIcons' },
     { id: 'coach', label: 'Coach', icon: 'chatbubbles', iconFamily: 'Ionicons' },
   ];
 
