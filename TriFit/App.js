@@ -8,6 +8,7 @@ import LongevityDashboardScreen from './src/screens/LongevityDashboardScreen';
 import LoginScreen from './src/screens/LoginScreen';
 import SplashScreen from './src/screens/SplashScreen';
 import CoachMayaModal from './src/components/CoachMayaModal';
+import CoachMayaTour from './src/components/CoachMayaTour';
 import ActiveRunModal from './src/components/ActiveRunModal';
 import AthleteProfileModal from './src/components/AthleteProfileModal';
 import AuthModal from './src/components/AuthModal';
@@ -22,6 +23,7 @@ export default function App() {
   const [needsOnboarding, setNeedsOnboarding] = useState(false);
   const [activeTab, setActiveTab] = useState('today');
   const [coachVisible, setCoachVisible] = useState(false);
+  const [tourVisible, setTourVisible] = useState(false);
   const [profileVisible, setProfileVisible] = useState(false);
   const [runVisible, setRunVisible] = useState(false);
   const [authVisible, setAuthVisible] = useState(false);
@@ -33,6 +35,7 @@ export default function App() {
   const [trainingPlan, setTrainingPlan] = useState(null);
   const [adaptedPlan, setAdaptedPlan] = useState(null);
   const [dbEvents, setDbEvents] = useState([]);
+  const activeUsernameRef = React.useRef(null);
   const [userProfile, setUserProfile] = useState({
     name: '',
     email: '',
@@ -40,12 +43,16 @@ export default function App() {
     race_date: '',
   });
 
-  const fetchDbEvents = async () => {
-    const username = currentUser?.username || 'DemoAccount';
+  const fetchDbEvents = async (usernameOverride) => {
+    const username = usernameOverride || currentUser?.username;
+    if (!username) {
+      setDbEvents([]);
+      return;
+    }
     try {
       const res = await fetch(`${API_BASE_URL}/api/events?username=${username}&month=9`);
       const data = await res.json();
-      if (data.success && data.events) {
+      if (data.success && data.events && activeUsernameRef.current === username) {
         setDbEvents(data.events);
       }
     } catch (e) {
@@ -55,7 +62,8 @@ export default function App() {
 
   React.useEffect(() => {
     if (isLoggedIn) {
-      fetchDbEvents();
+      activeUsernameRef.current = currentUser?.username || null;
+      fetchDbEvents(currentUser?.username);
     }
   }, [isLoggedIn, currentUser?.username]);
 
@@ -123,6 +131,7 @@ export default function App() {
   const handleLoginSuccess = async (userData) => {
     const name = userData?.username || userData?.name || userData?.email?.split('@')[0] || '';
     const email = userData?.email || '';
+    activeUsernameRef.current = userData?.username || name;
 
     setUserProfile({
       name,
@@ -132,6 +141,7 @@ export default function App() {
     });
     setCurrentUser(userData || { username: name, email });
     setIsLoggedIn(true);
+    setDbEvents([]);
 
     if (userData?.isDemo) {
       // Seed demo stats directly — no backend call needed
@@ -156,7 +166,7 @@ export default function App() {
     } else {
       await fetchUserStats(userData?.username || name);
     }
-    fetchDbEvents();
+    fetchDbEvents(userData?.username || name);
 
     // Only show onboarding when creating a new account (signup)
     if (userData?.isSignup) {
@@ -170,11 +180,14 @@ export default function App() {
   const handleLogout = () => {
     setProfileVisible(false);
     setCoachVisible(false);
+    setTourVisible(false);
     setIsLoggedIn(false);
     setCurrentUser(null);
+    activeUsernameRef.current = null;
     setNeedsOnboarding(false);
     setXp(0);
     setStreakDays(0);
+    setDbEvents([]);
     setUserProfile({ name: '', email: '', race_type: '', race_date: '' });
   };
 
@@ -282,7 +295,11 @@ export default function App() {
         <OnboardingQuestionnaireScreen
           currentUser={currentUser}
           token={token}
-          onComplete={() => setNeedsOnboarding(false)}
+          onComplete={() => {
+            setNeedsOnboarding(false);
+            setActiveTab('today');
+            setTourVisible(true);
+          }}
           onBackToLogin={handleLogout}
         />
       </SafeAreaView>
@@ -384,6 +401,17 @@ export default function App() {
           setActiveTab(tab);
         }}
         onOpenCoach={() => setCoachVisible(true)}
+      />
+
+      {/* Coach-led quick tour shown only after new-account onboarding */}
+      <CoachMayaTour
+        visible={tourVisible}
+        athleteName={currentUser?.name || currentUser?.username}
+        onNavigate={setActiveTab}
+        onFinish={() => {
+          setTourVisible(false);
+          setActiveTab('today');
+        }}
       />
 
       {/* Athlete Profile Page Modal */}
