@@ -6,7 +6,6 @@ import {
   ScrollView,
   TouchableOpacity,
   Image,
-  Switch,
   useWindowDimensions,
 } from 'react-native';
 import { Ionicons, MaterialCommunityIcons, FontAwesome5, Feather } from '@expo/vector-icons';
@@ -21,7 +20,6 @@ export default function DailyMissionsScreen({
   xp,
   setXp,
 }) {
-  const [audioGuideEnabled, setAudioGuideEnabled] = useState(true);
   const { width } = useWindowDimensions();
   const isWide = width >= 860;
 
@@ -37,43 +35,34 @@ export default function DailyMissionsScreen({
 
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
-      {/* 1. Top Welcome Header & Compact Ask AI Coach */}
-      <View style={[styles.topSection, isWide ? styles.topSectionWide : styles.topSectionMobile]}>
-        <View style={styles.welcomeTextGroup}>
-          <Text style={styles.welcomeTitle}>Welcome back, {athleteName}</Text>
-          <Text style={styles.welcomeDate}>{dateStr}</Text>
+      {/* 1. Top Greeting & Target Race Countdown */}
+      <View style={styles.topGreetingSection}>
+        <View style={styles.headlineRow}>
+          <Ionicons name="sunny" size={26} color="#F59E0B" />
+          <Text style={styles.headlineTitle}>
+            Day 14 <Text style={styles.orangeDot}>•</Text> Zone In!
+          </Text>
         </View>
 
-        <TouchableOpacity
-          style={styles.aiCoachHeroCard}
-          onPress={onOpenCoach}
-          activeOpacity={0.88}
+        {/* London Hyrox Open Countdown Pill */}
+        <LinearGradient
+          colors={['#e0f2fe', '#ecfeff', '#fef3c7']}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 0 }}
+          style={styles.targetRaceCountdownPill}
         >
-          <LinearGradient
-            colors={['#241242', '#3b0764', '#4c0519']}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 1 }}
-            style={styles.aiCoachHeroGradient}
-          >
-            <View style={styles.aiCoachHeroHeader}>
-              <View style={styles.coachAvatarRing}>
-                <Image
-                  source={{
-                    uri: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80',
-                  }}
-                  style={styles.coachAvatarImg}
-                />
-              </View>
-              <View style={styles.aiCoachTextWrap}>
-                <Text style={styles.aiCoachHeroTitle}>Ask AI Coach</Text>
-                <Text style={styles.aiCoachHeroSub} numberOfLines={2}>
-                  Personalized cues from recent training + recovery.
-                </Text>
-              </View>
-              <Ionicons name="sparkles" size={14} color="#f0abfc" />
+          <View style={styles.raceInfoLeft}>
+            <View style={styles.raceTimerIconBox}>
+              <MaterialCommunityIcons name="timer" size={20} color="#0284c7" />
             </View>
-          </LinearGradient>
-        </TouchableOpacity>
+            <Text style={styles.raceNameText}>London Hyrox Open</Text>
+          </View>
+
+          <View style={styles.daysLeftBadge}>
+            <Text style={styles.daysLeftText}>68D LEFT</Text>
+            <Ionicons name="flag" size={13} color="#ffffff" />
+          </View>
+        </LinearGradient>
       </View>
 
       {/* 2. Daily Consistency & Streak Tracker (Placed above everything, below AI Coach) */}
@@ -202,21 +191,8 @@ export default function DailyMissionsScreen({
             </View>
           </View>
 
-          {/* Toggle & Start Button */}
+          {/* Start Button */}
           <View style={styles.questControls}>
-            <View style={styles.toggleRow}>
-              <View style={styles.toggleLeft}>
-                <Ionicons name="mic-outline" size={18} color="#0d9488" />
-                <Text style={styles.toggleText}>Maya Audio Guide</Text>
-              </View>
-              <Switch
-                value={audioGuideEnabled}
-                onValueChange={setAudioGuideEnabled}
-                trackColor={{ false: '#cbd5e1', true: '#10b981' }}
-                thumbColor="#ffffff"
-              />
-            </View>
-
             <TouchableOpacity
               style={styles.startBtn}
               onPress={onStartRun}
@@ -384,81 +360,77 @@ const styles = StyleSheet.create({
     paddingBottom: 40,
     gap: 18,
   },
-  topSection: {
-    gap: 12,
+  topGreetingSection: {
+    gap: 10,
+    paddingTop: 4,
   },
-  topSectionMobile: {
-    flexDirection: 'column',
-  },
-  topSectionWide: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-  },
-  welcomeTextGroup: {
-    flex: 1,
-  },
-  welcomeTitle: {
-    fontSize: 24,
-    fontWeight: '900',
-    color: '#0f172a',
-    letterSpacing: -0.5,
-  },
-  welcomeDate: {
-    fontSize: 13,
-    fontWeight: '500',
-    color: '#64748b',
-    marginTop: 2,
-  },
-  aiCoachHeroCard: {
-    borderRadius: 16,
-    overflow: 'hidden',
-    shadowColor: '#581c87',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.18,
-    shadowRadius: 6,
-    elevation: 3,
-    maxWidth: 320,
-    alignSelf: 'flex-start',
-  },
-  aiCoachHeroGradient: {
-    paddingHorizontal: 12,
-    paddingVertical: 10,
-    borderRadius: 16,
-    borderWidth: 1,
-    borderColor: 'rgba(168, 85, 247, 0.35)',
-  },
-  aiCoachHeroHeader: {
+  headlineRow: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
   },
-  coachAvatarRing: {
-    width: 28,
-    height: 28,
-    borderRadius: 14,
-    borderWidth: 1.5,
-    borderColor: '#c084fc',
-    overflow: 'hidden',
+  headlineTitle: {
+    fontSize: 26,
+    fontWeight: '900',
+    color: '#131b2e',
+    letterSpacing: -0.5,
   },
-  coachAvatarImg: {
-    width: '100%',
-    height: '100%',
+  orangeDot: {
+    color: '#F97316',
   },
-  aiCoachTextWrap: {
+  targetRaceCountdownPill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: 'rgba(186, 230, 253, 0.6)',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.04,
+    shadowRadius: 3,
+    elevation: 1,
+  },
+  raceInfoLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
     flex: 1,
+    minWidth: 0,
   },
-  aiCoachHeroTitle: {
-    fontSize: 13,
+  raceTimerIconBox: {
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  raceNameText: {
+    fontSize: 16,
     fontWeight: '800',
-    color: '#ffffff',
+    color: '#131b2e',
     letterSpacing: -0.2,
   },
-  aiCoachHeroSub: {
-    fontSize: 10,
-    color: '#e9d5ff',
-    lineHeight: 14,
-    fontWeight: '400',
+  daysLeftBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+    backgroundColor: '#ea580c',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 20,
+    shadowColor: '#9a3412',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 0,
+    elevation: 2,
+    borderBottomWidth: 2.5,
+    borderBottomColor: '#9a3412',
+  },
+  daysLeftText: {
+    fontSize: 12,
+    fontWeight: '900',
+    color: '#ffffff',
+    letterSpacing: 0.4,
   },
   streakSection: {
     backgroundColor: '#ffffff',
