@@ -601,7 +601,7 @@ export default function OnboardingQuestionnaireScreen({ onComplete, onBackToLogi
         </TouchableOpacity>
       ))}
 
-      <Text style={styles.questionLabel}>Any ongoing injuries or niggles? (Optional)</Text>
+      <Text style={styles.questionLabel}>Any ongoing injuries? (Optional)</Text>
       <View style={[styles.inputWrapper, { height: 80, alignItems: 'flex-start', paddingTop: 10 }]}>
         <TextInput
           style={[styles.inputField, { textAlignVertical: 'top' }]}
@@ -686,8 +686,8 @@ export default function OnboardingQuestionnaireScreen({ onComplete, onBackToLogi
                   {isSaving
                     ? 'Saving Profile...'
                     : currentStep === totalSteps
-                    ? 'Complete Setup'
-                    : 'Next Step →'}
+                      ? 'Complete Setup'
+                      : 'Next Step →'}
                 </Text>
               </LinearGradient>
             </TouchableOpacity>

@@ -28,6 +28,95 @@ export default function CoachMayaModal({ visible, onClose, onLogout, currentUser
   const [inputText, setInputText] = useState('');
   const [isTyping, setIsTyping] = useState(false);
 
+  const [playingId, setPlayingId] = useState(null);
+  const [audioObj, setAudioObj] = useState(null);
+
+  const stopCurrentAudio = () => {
+    if (audioObj) {
+      try {
+        audioObj.pause();
+        audioObj.currentTime = 0;
+      } catch (e) {}
+      setAudioObj(null);
+    }
+    if (typeof window !== 'undefined' && window.speechSynthesis) {
+      window.speechSynthesis.cancel();
+    }
+    setPlayingId(null);
+  };
+
+  const cleanTextForSpeech = (str) => {
+    return str
+      ? str
+          .replace(/[*_~`#]/g, '')
+          .replace(/([\u2700-\u27BF]|[\uE000-\uF8FF]|\uD83C[\uDC00-\uDFFF]|\uD83D[\uDC00-\uDFFF]|[\u2011-\u26FF]|\uD83E[\uDD10-\uDDFF])/g, '')
+          .replace(/\s+/g, ' ')
+          .trim()
+      : '';
+  };
+
+  const handlePlayAudio = async (msgId, text) => {
+    if (playingId === msgId) {
+      stopCurrentAudio();
+      return;
+    }
+
+    stopCurrentAudio();
+    setPlayingId(msgId);
+
+    const speechText = cleanTextForSpeech(text);
+    if (!speechText) {
+      setPlayingId(null);
+      return;
+    }
+
+    // Try ElevenLabs backend TTS first
+    try {
+      const response = await fetch('http://localhost:8000/api/tts', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ text: speechText }),
+      });
+
+      if (response.ok) {
+        const blob = await response.blob();
+        const audioUrl = URL.createObjectURL(blob);
+        const newAudio = new Audio(audioUrl);
+        
+        newAudio.onended = () => {
+          setPlayingId(null);
+          setAudioObj(null);
+        };
+        newAudio.onerror = () => {
+          fallbackWebSpeech(speechText, msgId);
+        };
+
+        setAudioObj(newAudio);
+        await newAudio.play();
+        return;
+      }
+    } catch (err) {
+      console.log('ElevenLabs backend TTS error, using fallback Speech Synthesis:', err);
+    }
+
+    // Fallback using Browser Speech Synthesis API
+    fallbackWebSpeech(speechText, msgId);
+  };
+
+  const fallbackWebSpeech = (text, msgId) => {
+    if (typeof window !== 'undefined' && window.speechSynthesis) {
+      window.speechSynthesis.cancel();
+      const utterance = new SpeechSynthesisUtterance(text);
+      utterance.rate = 1.0;
+      utterance.pitch = 1.0;
+      utterance.onend = () => setPlayingId(null);
+      utterance.onerror = () => setPlayingId(null);
+      window.speechSynthesis.speak(utterance);
+    } else {
+      setPlayingId(null);
+    }
+  };
+
   const quickPrompts = [
     'Why swap to Zone 2?',
     'Legs feel great!',
@@ -162,18 +251,41 @@ export default function CoachMayaModal({ visible, onClose, onLogout, currentUser
               <View
                 key={msg.id}
                 style={[
-                  styles.msgBubble,
-                  msg.sender === 'user' ? styles.userMsgBubble : styles.mayaMsgBubble,
+                  styles.msgBubbleWrap,
+                  msg.sender === 'user' ? styles.userMsgWrap : styles.mayaMsgWrap,
                 ]}
               >
-                <Text
+                <View
                   style={[
-                    styles.msgText,
-                    msg.sender === 'user' ? styles.userMsgText : styles.mayaMsgText,
+                    styles.msgBubble,
+                    msg.sender === 'user' ? styles.userMsgBubble : styles.mayaMsgBubble,
                   ]}
                 >
-                  {msg.text}
-                </Text>
+                  <Text
+                    style={[
+                      styles.msgText,
+                      msg.sender === 'user' ? styles.userMsgText : styles.mayaMsgText,
+                    ]}
+                  >
+                    {msg.text}
+                  </Text>
+                  {msg.sender === 'maya' && (
+                    <TouchableOpacity
+                      style={styles.speakerBtn}
+                      onPress={() => handlePlayAudio(msg.id, msg.text)}
+                      activeOpacity={0.7}
+                    >
+                      <Ionicons
+                        name={playingId === msg.id ? 'stop-circle' : 'volume-medium'}
+                        size={16}
+                        color={playingId === msg.id ? '#059669' : '#0d9488'}
+                      />
+                      <Text style={[styles.speakerBtnText, playingId === msg.id && { color: '#059669' }]}>
+                        {playingId === msg.id ? 'Stop' : 'Listen'}
+                      </Text>
+                    </TouchableOpacity>
+                  )}
+                </View>
               </View>
             ))}
             {isTyping && (
@@ -323,6 +435,16 @@ const styles = StyleSheet.create({
     paddingVertical: 16,
     gap: 12,
   },
+  msgBubbleWrap: {
+    width: '100%',
+    flexDirection: 'row',
+  },
+  mayaMsgWrap: {
+    justifyContent: 'flex-start',
+  },
+  userMsgWrap: {
+    justifyContent: 'flex-end',
+  },
   msgBubble: {
     maxWidth: '82%',
     padding: 12,
@@ -337,6 +459,24 @@ const styles = StyleSheet.create({
   userMsgBubble: {
     alignSelf: 'flex-end',
     backgroundColor: COLORS.primary,
+  },
+  speakerBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    marginTop: 8,
+    alignSelf: 'flex-start',
+    backgroundColor: '#f0fdf4',
+    borderWidth: 1,
+    borderColor: '#a7f3d0',
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 12,
+  },
+  speakerBtnText: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: '#0d9488',
   },
   msgText: {
     fontSize: 14,
