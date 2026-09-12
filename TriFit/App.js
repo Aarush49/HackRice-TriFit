@@ -119,6 +119,8 @@ export default function App() {
       <SafeAreaView style={styles.safeArea}>
         <StatusBar barStyle="dark-content" backgroundColor="#FAF9F6" />
         <OnboardingQuestionnaireScreen
+          currentUser={currentUser}
+          token={token}
           onComplete={() => setNeedsOnboarding(false)}
           onBackToLogin={handleLogout}
         />

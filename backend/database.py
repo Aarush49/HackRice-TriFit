@@ -32,7 +32,7 @@ def get_db():
     return psycopg2.connect(DATABASE_URL)
 
 def init_db():
-    """Create the users table if it does not exist."""
+    """Create the users and athlete_profiles tables if they do not exist."""
     conn = get_db()
     try:
         with conn.cursor() as cur:
@@ -44,9 +44,28 @@ def init_db():
                     password_hash VARCHAR(255) NOT NULL,
                     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
                 );
+
+                CREATE TABLE IF NOT EXISTS athlete_profiles (
+                    id SERIAL PRIMARY KEY,
+                    user_id INT REFERENCES users(id) ON DELETE CASCADE,
+                    username VARCHAR(100) UNIQUE NOT NULL,
+                    race_type VARCHAR(100),
+                    race_date VARCHAR(50),
+                    is_first_time VARCHAR(10),
+                    previous_time VARCHAR(50),
+                    fitness_level VARCHAR(100),
+                    training_days INT DEFAULT 4,
+                    equipment JSONB,
+                    baseline_metrics JSONB,
+                    sleep_hours VARCHAR(50),
+                    stress_level VARCHAR(100),
+                    injuries TEXT,
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                );
             """)
             conn.commit()
-            print("[DB] Users table initialized successfully.")
+            print("[DB] Users and Athlete Profiles tables initialized successfully.")
     except Exception as e:
         conn.rollback()
         print(f"[DB ERROR] {e}")
