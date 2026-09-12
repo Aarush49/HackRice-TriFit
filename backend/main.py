@@ -380,6 +380,8 @@ def clean_markdown_for_speech(text: str) -> str:
     text = re.sub(r'[*_~`#]', '', text)
     # Remove bullet markers at line starts
     text = re.sub(r'^\s*[-+*]\s+', '', text, flags=re.MULTILINE)
+    # Remove emojis and special unicode symbols
+    text = re.sub(r'[\U00010000-\U0010ffff\u2600-\u27ff\u2300-\u23ff\u2000-\u206f\u2b00-\u2bff]', '', text)
     # Normalize space & newline sequences
     text = re.sub(r'\s+', ' ', text)
     return text.strip()
@@ -480,6 +482,40 @@ Instructions:
                 "Content-Disposition": "inline; filename=training_plan.mp3",
                 "X-Training-Plan-Text": clean_text
             }
+        )
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"ElevenLabs TTS generation failed: {str(e)}")
+
+class TTSRequest(BaseModel):
+    text: str
+    voice_id: Optional[str] = None
+
+@app.post("/api/tts")
+@app.post("/tts")
+def text_to_speech(data: TTSRequest):
+    """
+    Converts given text to speech using ElevenLabs API and streams the MP3 audio back.
+    """
+    if not eleven_client:
+        raise HTTPException(status_code=500, detail="ElevenLabs API key is missing or client is not initialized.")
+    
+    clean_text = clean_markdown_for_speech(data.text)
+    if not clean_text:
+        raise HTTPException(status_code=400, detail="Text is empty")
+
+    voice_id = data.voice_id or os.getenv("ELEVENLABS_VOICE_ID", "21m00Tcm4TlvDq8ikWAM")  # Default Rachel voice
+
+    try:
+        audio_stream = eleven_client.text_to_speech.convert(
+            voice_id=voice_id,
+            text=clean_text,
+            model_id="eleven_multilingual_v2",
+            output_format="mp3_44100_128"
+        )
+        return StreamingResponse(
+            audio_stream,
+            media_type="audio/mpeg",
+            headers={"Content-Disposition": "inline; filename=speech.mp3"}
         )
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"ElevenLabs TTS generation failed: {str(e)}")

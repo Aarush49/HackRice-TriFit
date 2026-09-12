@@ -8,6 +8,7 @@ _current_dir = Path(__file__).resolve().parent
 _parent_dir = _current_dir.parent
 
 for _env_file in [
+    _current_dir / "tests" / ".env",
     _current_dir / "tiger-cloud-trifit-credentials.env.local",
     _parent_dir / "tiger-cloud-trifit-credentials.env.local",
     _current_dir / "tiger-cloud-trifit-credentials.env",
