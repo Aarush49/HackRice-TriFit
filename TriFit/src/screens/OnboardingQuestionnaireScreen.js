@@ -50,7 +50,10 @@ export default function OnboardingQuestionnaireScreen({ onComplete, onBackToLogi
     }
   };
 
-  const isTriathlon = raceType && raceType.toLowerCase().includes('triathlon');
+  const isTriathlon =
+    raceType &&
+    (raceType.toLowerCase().includes('triathlon') ||
+      raceType.toLowerCase().includes('ironman'));
   const isHyrox = raceType === 'Hyrox';
 
   const validateCurrentStep = () => {
@@ -303,11 +306,10 @@ export default function OnboardingQuestionnaireScreen({ onComplete, onBackToLogi
               style={styles.inputField}
               placeholder="e.g. 2:30:00"
               placeholderTextColor="#94a3b8"
-              keyboardType="numbers-and-punctuation"
               value={previousTime}
               onChangeText={(val) => {
                 setValidationError('');
-                setPreviousTime(val.replace(/[^0-9:]/g, ''));
+                setPreviousTime(val);
               }}
             />
           </View>
@@ -451,29 +453,25 @@ export default function OnboardingQuestionnaireScreen({ onComplete, onBackToLogi
               style={styles.inputField}
               placeholder="e.g. 7:30"
               placeholderTextColor="#94a3b8"
-              keyboardType="numbers-and-punctuation"
-              inputMode="decimal"
               value={swimPace}
               onChangeText={(val) => {
                 setValidationError('');
-                setSwimPace(val.replace(/[^0-9:]/g, ''));
+                setSwimPace(val);
               }}
             />
           </View>
 
-          <Text style={styles.questionLabel}>Current Cycling FTP or 20min Power (watts only) *</Text>
+          <Text style={styles.questionLabel}>Current Cycling FTP or 20min Power (watts) *</Text>
           <View style={styles.inputWrapper}>
             <Ionicons name="bicycle" size={18} color="#94a3b8" style={styles.inputIcon} />
             <TextInput
               style={styles.inputField}
               placeholder="e.g. 220"
               placeholderTextColor="#94a3b8"
-              keyboardType="number-pad"
-              inputMode="numeric"
               value={bikeFtp}
               onChangeText={(val) => {
                 setValidationError('');
-                setBikeFtp(val.replace(/[^0-9]/g, ''));
+                setBikeFtp(val);
               }}
             />
           </View>
@@ -485,12 +483,10 @@ export default function OnboardingQuestionnaireScreen({ onComplete, onBackToLogi
               style={styles.inputField}
               placeholder="e.g. 5:00"
               placeholderTextColor="#94a3b8"
-              keyboardType="numbers-and-punctuation"
-              inputMode="decimal"
               value={runPace}
               onChangeText={(val) => {
                 setValidationError('');
-                setRunPace(val.replace(/[^0-9:]/g, ''));
+                setRunPace(val);
               }}
             />
           </View>
@@ -504,12 +500,10 @@ export default function OnboardingQuestionnaireScreen({ onComplete, onBackToLogi
               style={styles.inputField}
               placeholder="e.g. 24:00"
               placeholderTextColor="#94a3b8"
-              keyboardType="numbers-and-punctuation"
-              inputMode="decimal"
               value={runPace}
               onChangeText={(val) => {
                 setValidationError('');
-                setRunPace(val.replace(/[^0-9:]/g, ''));
+                setRunPace(val);
               }}
             />
           </View>
@@ -623,70 +617,82 @@ export default function OnboardingQuestionnaireScreen({ onComplete, onBackToLogi
 
   return (
     <View style={styles.container}>
+      {Platform.OS === 'web' && (
+        <style>{`
+          input, textarea {
+            -webkit-user-select: text !important;
+            user-select: text !important;
+            touch-action: manipulation !important;
+            pointer-events: auto !important;
+            outline: none !important;
+          }
+          input:focus, textarea:focus {
+            outline: none !important;
+            box-shadow: none !important;
+          }
+        `}</style>
+      )}
       <KeyboardAvoidingView
         style={{ flex: 1 }}
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
         keyboardVerticalOffset={Platform.OS === 'ios' ? 40 : 0}
       >
-        <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
-          <View style={{ flex: 1 }}>
-            <View style={styles.header}>
-              {renderProgressBar()}
-            </View>
-            <ScrollView
-              style={styles.scrollView}
-              contentContainerStyle={styles.scrollContent}
-              showsVerticalScrollIndicator={false}
-              keyboardShouldPersistTaps="handled"
-              keyboardDismissMode="on-drag"
-            >
-              {currentStep === 1 && renderStep1()}
-              {currentStep === 2 && renderStep2()}
-              {currentStep === 3 && renderStep3()}
-              {currentStep === 4 && renderStep4()}
-            </ScrollView>
-
-            {validationError ? (
-              <View style={styles.validationErrorBanner}>
-                <Ionicons name="alert-circle" size={18} color="#dc2626" />
-                <Text style={styles.validationErrorText}>{validationError}</Text>
-              </View>
-            ) : null}
-
-            <View style={styles.footer}>
-              <TouchableOpacity
-                style={styles.navBtn}
-                onPress={handleBack}
-                activeOpacity={0.7}
-              >
-                <Text style={styles.navBtnText}>
-                  {currentStep === 1 ? '← Back to Login' : '← Back'}
-                </Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={styles.nextBtn}
-                onPress={handleNext}
-                activeOpacity={0.85}
-                disabled={isSaving}
-              >
-                <LinearGradient
-                  colors={['#0d9488', '#0f766e']}
-                  start={{ x: 0, y: 0 }}
-                  end={{ x: 1, y: 0 }}
-                  style={styles.nextGradient}
-                >
-                  <Text style={styles.nextBtnText}>
-                    {isSaving
-                      ? 'Saving Profile...'
-                      : currentStep === totalSteps
-                      ? 'Complete Setup'
-                      : 'Next Step →'}
-                  </Text>
-                </LinearGradient>
-              </TouchableOpacity>
-            </View>
+        <View style={{ flex: 1 }}>
+          <View style={styles.header}>
+            {renderProgressBar()}
           </View>
-        </TouchableWithoutFeedback>
+          <ScrollView
+            style={styles.scrollView}
+            contentContainerStyle={styles.scrollContent}
+            showsVerticalScrollIndicator={false}
+            keyboardShouldPersistTaps="handled"
+          >
+            {currentStep === 1 && renderStep1()}
+            {currentStep === 2 && renderStep2()}
+            {currentStep === 3 && renderStep3()}
+            {currentStep === 4 && renderStep4()}
+          </ScrollView>
+
+          {validationError ? (
+            <View style={styles.validationErrorBanner}>
+              <Ionicons name="alert-circle" size={18} color="#dc2626" />
+              <Text style={styles.validationErrorText}>{validationError}</Text>
+            </View>
+          ) : null}
+
+          <View style={styles.footer}>
+            <TouchableOpacity
+              style={styles.navBtn}
+              onPress={handleBack}
+              activeOpacity={0.7}
+            >
+              <Text style={styles.navBtnText}>
+                {currentStep === 1 ? '← Back to Login' : '← Back'}
+              </Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={styles.nextBtn}
+              onPress={handleNext}
+              activeOpacity={0.85}
+              disabled={isSaving}
+            >
+              <LinearGradient
+                colors={['#0d9488', '#0f766e']}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 0 }}
+                style={styles.nextGradient}
+              >
+                <Text style={styles.nextBtnText}>
+                  {isSaving
+                    ? 'Saving Profile...'
+                    : currentStep === totalSteps
+                    ? 'Complete Setup'
+                    : 'Next Step →'}
+                </Text>
+              </LinearGradient>
+            </TouchableOpacity>
+          </View>
+        </View>
       </KeyboardAvoidingView>
     </View>
   );
