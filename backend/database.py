@@ -93,9 +93,48 @@ def init_db():
                     zone2_minutes INT DEFAULT 45,
                     synced_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
                 );
+
+                CREATE TABLE IF NOT EXISTS scheduled_events (
+                    id SERIAL PRIMARY KEY,
+                    user_id INT REFERENCES users(id) ON DELETE CASCADE,
+                    username VARCHAR(100) NOT NULL,
+                    event_date DATE NOT NULL,
+                    day_number INT NOT NULL,
+                    workout_type VARCHAR(100) NOT NULL,
+                    description TEXT,
+                    icon VARCHAR(50) DEFAULT 'run',
+                    icon_type VARCHAR(20) DEFAULT 'mc',
+                    icon_color VARCHAR(30) DEFAULT '#00685f',
+                    icon_bg VARCHAR(30) DEFAULT '#89f5e7',
+                    status VARCHAR(20) DEFAULT 'planned',
+                    completed_at TIMESTAMP,
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                    UNIQUE (username, event_date)
+                );
+
+                CREATE INDEX IF NOT EXISTS idx_scheduled_events_user_date ON scheduled_events(username, event_date);
+
+                -- Ensure columns exist if table was already created
+                ALTER TABLE scheduled_events ADD COLUMN IF NOT EXISTS status VARCHAR(20) DEFAULT 'planned';
+                ALTER TABLE scheduled_events ADD COLUMN IF NOT EXISTS icon VARCHAR(50) DEFAULT 'run';
+                ALTER TABLE scheduled_events ADD COLUMN IF NOT EXISTS icon_type VARCHAR(20) DEFAULT 'mc';
+                ALTER TABLE scheduled_events ADD COLUMN IF NOT EXISTS icon_color VARCHAR(30) DEFAULT '#00685f';
+                ALTER TABLE scheduled_events ADD COLUMN IF NOT EXISTS icon_bg VARCHAR(30) DEFAULT '#89f5e7';
+                ALTER TABLE scheduled_events ADD COLUMN IF NOT EXISTS is_completed BOOLEAN DEFAULT FALSE;
+
+                -- Seed DemoAccount user and profile
+                INSERT INTO users (username, email, password_hash, xp, streak_days)
+                VALUES ('DemoAccount', 'demo@trifit.io', '$2b$12$eXAMP1eHashForDemoAccountAuthenticationOnly000', 2450, 7)
+                ON CONFLICT (username) DO NOTHING;
+
+                INSERT INTO athlete_profiles (user_id, username, race_type, race_date, fitness_level, training_days)
+                SELECT id, 'DemoAccount', 'Hyrox Open / Pro', 'November 15, 2026', 'Intermediate', 5
+                FROM users WHERE username = 'DemoAccount'
+                ON CONFLICT (username) DO NOTHING;
             """)
             conn.commit()
-            print("[DB] Users, Athlete Profiles, Training Plans, and Wearable Metrics tables initialized successfully.")
+            print("[DB] Users, Athlete Profiles, Training Plans, Scheduled Events, and Wearables tables initialized successfully.")
     except Exception as e:
         conn.rollback()
         print(f"[DB ERROR] {e}")

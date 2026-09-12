@@ -11,10 +11,9 @@ import CoachMayaModal from './src/components/CoachMayaModal';
 import ActiveRunModal from './src/components/ActiveRunModal';
 import AthleteProfileModal from './src/components/AthleteProfileModal';
 import AuthModal from './src/components/AuthModal';
-import TrainingScheduleScreen from './src/screens/TrainingScheduleScreen';
+import TrainingScheduleScreen, { getSportTrainingPlan } from './src/screens/TrainingScheduleScreen';
 import ProgressDashboardScreen from './src/screens/ProgressDashboardScreen';
 import { COLORS } from './src/theme';
-import API_BASE_URL from './src/config';
 
 export default function App() {
   const [showSplash, setShowSplash] = useState(true);
@@ -29,6 +28,10 @@ export default function App() {
   const [token, setToken] = useState(null);
   const [xp, setXp] = useState(0);
   const [streakDays, setStreakDays] = useState(0);
+  const [selectedDay, setSelectedDay] = useState(12);
+  const [trainingPlan, setTrainingPlan] = useState(null);
+  const [adaptedPlan, setAdaptedPlan] = useState(null);
+  const [dbEvents, setDbEvents] = useState([]);
   const [userProfile, setUserProfile] = useState({
     name: '',
     email: '',
@@ -36,10 +39,50 @@ export default function App() {
     race_date: '',
   });
 
+  const fetchDbEvents = async () => {
+    const username = currentUser?.username || 'DemoAccount';
+    try {
+      const res = await fetch(`http://localhost:8000/api/events?username=${username}&month=9`);
+      const data = await res.json();
+      if (data.success && data.events) {
+        setDbEvents(data.events);
+      }
+    } catch (e) {
+      console.error('Failed to fetch scheduled events:', e);
+    }
+  };
+
+  React.useEffect(() => {
+    if (isLoggedIn) {
+      fetchDbEvents();
+    }
+  }, [isLoggedIn, currentUser?.username]);
+
+  React.useEffect(() => {
+    if (!isLoggedIn) return;
+    const fetchSharedPlan = async () => {
+      const username = currentUser?.username || 'DemoAccount';
+      try {
+        let res = await fetch(`http://localhost:8000/api/plan/current?username=${username}`);
+        let data = await res.json();
+        if (data.success && data.plan?.plan_data) {
+          setTrainingPlan(data.plan.plan_data);
+          return;
+        }
+      } catch (e) {
+        console.log('Could not fetch shared plan from backend:', e);
+      }
+      const race = userProfile?.race_type || 'Hyrox Open / Pro';
+      const date = userProfile?.race_date || 'November 15, 2026';
+      setTrainingPlan(getSportTrainingPlan(race, date));
+    };
+    fetchSharedPlan();
+  }, [isLoggedIn, currentUser?.username, userProfile?.race_type]);
+
   const fetchUserStats = async (username) => {
     if (!username) return;
     try {
-      const res = await fetch(`${API_BASE_URL}/api/user-stats?username=${encodeURIComponent(username)}`);
+      const res = await fetch(`http://localhost:8000/api/user-stats?username=${encodeURIComponent(username)}`);
       if (res.ok) {
         const data = await res.json();
         if (data.user) {
@@ -63,6 +106,19 @@ export default function App() {
     }
   };
 
+  const handleUpdateProfile = (updated) => {
+    setUserProfile((prev) => ({ ...prev, ...updated }));
+    if (updated.name) {
+      setCurrentUser((prev) => (prev ? { ...prev, name: updated.name, username: updated.name } : prev));
+    }
+    if (updated.xp !== undefined) {
+      setXp(updated.xp);
+    }
+    if (updated.streak_days !== undefined) {
+      setStreakDays(updated.streak_days);
+    }
+  };
+
   const handleLoginSuccess = async (userData) => {
     const name = userData?.username || userData?.name || userData?.email?.split('@')[0] || '';
     const email = userData?.email || '';
@@ -83,6 +139,7 @@ export default function App() {
     } else {
       await fetchUserStats(userData?.username || name);
     }
+    fetchDbEvents();
 
     // Only show onboarding when creating a new account (signup)
     if (userData?.isSignup) {
@@ -105,22 +162,32 @@ export default function App() {
   };
 
   const handleFinishRun = async () => {
-    setXp((prev) => prev + 120);
-    setStreakDays((prev) => (prev === 0 ? 1 : prev));
-    if (currentUser?.username) {
-      try {
-        await fetch(`${API_BASE_URL}/api/add-xp`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            username: currentUser.username,
-            xp_to_add: 120,
-            increment_streak: true,
-          }),
-        });
-      } catch (err) {
-        console.log('Error syncing run xp:', err);
+    const username = currentUser?.username || 'DemoAccount';
+    try {
+      const res = await fetch('http://localhost:8000/api/events/complete', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          username,
+          day_number: 12,
+          event_date: '2026-09-12',
+          xp_awarded: 120,
+        }),
+      });
+      const data = await res.json();
+      if (data.success && data.user) {
+        setXp(data.user.xp);
+        setStreakDays(data.user.streak_days);
+      } else {
+        setXp((prev) => prev + 120);
+        setStreakDays((prev) => (prev === 0 ? 1 : prev));
       }
+    } catch (err) {
+      console.log('Error completing event from run modal:', err);
+      setXp((prev) => prev + 120);
+      setStreakDays((prev) => (prev === 0 ? 1 : prev));
+    } finally {
+      fetchDbEvents();
     }
   };
 
@@ -235,20 +302,38 @@ export default function App() {
           <DailyMissionsScreen
             currentUser={currentUser}
             userProfile={userProfile}
+            trainingPlan={trainingPlan}
+            adaptedPlan={adaptedPlan}
+            selectedDay={selectedDay}
+            onSelectDay={setSelectedDay}
+            onUpdatePlan={setTrainingPlan}
+            onUpdateAdaptedPlan={setAdaptedPlan}
             onStartRun={() => setRunVisible(true)}
             onOpenCoach={() => setCoachVisible(true)}
             onNavigateToSchedule={() => setActiveTab('schedule')}
             xp={xp}
             setXp={setXp}
             streakDays={streakDays}
+            dbEvents={dbEvents}
+            onRefreshEvents={fetchDbEvents}
+            onUpdateProfile={handleUpdateProfile}
           />
         )}
         {activeTab === 'schedule' && (
           <TrainingScheduleScreen
             currentUser={currentUser}
             userProfile={userProfile}
+            trainingPlan={trainingPlan}
+            adaptedPlan={adaptedPlan}
+            selectedDay={selectedDay}
+            onSelectDay={setSelectedDay}
+            onUpdatePlan={setTrainingPlan}
+            onUpdateAdaptedPlan={setAdaptedPlan}
+            onUpdateProfile={handleUpdateProfile}
             onStartWorkout={() => setRunVisible(true)}
             onOpenCoach={() => setCoachVisible(true)}
+            dbEvents={dbEvents}
+            onRefreshEvents={fetchDbEvents}
           />
         )}
         {(activeTab === 'recovery' || activeTab === 'longevity') && (
@@ -290,12 +375,7 @@ export default function App() {
         onClose={() => setProfileVisible(false)}
         onLogout={handleLogout}
         userProfile={userProfile}
-        onUpdateProfile={(updated) => {
-          setUserProfile((prev) => ({ ...prev, ...updated }));
-          if (updated.name) {
-            setCurrentUser((prev) => (prev ? { ...prev, name: updated.name, username: updated.name } : prev));
-          }
-        }}
+        onUpdateProfile={handleUpdateProfile}
         xp={xp}
         streakDays={streakDays}
       />

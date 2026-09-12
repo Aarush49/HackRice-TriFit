@@ -4,6 +4,8 @@ import {
   Text,
   StyleSheet,
   ScrollView,
+  TouchableOpacity,
+  Image,
   useWindowDimensions,
   Animated,
 } from 'react-native';
@@ -11,8 +13,9 @@ import Svg, { Circle } from 'react-native-svg';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { COLORS } from '../theme';
-import API_BASE_URL from '../config';
 import { PopInView, ScrollPopView, BouncyButton } from '../components/AnimatedComponents';
+import { getSportTrainingPlan } from './TrainingScheduleScreen';
+
 const getWorkoutTags = (workout_type) => {
   const wtype = (workout_type || '').toLowerCase();
   if (wtype.includes('rest') || wtype.includes('recovery')) {
@@ -60,12 +63,21 @@ const getWorkoutTags = (workout_type) => {
 export default function DailyMissionsScreen({
   currentUser,
   userProfile,
+  trainingPlan,
+  adaptedPlan,
+  selectedDay = 12,
+  onSelectDay,
+  onUpdatePlan,
+  onUpdateAdaptedPlan,
   onStartRun,
   onOpenCoach,
   onNavigateToSchedule,
   xp = 420,
   setXp,
   streakDays = 14,
+  dbEvents = [],
+  onRefreshEvents,
+  onUpdateProfile,
 }) {
   const { width } = useWindowDimensions();
   const isWide = width >= 768;
@@ -73,8 +85,8 @@ export default function DailyMissionsScreen({
   // Track completed side habits
   const [completedHabits, setCompletedHabits] = useState({});
   const [activeScale] = useState(new Animated.Value(1));
-  const [aiPlan, setAiPlan] = useState(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const [aiPlan, setAiPlan] = useState(trainingPlan || null);
+  const [isLoading, setIsLoading] = useState(!trainingPlan);
   const [wearableData, setWearableData] = useState({
     readiness_score: 88,
     hrv_ms: 64,
@@ -85,10 +97,17 @@ export default function DailyMissionsScreen({
   });
   const [isSyncing, setIsSyncing] = useState(false);
 
+  React.useEffect(() => {
+    if (trainingPlan) {
+      setAiPlan(trainingPlan);
+      setIsLoading(false);
+    }
+  }, [trainingPlan]);
+
   const fetchWearableData = async () => {
-    const username = currentUser?.username || 'testuser2';
+    const username = currentUser?.username || 'DemoAccount';
     try {
-      const res = await fetch(`${API_BASE_URL}/api/wearables/current?username=${username}`);
+      const res = await fetch(`http://localhost:8000/api/wearables/current?username=${username}`);
       const data = await res.json();
       if (data.success && data.metrics) {
         setWearableData(data.metrics);
@@ -100,9 +119,9 @@ export default function DailyMissionsScreen({
 
   const handleSyncWearables = async () => {
     setIsSyncing(true);
-    const username = currentUser?.username || 'testuser2';
+    const username = currentUser?.username || 'DemoAccount';
     try {
-      const res = await fetch(`${API_BASE_URL}/api/wearables/sync-simulated?username=${username}`, { method: 'POST' });
+      const res = await fetch(`http://localhost:8000/api/wearables/sync-simulated?username=${username}`, { method: 'POST' });
       const data = await res.json();
       if (data.success && data.wearable) {
         setWearableData(data.wearable);
@@ -116,40 +135,84 @@ export default function DailyMissionsScreen({
 
   React.useEffect(() => {
     const fetchOrGeneratePlan = async () => {
-      setIsLoading(true);
-      const username = currentUser?.username || 'testuser2';
+      const username = currentUser?.username || 'DemoAccount';
       try {
-        let res = await fetch(`${API_BASE_URL}/api/plan/current?username=${username}`);
+        let res = await fetch(`http://localhost:8000/api/plan/current?username=${username}`);
         let data = await res.json();
-        if (!data.success) {
-          res = await fetch(`${API_BASE_URL}/api/plan/generate?username=${username}`, { method: 'POST' });
+        if (!data.success || !data.plan || !data.plan.plan_data) {
+          const race = userProfile?.race_type || 'Hyrox Open / Pro';
+          const date = userProfile?.race_date || 'November 15, 2026';
+          res = await fetch(`http://localhost:8000/api/plan/generate?username=${username}&race_type=${encodeURIComponent(race)}&race_date=${encodeURIComponent(date)}`, { method: 'POST' });
           data = await res.json();
         }
-        if (data.success && data.plan && data.plan.plan_data) setAiPlan(data.plan.plan_data);
+        if (data.success && data.plan && data.plan.plan_data) {
+          setAiPlan(data.plan.plan_data);
+          if (onUpdatePlan) onUpdatePlan(data.plan.plan_data);
+        } else {
+          const race = userProfile?.race_type || 'Hyrox Open / Pro';
+          const date = userProfile?.race_date || 'November 15, 2026';
+          const fallbackPlan = getSportTrainingPlan(race, date);
+          setAiPlan(fallbackPlan);
+          if (onUpdatePlan) onUpdatePlan(fallbackPlan);
+        }
       } catch (e) {
         console.error('Failed to fetch plan:', e);
+        const race = userProfile?.race_type || 'Hyrox Open / Pro';
+        const date = userProfile?.race_date || 'November 15, 2026';
+        setAiPlan(getSportTrainingPlan(race, date));
       } finally {
         setIsLoading(false);
       }
     };
-    fetchOrGeneratePlan();
+    if (!trainingPlan) {
+      fetchOrGeneratePlan();
+    }
     fetchWearableData();
-  }, [currentUser]);
+  }, [currentUser, trainingPlan, userProfile?.race_type]);
 
-  const todayDayIndex = 5; // Saturday Sep 12th corresponds to Day 6 (index 5) in week strip
-  const rawTodayWorkout = aiPlan?.weeks?.[0]?.days?.[todayDayIndex] || {
-    workout_type: 'Zone 2 Base Run & Strides',
-    description: '45m Zone 2 Aerobic Base • 5x100m Strides • Tendon Adaptations'
+  const effectivePlan = trainingPlan || aiPlan;
+  const isTodaySelected = selectedDay === 12;
+
+  const currentEvent = dbEvents.find(e => e.day_number === selectedDay);
+  const isEventCompleted = currentEvent ? (currentEvent.status === 'completed' || currentEvent.is_completed) : false;
+
+  // Day 7 = Mon (0), Day 8 = Tue (1), Day 9 = Wed (2), Day 10 = Thu (3), Day 11 = Fri (4), Day 12 = Sat (5 - Today), Day 13 = Sun (6)
+  let dayIndex = 5;
+  if (selectedDay >= 7 && selectedDay <= 13) {
+    dayIndex = selectedDay - 7;
+  } else if (selectedDay >= 1 && selectedDay <= 31) {
+    dayIndex = (selectedDay - 1) % 7;
+  }
+
+  const rawDayWorkout = {
+    workout_type: currentEvent?.workout_type || effectivePlan?.weeks?.[0]?.days?.[dayIndex]?.workout_type || 'Compromised Run',
+    description: currentEvent?.description || effectivePlan?.weeks?.[0]?.days?.[dayIndex]?.description || '4 x 800m run with 100 Wall Balls (6kg) buy-in'
   };
 
-  const isRest = (rawTodayWorkout.workout_type || '').toLowerCase().includes('rest') || 
-                 (rawTodayWorkout.workout_type || '').toLowerCase().includes('recovery');
+  let activeWorkoutType = rawDayWorkout.workout_type;
+  let activeDescription = rawDayWorkout.description;
+
+  if (isTodaySelected && adaptedPlan) {
+    if (adaptedPlan === 'walk') {
+      activeWorkoutType = 'Active Walk & Form Recovery';
+      activeDescription = 'Gentle outdoor walk to keep tendons supple';
+    } else if (adaptedPlan === 'ease') {
+      activeWorkoutType = 'Zone 1-2 Easy Aerobic Recovery';
+      activeDescription = 'Dialed back 30% intensity for fresh legs';
+    } else if (adaptedPlan === 'rest') {
+      activeWorkoutType = 'Full Rest & Cellular Regeneration';
+      activeDescription = 'Sleep, hydrate, and let mitochondria rebuild';
+    }
+  }
+
+  const isRest = (activeWorkoutType || '').toLowerCase().includes('rest') || 
+                 (activeWorkoutType || '').toLowerCase().includes('recovery') || 
+                 (isTodaySelected && adaptedPlan === 'rest');
 
   const todayWorkout = {
-    ...rawTodayWorkout,
-    description: isRest 
-      ? 'Day of light stretching and recovery for tomorrow' 
-      : rawTodayWorkout.description
+    ...rawDayWorkout,
+    workout_type: activeWorkoutType,
+    description: activeDescription
   };
 
   const rawDesc = todayWorkout?.description || '';
@@ -168,6 +231,17 @@ export default function DailyMissionsScreen({
         pillBg: '#f1f5f9',
         pillText: '#475569',
         duration: 'Rest Day',
+      };
+    } else if (wtype.includes('walk')) {
+      return {
+        isRest: false,
+        icon: 'walk',
+        iconColors: ['#0d9488', '#0f766e'],
+        cardColors: ['#ffffff', '#f0fdfa'],
+        borderColor: '#14b8a6',
+        pillBg: '#ccfbf1',
+        pillText: '#0f766e',
+        duration: '25 min',
       };
     } else if (wtype.includes('swim')) {
       return {
@@ -252,8 +326,10 @@ export default function DailyMissionsScreen({
 
   const isStepsDone = (wearableData.steps || 0) >= 8000 || !!completedHabits['habit_2'];
   const completedCount = 1 + Object.values(completedHabits).filter(Boolean).length + (isStepsDone && !completedHabits['habit_2'] ? 1 : 0);
-  const targetRace = userProfile?.race_type ? userProfile.race_type.toUpperCase() : 'HYROX BUILD';
-  const planDay = streakDays > 0 ? streakDays : 1;
+  const targetRace = (
+    userProfile?.race_type || 
+    (effectivePlan?.goal ? effectivePlan.goal.replace('Prepare for ', '').split(' by ')[0] : 'HYROX OPEN / PRO')
+  ).toUpperCase();
 
   return (
     <ScrollView
@@ -271,15 +347,39 @@ export default function DailyMissionsScreen({
                 <Text style={styles.categoryPillText}>{targetRace}</Text>
               </View>
             </View>
-            <Text style={styles.headingTitle}>Today's Mission</Text>
+            <Text style={styles.headingTitle}>
+              {isTodaySelected ? "Today's Mission" : `Day ${selectedDay} Mission`}
+            </Text>
           </View>
 
           <View style={styles.dayBadge}>
             <Ionicons name="calendar-outline" size={13} color={COLORS.primary} />
-            <Text style={styles.dayBadgeText}>Day {planDay} of 90</Text>
+            <Text style={styles.dayBadgeText}>
+              {isTodaySelected ? 'Day 12 • Today' : `Day ${selectedDay} • Scheduled`}
+            </Text>
           </View>
         </View>
       </PopInView>
+
+      {/* If viewing a different day, show a banner to easily switch back to today */}
+      {!isTodaySelected && (
+        <View style={styles.notTodayBanner}>
+          <View style={styles.notTodayBannerLeft}>
+            <Ionicons name="calendar" size={16} color="#00685f" />
+            <Text style={styles.notTodayBannerText}>
+              Viewing Day {selectedDay} • {selectedDay < 12 ? 'Past Day (Completed)' : 'Future Day (Locked)'}
+            </Text>
+          </View>
+          <TouchableOpacity
+            style={styles.switchTodayBtn}
+            onPress={() => onSelectDay && onSelectDay(12)}
+            activeOpacity={0.8}
+          >
+            <Ionicons name="arrow-undo" size={13} color="#ffffff" style={{ marginRight: 4 }} />
+            <Text style={styles.switchTodayBtnText}>Switch to Today</Text>
+          </TouchableOpacity>
+        </View>
+      )}
 
       {/* 2. Bento 1: Daily Readiness & Progress Gauge Card */}
       <PopInView delay={90} style={styles.readinessCard}>
@@ -447,23 +547,66 @@ export default function DailyMissionsScreen({
             </View>
           </BouncyButton>
 
-          {/* Chunky Vibrant CTA (Hidden on Rest Days) */}
-          {!workoutTheme.isRest && (
-            <BouncyButton
-              onPress={handleStartWorkout}
-              shakeOnPress={true}
-              style={styles.startWorkoutTouch}
-            >
-              <LinearGradient
-                colors={workoutTheme.iconColors}
-                start={{ x: 0, y: 0 }}
-                end={{ x: 1, y: 0 }}
-                style={styles.startWorkoutGradient}
+          {/* Chunky Vibrant CTA (Hidden on Rest Days unless completed, locked on non-today days) */}
+          {workoutTheme.isRest ? (
+            isEventCompleted ? (
+              <View style={[styles.disabledPastBtn, { backgroundColor: '#ecfdf5', borderColor: '#a7f3d0', marginTop: 4 }]}>
+                <Ionicons name="checkmark-circle" size={16} color="#059669" style={{ marginRight: 6 }} />
+                <Text style={[styles.disabledPastText, { color: '#065f46', fontWeight: '700' }]}>Rest Day Logged • Done</Text>
+              </View>
+            ) : null
+          ) : isTodaySelected ? (
+            isEventCompleted ? (
+              <View style={[styles.disabledPastBtn, { backgroundColor: '#ecfdf5', borderColor: '#a7f3d0', marginTop: 4 }]}>
+                <Ionicons name="checkmark-circle" size={18} color="#059669" style={{ marginRight: 6 }} />
+                <Text style={[styles.disabledPastText, { color: '#065f46', fontWeight: '700' }]}>
+                  Session Completed Today • +120 XP
+                </Text>
+              </View>
+            ) : (
+              <BouncyButton
+                onPress={handleStartWorkout}
+                shakeOnPress={true}
+                style={styles.startWorkoutTouch}
               >
-                <Ionicons name="play" size={18} color="#ffffff" style={{ marginRight: 4 }} />
-                <Text style={styles.startWorkoutText}>Start Workout</Text>
-              </LinearGradient>
-            </BouncyButton>
+                <LinearGradient
+                  colors={workoutTheme.iconColors}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 0 }}
+                  style={styles.startWorkoutGradient}
+                >
+                  <Ionicons name="play" size={18} color="#ffffff" style={{ marginRight: 4 }} />
+                  <Text style={styles.startWorkoutText}>Start Workout</Text>
+                </LinearGradient>
+              </BouncyButton>
+            )
+          ) : selectedDay < 12 ? (
+            isEventCompleted ? (
+              <View style={styles.disabledPastBtn}>
+                <Ionicons name="checkmark-circle" size={16} color="#059669" style={{ marginRight: 6 }} />
+                <Text style={styles.disabledPastText}>Session Completed (Day {selectedDay})</Text>
+              </View>
+            ) : (
+              <View style={[styles.disabledPastBtn, { backgroundColor: '#f1f5f9', borderColor: '#cbd5e1' }]}>
+                <Ionicons name="time-outline" size={16} color="#64748b" style={{ marginRight: 6 }} />
+                <Text style={[styles.disabledPastText, { color: '#64748b' }]}>Past Session (Day {selectedDay}) • Not Logged</Text>
+              </View>
+            )
+          ) : (
+            <View style={{ gap: 8, marginTop: 4 }}>
+              <View style={styles.disabledFutureBtn}>
+                <Ionicons name="lock-closed" size={16} color="#64748b" style={{ marginRight: 6 }} />
+                <Text style={styles.disabledFutureText}>Scheduled for Day {selectedDay} • Locked</Text>
+              </View>
+              <TouchableOpacity
+                style={styles.jumpTodaySecondaryBtn}
+                onPress={() => onSelectDay && onSelectDay(12)}
+                activeOpacity={0.8}
+              >
+                <Ionicons name="arrow-undo" size={13} color="#00685f" style={{ marginRight: 5 }} />
+                <Text style={styles.jumpTodaySecondaryText}>Switch to Today to Start Workout</Text>
+              </TouchableOpacity>
+            </View>
           )}
         </LinearGradient>
       </PopInView>
@@ -654,7 +797,7 @@ const styles = StyleSheet.create({
   content: {
     paddingHorizontal: 16,
     paddingTop: 12,
-    paddingBottom: 16,
+    paddingBottom: 32,
     gap: 12,
   },
   wideContent: {
@@ -1275,6 +1418,94 @@ const styles = StyleSheet.create({
     fontSize: 11,
     fontWeight: '700',
     color: '#0f766e',
+  },
+  notTodayBanner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: '#e6f7f5',
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+    borderRadius: 14,
+    borderWidth: 1,
+    borderColor: '#b2ece4',
+    gap: 10,
+  },
+  notTodayBannerLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    flex: 1,
+  },
+  notTodayBannerText: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: '#004c44',
+  },
+  switchTodayBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#00685f',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 8,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
+  },
+  switchTodayBtnText: {
+    fontSize: 12,
+    fontWeight: '800',
+    color: '#ffffff',
+  },
+  disabledPastBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#ecfdf5',
+    borderWidth: 1.5,
+    borderColor: '#a7f3d0',
+    borderRadius: 12,
+    paddingVertical: 12,
+    width: '100%',
+  },
+  disabledPastText: {
+    fontSize: 13.5,
+    fontWeight: '800',
+    color: '#065f46',
+  },
+  disabledFutureBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#f1f5f9',
+    borderWidth: 1.5,
+    borderColor: '#cbd5e1',
+    borderRadius: 12,
+    paddingVertical: 12,
+    width: '100%',
+  },
+  disabledFutureText: {
+    fontSize: 13.5,
+    fontWeight: '800',
+    color: '#64748b',
+  },
+  jumpTodaySecondaryBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#f0fdfa',
+    borderWidth: 1,
+    borderColor: '#99f6e4',
+    borderRadius: 10,
+    paddingVertical: 9,
+    width: '100%',
+  },
+  jumpTodaySecondaryText: {
+    fontSize: 12.5,
+    fontWeight: '700',
+    color: '#00685f',
   },
 });
 
