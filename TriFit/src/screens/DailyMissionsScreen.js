@@ -136,9 +136,10 @@ export default function DailyMissionsScreen({
     fetchWearableData();
   }, [currentUser]);
 
-  const rawTodayWorkout = aiPlan?.weeks?.[0]?.days?.[2] || {
-    workout_type: 'Hyrox Sled & Grip Prep',
-    description: 'Power Endurance • Low Joint Strain'
+  const todayDayIndex = 5; // Saturday Sep 12th corresponds to Day 6 (index 5) in week strip
+  const rawTodayWorkout = aiPlan?.weeks?.[0]?.days?.[todayDayIndex] || {
+    workout_type: 'Zone 2 Base Run & Strides',
+    description: '45m Zone 2 Aerobic Base • 5x100m Strides • Tendon Adaptations'
   };
 
   const isRest = (rawTodayWorkout.workout_type || '').toLowerCase().includes('rest') || 

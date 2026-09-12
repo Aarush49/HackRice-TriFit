@@ -109,68 +109,61 @@ export default function TrainingScheduleScreen({ currentUser, userProfile, onSta
     fetchOrGeneratePlan();
   }, [currentUser]);
 
-  const days = [
-    { day: 'W', date: 12, status: 'today', icon: 'run', iconType: 'mc', bg: COLORS.primary, iconColor: COLORS.primary, iconBg: '#ffffff', isToday: true },
-    { day: 'T', date: 13, status: 'planned', icon: 'lightning-bolt', iconType: 'mc', bg: '#ffffff', iconColor: '#ea580c', iconBg: '#ffdbca' },
-    { day: 'F', date: 14, status: 'rest', icon: 'spa', iconType: 'mc', bg: '#ffffff', iconColor: '#64748b', iconBg: '#e2e8f0' },
-    { day: 'S', date: 15, status: 'long', icon: 'heart', iconType: 'mc', bg: '#ffffff', iconColor: '#00685f', iconBg: '#89f5e7' },
-    { day: 'S', date: 16, status: 'rest', icon: 'bed', iconType: 'mc', bg: '#ffffff', iconColor: '#64748b', iconBg: '#e2e8f0' },
+    const days = [
+    { day: 'M', date: 7, status: 'completed', icon: 'check', iconType: 'ion', bg: '#ffffff', iconColor: '#ffffff', iconBg: COLORS.primary },
+    { day: 'T', date: 8, status: 'completed', icon: 'check', iconType: 'ion', bg: '#ffffff', iconColor: '#ffffff', iconBg: COLORS.primary },
+    { day: 'W', date: 9, status: 'completed', icon: 'check', iconType: 'ion', bg: '#ffffff', iconColor: '#ffffff', iconBg: COLORS.primary },
+    { day: 'T', date: 10, status: 'completed', icon: 'check', iconType: 'ion', bg: '#ffffff', iconColor: '#ffffff', iconBg: COLORS.primary },
+    { day: 'F', date: 11, status: 'completed', icon: 'check', iconType: 'ion', bg: '#ffffff', iconColor: '#ffffff', iconBg: COLORS.primary },
+    { day: 'S', date: 12, status: 'today', icon: 'run', iconType: 'mc', bg: COLORS.primary, iconColor: COLORS.primary, iconBg: '#ffffff', isToday: true },
+    { day: 'S', date: 13, status: 'planned', icon: 'heart', iconType: 'mc', bg: '#ffffff', iconColor: '#00685f', iconBg: '#89f5e7' },
   ];
 
-  const monthDays = [
-    // Week 1 (Oct 26 - Nov 1)
-    { date: 26, isOtherMonth: true },
-    { date: 27, isOtherMonth: true },
-    { date: 28, isOtherMonth: true },
-    { date: 29, isOtherMonth: true },
-    { date: 30, isOtherMonth: true },
+    const monthDays = [
+    // Week 1 (Aug 31 - Sep 6)
     { date: 31, isOtherMonth: true },
-    { date: 1, type: 'long', icon: 'heart', iconColor: '#00685f', iconBg: '#89f5e7' },
-
-    // Week 2 (Nov 2 - Nov 8)
-    { date: 2, type: 'rest', icon: 'bed', iconColor: '#64748b', iconBg: '#e2e8f0' },
-    { date: 3, type: 'easy', icon: 'run', iconColor: '#00685f', iconBg: '#89f5e7' },
-    { date: 4, type: 'intervals', icon: 'lightning-bolt', iconColor: '#ea580c', iconBg: '#ffdbca' },
+    { date: 1, type: 'easy', icon: 'run', iconColor: '#00685f', iconBg: '#89f5e7' },
+    { date: 2, type: 'rest', icon: 'spa', iconColor: '#64748b', iconBg: '#e2e8f0' },
+    { date: 3, type: 'intervals', icon: 'lightning-bolt', iconColor: '#ea580c', iconBg: '#ffdbca' },
+    { date: 4, type: 'strength', icon: 'dumbbell', iconColor: '#7c3aed', iconBg: '#ede9fe' },
     { date: 5, type: 'easy', icon: 'run', iconColor: '#00685f', iconBg: '#89f5e7' },
-    { date: 6, type: 'strength', icon: 'dumbbell', iconColor: '#7c3aed', iconBg: '#ede9fe' },
-    { date: 7, type: 'rest', icon: 'spa', iconColor: '#64748b', iconBg: '#e2e8f0' },
-    { date: 8, type: 'long', icon: 'heart', iconColor: '#00685f', iconBg: '#89f5e7' },
+    { date: 6, type: 'long', icon: 'heart', iconColor: '#00685f', iconBg: '#89f5e7' },
 
-    // Week 3 (Nov 9 - Nov 15)
-    { date: 9, type: 'rest', icon: 'bed', iconColor: '#64748b', iconBg: '#e2e8f0' },
+    // Week 2 (Sep 7 - Sep 13)
+    { date: 7, type: 'completed', icon: 'check', iconType: 'ion', iconColor: '#ffffff', iconBg: COLORS.primary },
+    { date: 8, type: 'completed', icon: 'check', iconType: 'ion', iconColor: '#ffffff', iconBg: COLORS.primary },
+    { date: 9, type: 'completed', icon: 'check', iconType: 'ion', iconColor: '#ffffff', iconBg: COLORS.primary },
     { date: 10, type: 'completed', icon: 'check', iconType: 'ion', iconColor: '#ffffff', iconBg: COLORS.primary },
     { date: 11, type: 'completed', icon: 'check', iconType: 'ion', iconColor: '#ffffff', iconBg: COLORS.primary },
     { date: 12, type: 'today', icon: 'run', iconColor: COLORS.primary, iconBg: '#ffffff', isToday: true },
-    { date: 13, type: 'intervals', icon: 'lightning-bolt', iconColor: '#ea580c', iconBg: '#ffdbca' },
-    { date: 14, type: 'rest', icon: 'spa', iconColor: '#64748b', iconBg: '#e2e8f0' },
-    { date: 15, type: 'long', icon: 'heart', iconColor: '#00685f', iconBg: '#89f5e7' },
+    { date: 13, type: 'long', icon: 'heart', iconColor: '#00685f', iconBg: '#89f5e7' },
 
-    // Week 4 (Nov 16 - Nov 22)
-    { date: 16, type: 'rest', icon: 'bed', iconColor: '#64748b', iconBg: '#e2e8f0' },
+    // Week 3 (Sep 14 - Sep 20)
+    { date: 14, type: 'rest', icon: 'bed', iconColor: '#64748b', iconBg: '#e2e8f0' },
+    { date: 15, type: 'easy', icon: 'run', iconColor: '#00685f', iconBg: '#89f5e7' },
+    { date: 16, type: 'intervals', icon: 'lightning-bolt', iconColor: '#ea580c', iconBg: '#ffdbca' },
     { date: 17, type: 'easy', icon: 'run', iconColor: '#00685f', iconBg: '#89f5e7' },
-    { date: 18, type: 'intervals', icon: 'lightning-bolt', iconColor: '#ea580c', iconBg: '#ffdbca' },
-    { date: 19, type: 'easy', icon: 'run', iconColor: '#00685f', iconBg: '#89f5e7' },
-    { date: 20, type: 'strength', icon: 'dumbbell', iconColor: '#7c3aed', iconBg: '#ede9fe' },
-    { date: 21, type: 'rest', icon: 'spa', iconColor: '#64748b', iconBg: '#e2e8f0' },
-    { date: 22, type: 'long', icon: 'heart', iconColor: '#00685f', iconBg: '#89f5e7' },
+    { date: 18, type: 'strength', icon: 'dumbbell', iconColor: '#7c3aed', iconBg: '#ede9fe' },
+    { date: 19, type: 'rest', icon: 'spa', iconColor: '#64748b', iconBg: '#e2e8f0' },
+    { date: 20, type: 'long', icon: 'heart', iconColor: '#00685f', iconBg: '#89f5e7' },
 
-    // Week 5 (Nov 23 - Nov 29)
-    { date: 23, type: 'rest', icon: 'bed', iconColor: '#64748b', iconBg: '#e2e8f0' },
+    // Week 4 (Sep 21 - Sep 27)
+    { date: 21, type: 'rest', icon: 'bed', iconColor: '#64748b', iconBg: '#e2e8f0' },
+    { date: 22, type: 'easy', icon: 'run', iconColor: '#00685f', iconBg: '#89f5e7' },
+    { date: 23, type: 'intervals', icon: 'lightning-bolt', iconColor: '#ea580c', iconBg: '#ffdbca' },
     { date: 24, type: 'easy', icon: 'run', iconColor: '#00685f', iconBg: '#89f5e7' },
-    { date: 25, type: 'intervals', icon: 'lightning-bolt', iconColor: '#ea580c', iconBg: '#ffdbca' },
-    { date: 26, type: 'easy', icon: 'run', iconColor: '#00685f', iconBg: '#89f5e7' },
-    { date: 27, type: 'strength', icon: 'dumbbell', iconColor: '#7c3aed', iconBg: '#ede9fe' },
-    { date: 28, type: 'rest', icon: 'spa', iconColor: '#64748b', iconBg: '#e2e8f0' },
-    { date: 29, type: 'long', icon: 'heart', iconColor: '#00685f', iconBg: '#89f5e7' },
+    { date: 25, type: 'strength', icon: 'dumbbell', iconColor: '#7c3aed', iconBg: '#ede9fe' },
+    { date: 26, type: 'rest', icon: 'spa', iconColor: '#64748b', iconBg: '#e2e8f0' },
+    { date: 27, type: 'long', icon: 'heart', iconColor: '#00685f', iconBg: '#89f5e7' },
 
-    // Week 6 (Nov 30 - Dec 6)
-    { date: 30, type: 'rest', icon: 'bed', iconColor: '#64748b', iconBg: '#e2e8f0' },
+    // Week 5 (Sep 28 - Oct 4)
+    { date: 28, type: 'rest', icon: 'bed', iconColor: '#64748b', iconBg: '#e2e8f0' },
+    { date: 29, type: 'easy', icon: 'run', iconColor: '#00685f', iconBg: '#89f5e7' },
+    { date: 30, type: 'intervals', icon: 'lightning-bolt', iconColor: '#ea580c', iconBg: '#ffdbca' },
     { date: 1, isOtherMonth: true },
     { date: 2, isOtherMonth: true },
     { date: 3, isOtherMonth: true },
     { date: 4, isOtherMonth: true },
-    { date: 5, isOtherMonth: true },
-    { date: 6, isOtherMonth: true },
   ];
 
   const getIconData = (workout_type) => {
@@ -242,7 +235,7 @@ export default function TrainingScheduleScreen({ currentUser, userProfile, onSta
 
   let selectedDayData = null;
   if (viewMode === 'week') {
-    selectedDayData = dynamicDays.find(d => d.date === selectedDay) || dynamicDays[2];
+    selectedDayData = dynamicDays.find(d => d.date === selectedDay) || dynamicDays[5];
   } else {
     selectedDayData = dynamicMonthDays.find(d => !d.isOtherMonth && d.date === selectedDay) || dynamicMonthDays.find(d => !d.isOtherMonth && d.date === 12);
   }
@@ -415,7 +408,7 @@ export default function TrainingScheduleScreen({ currentUser, userProfile, onSta
         <View>
           <View style={styles.monthBadgeRow}>
             <Ionicons name="calendar-outline" size={13} color={COLORS.primary} />
-            <Text style={styles.monthBadgeText}>NOVEMBER 2026</Text>
+            <Text style={styles.monthBadgeText}>SEPTEMBER 2026</Text>
           </View>
           <Text style={styles.screenTitle}>Training Schedule</Text>
         </View>
