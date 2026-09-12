@@ -1496,7 +1496,8 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.background,
   },
   content: {
-    padding: 16,
+    paddingHorizontal: 16,
+    paddingTop: 20,
     paddingBottom: 40,
     gap: 16,
   },

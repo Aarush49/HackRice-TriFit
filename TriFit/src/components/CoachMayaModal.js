@@ -222,15 +222,7 @@ export default function CoachMayaModal({ visible, onClose, onLogout, currentUser
                   </View>
                 </View>
                 <View>
-                  <View style={styles.titleRow}>
-                    <Text style={styles.mayaName}>Coach Maya</Text>
-                    <View style={styles.tunedPill}>
-                      <Text style={styles.tunedText}>TUNED</Text>
-                    </View>
-                  </View>
-                  <Text style={styles.mayaSub}>
-                    <Ionicons name="heart" size={12} color="#0d9488" /> HR & Tendon Shield AI
-                  </Text>
+                  <Text style={styles.mayaName}>Coach Maya</Text>
                 </View>
               </View>
 
@@ -385,32 +377,10 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  titleRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-  },
   mayaName: {
     fontSize: 18,
     fontWeight: '900',
     color: '#131b2e',
-  },
-  tunedPill: {
-    backgroundColor: '#06b6d4',
-    paddingHorizontal: 8,
-    paddingVertical: 2,
-    borderRadius: 12,
-  },
-  tunedText: {
-    fontSize: 10,
-    fontWeight: '800',
-    color: '#ffffff',
-  },
-  mayaSub: {
-    fontSize: 12,
-    fontWeight: '600',
-    color: '#0d9488',
-    marginTop: 2,
   },
   closeBtn: {
     width: 36,

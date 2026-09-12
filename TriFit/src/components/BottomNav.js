@@ -21,6 +21,7 @@ export default function BottomNav({ activeTab, setActiveTab, onOpenCoach }) {
   }
 
   const resolvedIndex = activeIndex >= 0 ? activeIndex : 0;
+  const useRoomyLayout = activeTab === 'recovery' || activeTab === 'longevity' || activeTab === 'progress';
   const [rowWidth, setRowWidth] = useState(0);
   const slideAnim = useRef(new Animated.Value(0)).current;
   const tabScaleAnims = useRef(tabs.map(() => new Animated.Value(1))).current;
@@ -62,9 +63,9 @@ export default function BottomNav({ activeTab, setActiveTab, onOpenCoach }) {
   };
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, useRoomyLayout && styles.roomyContainer]}>
       <View
-        style={styles.tabsRow}
+        style={[styles.tabsRow, useRoomyLayout && styles.roomyTabsRow]}
         onLayout={(e) => {
           const w = e.nativeEvent.layout.width;
           if (w > 0) setRowWidth(w);
@@ -81,7 +82,7 @@ export default function BottomNav({ activeTab, setActiveTab, onOpenCoach }) {
               },
             ]}
           >
-            <View style={styles.slidingIndicatorCircle} />
+            <View style={[styles.slidingIndicatorCircle, useRoomyLayout && styles.roomyIndicatorCircle]} />
           </Animated.View>
         )}
 
@@ -105,18 +106,18 @@ export default function BottomNav({ activeTab, setActiveTab, onOpenCoach }) {
                 {tab.iconFamily === 'Ionicons' ? (
                   <Ionicons
                     name={tab.icon}
-                    size={23}
+                    size={useRoomyLayout ? 26 : 23}
                     color={isActive ? COLORS.primary : COLORS.onSurfaceVariant}
                   />
                 ) : (
                   <MaterialCommunityIcons
                     name={tab.icon}
-                    size={23}
+                    size={useRoomyLayout ? 26 : 23}
                     color={isActive ? COLORS.primary : COLORS.onSurfaceVariant}
                   />
                 )}
               </Animated.View>
-              <Text style={[styles.tabLabel, isActive && styles.activeTabLabel]}>
+              <Text style={[styles.tabLabel, useRoomyLayout && styles.roomyTabLabel, isActive && styles.activeTabLabel]}>
                 {tab.label}
               </Text>
             </TouchableOpacity>
@@ -139,6 +140,9 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.06,
     shadowRadius: 8,
   },
+  roomyContainer: {
+    paddingBottom: Platform.OS === 'android' ? 17 : 23,
+  },
   tabsRow: {
     position: 'relative',
     flexDirection: 'row',
@@ -146,6 +150,9 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     height: 60,
     paddingHorizontal: 8,
+  },
+  roomyTabsRow: {
+    height: 68,
   },
   slidingIndicatorWrap: {
     position: 'absolute',
@@ -168,6 +175,11 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.12,
     shadowRadius: 6,
   },
+  roomyIndicatorCircle: {
+    width: 64,
+    height: 56,
+    borderRadius: 28,
+  },
   tabItem: {
     flex: 1,
     alignItems: 'center',
@@ -181,6 +193,9 @@ const styles = StyleSheet.create({
     fontSize: 11,
     fontWeight: '600',
     color: COLORS.onSurfaceVariant,
+  },
+  roomyTabLabel: {
+    fontSize: 12,
   },
   activeTabLabel: {
     color: COLORS.primary,
