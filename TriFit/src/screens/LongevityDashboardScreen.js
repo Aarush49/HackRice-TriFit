@@ -14,6 +14,7 @@ import {
 import Svg, { Circle } from 'react-native-svg';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { COLORS } from '../theme';
+import { PopInView, ScrollPopView, BouncyButton } from '../components/AnimatedComponents';
 
 const RECIPES_DATA = [
   // --- 6 VEGETARIAN RECIPES ---
@@ -506,27 +507,29 @@ export default function LongevityDashboardScreen({ currentUser, userProfile, onO
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
       {/* 1. Top Hero Header & Race Phase Badge */}
-      <View style={styles.headerSection}>
-        <View style={styles.badgeRow}>
-          <View style={styles.phasePill}>
-            <MaterialCommunityIcons name="dumbbell" size={13} color="#9d4300" />
-            <Text style={styles.phasePillText}>HYROX BUILD</Text>
+      <PopInView delay={0}>
+        <View style={styles.headerSection}>
+          <View style={styles.badgeRow}>
+            <View style={styles.phasePill}>
+              <MaterialCommunityIcons name="dumbbell" size={13} color="#9d4300" />
+              <Text style={styles.phasePillText}>HYROX BUILD</Text>
+            </View>
+
+            <View style={styles.dietPill}>
+              <Ionicons name="flash" size={13} color="#00685f" />
+              <Text style={styles.dietPillText}>High Carb</Text>
+            </View>
           </View>
 
-          <View style={styles.dietPill}>
-            <Ionicons name="flash" size={13} color="#00685f" />
-            <Text style={styles.dietPillText}>High Carb</Text>
+          <View style={styles.titleRow}>
+            <Text style={styles.mainTitle}>Recovery</Text>
+            <Text style={styles.targetSub}>Target: {calorieTarget.toLocaleString()} kcal</Text>
           </View>
         </View>
-
-        <View style={styles.titleRow}>
-          <Text style={styles.mainTitle}>Recovery</Text>
-          <Text style={styles.targetSub}>Target: {calorieTarget.toLocaleString()} kcal</Text>
-        </View>
-      </View>
+      </PopInView>
 
       {/* 2. Calorie & Macro Target Card (Bento Box) */}
-      <View style={styles.bentoCard}>
+      <PopInView delay={90} style={styles.bentoCard}>
         <View style={styles.bentoTopRow}>
           {/* Dual Ring Circular SVG Progress Gauge */}
           <View style={styles.gaugeContainer}>
@@ -582,11 +585,11 @@ export default function LongevityDashboardScreen({ currentUser, userProfile, onO
             </View>
           </View>
 
-          {/* Quick Hydration Logger */}
-          <TouchableOpacity
+          {/* Quick Hydration Logger with Bouncy Press & Shake */}
+          <BouncyButton
             style={[styles.hydrationBtn, waterLogged && styles.hydrationBtnSuccess]}
             onPress={handleAddWater}
-            activeOpacity={0.8}
+            shakeOnPress={true}
           >
             <MaterialCommunityIcons
               name={waterLogged ? 'check-circle' : 'cup-water'}
@@ -599,7 +602,7 @@ export default function LongevityDashboardScreen({ currentUser, userProfile, onO
             <View style={styles.hydrationAddChip}>
               <Text style={styles.hydrationAddText}>+250ml</Text>
             </View>
-          </TouchableOpacity>
+          </BouncyButton>
         </View>
 
         {/* 3 Macro Progress Bars */}
@@ -675,15 +678,15 @@ export default function LongevityDashboardScreen({ currentUser, userProfile, onO
         </View>
 
         {/* Add Meal Action Button */}
-        <TouchableOpacity
+        <BouncyButton
           style={styles.addMealActionBtn}
           onPress={() => setIsAddMealModalOpen(true)}
-          activeOpacity={0.85}
+          shakeOnPress={false}
         >
           <Ionicons name="add-circle" size={18} color="#ffffff" />
           <Text style={styles.addMealActionBtnText}>+ Log Meal / Food</Text>
-        </TouchableOpacity>
-      </View>
+        </BouncyButton>
+      </PopInView>
 
       {/* Logged Meals List Card */}
       {loggedMeals.length > 0 && (
@@ -712,8 +715,8 @@ export default function LongevityDashboardScreen({ currentUser, userProfile, onO
         </View>
       )}
 
-      {/* 3. Performance Recipes Section */}
-      <View style={styles.sectionWrap}>
+      {/* 3. Performance Recipes Section with Scroll Pop-In */}
+      <ScrollPopView delay={60} style={styles.sectionWrap}>
         <View style={styles.sectionHeaderRow}>
           <View style={styles.sectionHeadingRow}>
             <Text style={styles.sectionHeading}>Performance Recipes</Text>
@@ -852,7 +855,7 @@ export default function LongevityDashboardScreen({ currentUser, userProfile, onO
             </TouchableOpacity>
           ))}
         </View>
-      </View>
+      </ScrollPopView>
 
       {/* Recipe Detail Modal */}
       <Modal

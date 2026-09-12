@@ -15,6 +15,7 @@ import {
 import { MaterialCommunityIcons, Ionicons, Feather, FontAwesome5 } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { COLORS } from '../theme';
+import { PopInView, ScrollPopView, BouncyButton } from '../components/AnimatedComponents';
 
 export default function TrainingScheduleScreen({ currentUser, userProfile, onStartWorkout, onOpenCoach }) {
   const [viewMode, setViewMode] = useState('week'); // 'week' | 'month'
@@ -364,77 +365,81 @@ export default function TrainingScheduleScreen({ currentUser, userProfile, onSta
       showsVerticalScrollIndicator={false}
     >
       {/* Target Race & Timeline Countdown Banner */}
-      <View style={styles.targetEventCard}>
-        <View style={styles.targetEventTopRow}>
-          <View style={styles.targetEventLeft}>
-            <View style={styles.targetEventIconBox}>
-              <FontAwesome5 name="dumbbell" size={16} color={COLORS.primary} />
+      <PopInView delay={0}>
+        <View style={styles.targetEventCard}>
+          <View style={styles.targetEventTopRow}>
+            <View style={styles.targetEventLeft}>
+              <View style={styles.targetEventIconBox}>
+                <FontAwesome5 name="dumbbell" size={16} color={COLORS.primary} />
+              </View>
+              <View style={styles.targetEventTextWrap}>
+                <Text style={styles.targetEventLabel}>TARGET EVENT</Text>
+                <Text style={styles.targetEventTitle}>{targetRace}</Text>
+                <Text style={styles.targetEventDate}>{targetDate}</Text>
+              </View>
             </View>
-            <View style={styles.targetEventTextWrap}>
-              <Text style={styles.targetEventLabel}>TARGET EVENT</Text>
-              <Text style={styles.targetEventTitle}>{targetRace}</Text>
-              <Text style={styles.targetEventDate}>{targetDate}</Text>
-            </View>
+            <TouchableOpacity
+              style={styles.adjustBtn}
+              onPress={handleOpenAdjustModal}
+              activeOpacity={0.8}
+            >
+              <Text style={styles.adjustBtnText}>Adjust</Text>
+            </TouchableOpacity>
           </View>
-          <TouchableOpacity
-            style={styles.adjustBtn}
-            onPress={handleOpenAdjustModal}
-            activeOpacity={0.8}
-          >
-            <Text style={styles.adjustBtnText}>Adjust</Text>
-          </TouchableOpacity>
-        </View>
 
-        {/* Timeline Ramp Pill */}
-        <View style={styles.targetRampPill}>
-          <View style={styles.trendingBox}>
-            <Ionicons name="trending-up" size={16} color="#783200" />
-          </View>
-          <View style={styles.rampTextWrap}>
-            <View style={styles.rampHeaderRow}>
-              <Text style={styles.rampWeeks}>{targetDate}</Text>
-              <View style={styles.dotSeparator} />
-              <Text style={styles.rampLabel}>Optimal Ramp</Text>
+          {/* Timeline Ramp Pill */}
+          <View style={styles.targetRampPill}>
+            <View style={styles.trendingBox}>
+              <Ionicons name="trending-up" size={16} color="#783200" />
             </View>
-            <Text style={styles.rampSub}>
-              Ample buffer to adapt tendons and elevate VO2 max gradually!
-            </Text>
+            <View style={styles.rampTextWrap}>
+              <View style={styles.rampHeaderRow}>
+                <Text style={styles.rampWeeks}>{targetDate}</Text>
+                <View style={styles.dotSeparator} />
+                <Text style={styles.rampLabel}>Optimal Ramp</Text>
+              </View>
+              <Text style={styles.rampSub}>
+                Ample buffer to adapt tendons and elevate VO2 max gradually!
+              </Text>
+            </View>
           </View>
         </View>
-      </View>
+      </PopInView>
 
       {/* Title & Week/Month Switcher */}
-      <View style={styles.topHeader}>
-        <View>
-          <View style={styles.monthBadgeRow}>
-            <Ionicons name="calendar-outline" size={13} color={COLORS.primary} />
-            <Text style={styles.monthBadgeText}>SEPTEMBER 2026</Text>
+      <PopInView delay={80}>
+        <View style={styles.topHeader}>
+          <View>
+            <View style={styles.monthBadgeRow}>
+              <Ionicons name="calendar-outline" size={13} color={COLORS.primary} />
+              <Text style={styles.monthBadgeText}>SEPTEMBER 2026</Text>
+            </View>
+            <Text style={styles.screenTitle}>Training Schedule</Text>
           </View>
-          <Text style={styles.screenTitle}>Training Schedule</Text>
-        </View>
 
-        {/* Week / Month Toggle */}
-        <View style={styles.viewToggleGroup}>
-          <TouchableOpacity
-            style={[styles.toggleBtn, viewMode === 'week' && styles.toggleBtnActive]}
-            onPress={() => setViewMode('week')}
-            activeOpacity={0.8}
-          >
-            <Text style={[styles.toggleBtnText, viewMode === 'week' && styles.toggleBtnTextActive]}>
-              Week
-            </Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={[styles.toggleBtn, viewMode === 'month' && styles.toggleBtnActive]}
-            onPress={() => setViewMode('month')}
-            activeOpacity={0.8}
-          >
-            <Text style={[styles.toggleBtnText, viewMode === 'month' && styles.toggleBtnTextActive]}>
-              Month
-            </Text>
-          </TouchableOpacity>
+          {/* Week / Month Toggle */}
+          <View style={styles.viewToggleGroup}>
+            <TouchableOpacity
+              style={[styles.toggleBtn, viewMode === 'week' && styles.toggleBtnActive]}
+              onPress={() => setViewMode('week')}
+              activeOpacity={0.8}
+            >
+              <Text style={[styles.toggleBtnText, viewMode === 'week' && styles.toggleBtnTextActive]}>
+                Week
+              </Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[styles.toggleBtn, viewMode === 'month' && styles.toggleBtnActive]}
+              onPress={() => setViewMode('month')}
+              activeOpacity={0.8}
+            >
+              <Text style={[styles.toggleBtnText, viewMode === 'month' && styles.toggleBtnTextActive]}>
+                Month
+              </Text>
+            </TouchableOpacity>
+          </View>
         </View>
-      </View>
+      </PopInView>
 
       {/* 2. Calendar Card: Week View vs Month View */}
       {viewMode === 'week' ? (
@@ -665,14 +670,14 @@ export default function TrainingScheduleScreen({ currentUser, userProfile, onSta
 
             {/* Action Button inside Card */}
             {!isRestDay ? (
-              <TouchableOpacity
+              <BouncyButton
                 style={[styles.startWorkoutBtn, { backgroundColor: cardTheme.btnBg, borderBottomColor: cardTheme.btnBorder }]}
                 onPress={onStartWorkout}
-                activeOpacity={0.88}
+                shakeOnPress={true}
               >
                 <Ionicons name="play" size={20} color="#ffffff" />
                 <Text style={styles.startWorkoutBtnText}>Start Today's Workout</Text>
-              </TouchableOpacity>
+              </BouncyButton>
             ) : (
               <View style={[styles.startWorkoutBtn, { backgroundColor: 'rgba(255, 255, 255, 0.4)', borderWidth: 1, borderColor: '#99f6e4' }]}>
                 <Ionicons name="bed" size={20} color="#0f766e" />
@@ -685,7 +690,7 @@ export default function TrainingScheduleScreen({ currentUser, userProfile, onSta
       </View>
 
       {/* 4. Not Feeling 100%? / Quick Plan Adaptations Section */}
-      <View style={styles.adaptSection}>
+      <ScrollPopView delay={80} style={styles.adaptSection}>
         <View style={styles.adaptCard}>
           {/* Header */}
           <View style={styles.adaptHeader}>
@@ -783,7 +788,7 @@ export default function TrainingScheduleScreen({ currentUser, userProfile, onSta
             </Text>
           </View>
         </View>
-      </View>
+      </ScrollPopView>
 
       {/* Adjust Target Event & Date Modal */}
       <Modal visible={isAdjustModalOpen} transparent animationType="fade" onRequestClose={() => setIsAdjustModalOpen(false)}>

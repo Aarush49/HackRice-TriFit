@@ -13,6 +13,7 @@ import Svg, { Circle } from 'react-native-svg';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { COLORS } from '../theme';
+import { PopInView, ScrollPopView, BouncyButton } from '../components/AnimatedComponents';
 const getWorkoutTags = (workout_type) => {
   const wtype = (workout_type || '').toLowerCase();
   if (wtype.includes('rest') || wtype.includes('recovery')) {
@@ -262,26 +263,27 @@ export default function DailyMissionsScreen({
       showsVerticalScrollIndicator={false}
     >
       {/* 1. Subheader: Category Pill + Headline */}
-      <View style={styles.headerRow}>
-        <View style={styles.headerLeft}>
-          <View style={styles.categoryRow}>
-            <View style={styles.categoryPill}>
-              <Ionicons name="flash" size={11} color="#0f766e" />
-              <Text style={styles.categoryPillText}>{targetRace}</Text>
+      <PopInView delay={0}>
+        <View style={styles.headerRow}>
+          <View style={styles.headerLeft}>
+            <View style={styles.categoryRow}>
+              <View style={styles.categoryPill}>
+                <Ionicons name="flash" size={11} color="#0f766e" />
+                <Text style={styles.categoryPillText}>{targetRace}</Text>
+              </View>
             </View>
-            
+            <Text style={styles.headingTitle}>Today's Mission</Text>
           </View>
-          <Text style={styles.headingTitle}>Today's Mission</Text>
-        </View>
 
-        <View style={styles.dayBadge}>
-          <Ionicons name="calendar-outline" size={13} color={COLORS.primary} />
-          <Text style={styles.dayBadgeText}>Day {planDay} of 90</Text>
+          <View style={styles.dayBadge}>
+            <Ionicons name="calendar-outline" size={13} color={COLORS.primary} />
+            <Text style={styles.dayBadgeText}>Day {planDay} of 90</Text>
+          </View>
         </View>
-      </View>
+      </PopInView>
 
       {/* 2. Bento 1: Daily Readiness & Progress Gauge Card */}
-      <View style={styles.readinessCard}>
+      <PopInView delay={90} style={styles.readinessCard}>
         <View style={styles.readinessTopRow}>
           {/* Circular Gauge */}
           <View style={styles.gaugeContainer}>
@@ -333,15 +335,15 @@ export default function DailyMissionsScreen({
 
           {/* Right Quests Progress Indicator & Sync Button */}
           <View style={styles.questsSummary}>
-            <TouchableOpacity 
+            <BouncyButton 
               style={styles.syncBtnPill} 
               onPress={handleSyncWearables} 
-              activeOpacity={0.8}
               disabled={isSyncing}
+              shakeOnPress={false}
             >
               <MaterialCommunityIcons name="sync" size={13} color="#0f766e" />
               <Text style={styles.syncBtnText}>{isSyncing ? 'Syncing...' : 'Sync Wearables'}</Text>
-            </TouchableOpacity>
+            </BouncyButton>
             <Text style={styles.xpGainedSub}>Open Wearables API</Text>
           </View>
         </View>
@@ -391,66 +393,66 @@ export default function DailyMissionsScreen({
             </View>
           </View>
         </View>
-      </View>
+      </PopInView>
 
       {/* Main Active Mission Card (Priority Workout) */}
-      <LinearGradient
-        colors={workoutTheme.cardColors}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 0, y: 1 }}
-        style={[styles.workoutCard, { borderColor: workoutTheme.borderColor }]}
-      >
-        <View style={styles.workoutCardHeader}>
-          <View style={styles.workoutInfoLeft}>
-            <LinearGradient
-              colors={workoutTheme.iconColors}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 1 }}
-              style={styles.workoutIconBox}
-            >
-              <MaterialCommunityIcons name={workoutTheme.icon} size={20} color="#ffffff" />
-            </LinearGradient>
-            <View style={styles.workoutTitles}>
-              <View style={styles.workoutBadgeRow}>
-                <View style={[styles.priorityPill, { backgroundColor: workoutTheme.pillBg }]}>
-                  <Text style={[styles.priorityPillText, { color: workoutTheme.pillText }]}>
-                    {workoutTheme.isRest ? 'REST DAY' : 'PRIORITY WORKOUT'}
-                  </Text>
+      <PopInView delay={170}>
+        <LinearGradient
+          colors={workoutTheme.cardColors}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 0, y: 1 }}
+          style={[styles.workoutCard, { borderColor: workoutTheme.borderColor }]}
+        >
+          <View style={styles.workoutCardHeader}>
+            <View style={styles.workoutInfoLeft}>
+              <LinearGradient
+                colors={workoutTheme.iconColors}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 1 }}
+                style={styles.workoutIconBox}
+              >
+                <MaterialCommunityIcons name={workoutTheme.icon} size={20} color="#ffffff" />
+              </LinearGradient>
+              <View style={styles.workoutTitles}>
+                <View style={styles.workoutBadgeRow}>
+                  <View style={[styles.priorityPill, { backgroundColor: workoutTheme.pillBg }]}>
+                    <Text style={[styles.priorityPillText, { color: workoutTheme.pillText }]}>
+                      {workoutTheme.isRest ? 'REST DAY' : 'PRIORITY WORKOUT'}
+                    </Text>
+                  </View>
+                  <Text style={styles.durationBullet}>• {workoutTheme.duration}</Text>
                 </View>
-                <Text style={styles.durationBullet}>• {workoutTheme.duration}</Text>
+                <Text style={styles.workoutName} numberOfLines={1}>
+                  {todayWorkout.workout_type}
+                </Text>
               </View>
-              <Text style={styles.workoutName} numberOfLines={1}>
-                {todayWorkout.workout_type}
-              </Text>
+            </View>
+
+            <View style={styles.xpRewardBadge}>
+              <Ionicons name="flash" size={12} color="#0f766e" />
+              <Text style={styles.xpRewardText}>+85 XP</Text>
             </View>
           </View>
 
-          <View style={styles.xpRewardBadge}>
-            <Ionicons name="flash" size={12} color="#0f766e" />
-            <Text style={styles.xpRewardText}>+85 XP</Text>
-          </View>
-        </View>
+          {/* Workout Highlights Strip (Clickable Button -> Schedule) */}
+          <BouncyButton
+            style={styles.clickableDescriptionBox}
+            onPress={onNavigateToSchedule}
+            shakeOnPress={false}
+          >
+            <View style={styles.descTextRow}>
+              <Text style={styles.highlightText} numberOfLines={2} ellipsizeMode="tail">
+                {cleanDesc}
+              </Text>
+              <Ionicons name="chevron-forward" size={16} color="#0f766e" style={{ marginLeft: 4 }} />
+            </View>
+          </BouncyButton>
 
-        {/* Workout Highlights Strip (Clickable Button -> Schedule) */}
-        <TouchableOpacity
-          style={styles.clickableDescriptionBox}
-          onPress={onNavigateToSchedule}
-          activeOpacity={0.85}
-        >
-          <View style={styles.descTextRow}>
-            <Text style={styles.highlightText} numberOfLines={2} ellipsizeMode="tail">
-              {cleanDesc}
-            </Text>
-            <Ionicons name="chevron-forward" size={16} color="#0f766e" style={{ marginLeft: 4 }} />
-          </View>
-        </TouchableOpacity>
-
-        {/* Chunky Vibrant CTA (Hidden on Rest Days) */}
-        {!workoutTheme.isRest && (
-          <Animated.View style={{ transform: [{ scale: activeScale }] }}>
-            <TouchableOpacity
+          {/* Chunky Vibrant CTA (Hidden on Rest Days) */}
+          {!workoutTheme.isRest && (
+            <BouncyButton
               onPress={handleStartWorkout}
-              activeOpacity={0.9}
+              shakeOnPress={true}
               style={styles.startWorkoutTouch}
             >
               <LinearGradient
@@ -462,13 +464,13 @@ export default function DailyMissionsScreen({
                 <Ionicons name="play" size={18} color="#ffffff" style={{ marginRight: 4 }} />
                 <Text style={styles.startWorkoutText}>Start Workout</Text>
               </LinearGradient>
-            </TouchableOpacity>
-          </Animated.View>
-        )}
-      </LinearGradient>
+            </BouncyButton>
+          )}
+        </LinearGradient>
+      </PopInView>
 
       {/* 5. Compact 2-Column Daily Habits / Recovery Quests Grid */}
-      <View style={styles.habitsSection}>
+      <ScrollPopView delay={120} style={styles.habitsSection}>
         <View style={styles.habitsHeader}>
           <Text style={styles.habitsTitle}>DAILY HABITS &amp; SIDE QUESTS</Text>
           <Text style={styles.habitsSub}>+90 XP remaining</Text>
@@ -491,9 +493,9 @@ export default function DailyMissionsScreen({
               <Text style={styles.habitCardSub}>3m Reset Protocol</Text>
             </View>
 
-            <TouchableOpacity
+            <BouncyButton
               onPress={() => toggleHabit('habit_1', 20)}
-              activeOpacity={0.8}
+              shakeOnPress={true}
               style={[
                 styles.habitActionBtn,
                 completedHabits['habit_1'] && styles.habitActionBtnActive,
@@ -512,7 +514,7 @@ export default function DailyMissionsScreen({
               >
                 {completedHabits['habit_1'] ? 'Completed' : 'Done'}
               </Text>
-            </TouchableOpacity>
+            </BouncyButton>
           </View>
 
           {/* Habit Card 2: Steps */}
@@ -540,9 +542,9 @@ export default function DailyMissionsScreen({
               </View>
             </View>
 
-            <TouchableOpacity
+            <BouncyButton
               onPress={handleSyncWearables}
-              activeOpacity={0.8}
+              shakeOnPress={true}
               disabled={isSyncing}
               style={[
                 styles.habitActionBtn,
@@ -557,7 +559,7 @@ export default function DailyMissionsScreen({
               <Text style={[styles.habitActionText, { color: isSyncing ? '#ea580c' : (isStepsDone ? '#15803d' : '#c2410c') }]}>
                 {isSyncing ? 'Syncing...' : (isStepsDone ? 'Completed' : 'Sync')}
               </Text>
-            </TouchableOpacity>
+            </BouncyButton>
           </View>
 
           {/* Habit Card 3: Hydration */}
@@ -576,9 +578,9 @@ export default function DailyMissionsScreen({
               <Text style={styles.habitCardSub}>Electrolytes &amp; Minerals</Text>
             </View>
 
-            <TouchableOpacity
+            <BouncyButton
               onPress={() => toggleHabit('habit_3', 15)}
-              activeOpacity={0.8}
+              shakeOnPress={true}
               style={[
                 styles.habitActionBtn,
                 completedHabits['habit_3'] && styles.habitActionBtnActive,
@@ -597,7 +599,7 @@ export default function DailyMissionsScreen({
               >
                 {completedHabits['habit_3'] ? 'Completed' : 'Done'}
               </Text>
-            </TouchableOpacity>
+            </BouncyButton>
           </View>
 
           {/* Habit Card 4: Mobility */}
@@ -616,9 +618,9 @@ export default function DailyMissionsScreen({
               <Text style={styles.habitCardSub}>10m Foam Roll &amp; Stretch</Text>
             </View>
 
-            <TouchableOpacity
+            <BouncyButton
               onPress={() => toggleHabit('habit_4', 25)}
-              activeOpacity={0.8}
+              shakeOnPress={true}
               style={[
                 styles.habitActionBtn,
                 completedHabits['habit_4'] && styles.habitActionBtnActive,
@@ -637,10 +639,10 @@ export default function DailyMissionsScreen({
               >
                 {completedHabits['habit_4'] ? 'Completed' : 'Done'}
               </Text>
-            </TouchableOpacity>
+            </BouncyButton>
           </View>
         </View>
-      </View>
+      </ScrollPopView>
     </ScrollView>
   );
 }

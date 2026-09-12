@@ -15,6 +15,7 @@ import { Ionicons, MaterialCommunityIcons, FontAwesome5, Feather } from '@expo/v
 import { LinearGradient } from 'expo-linear-gradient';
 import { COLORS } from '../theme';
 import { computeBioAge } from '../bioAge';
+import { PopInView, BouncyButton } from './AnimatedComponents';
 
 const RACE_OPTIONS = [
   'Sprint Triathlon',
@@ -91,10 +92,10 @@ export default function AthleteProfileModal({
             <Ionicons name="chevron-back" size={24} color="#0f172a" />
           </TouchableOpacity>
           <Text style={styles.headerTitle}>Athlete Profile</Text>
-          <TouchableOpacity
+          <BouncyButton
             style={styles.editToggleBtn}
             onPress={() => (isEditing ? handleSave() : setIsEditing(true))}
-            activeOpacity={0.7}
+            shakeOnPress={false}
           >
             <Ionicons
               name={isEditing ? 'checkmark' : 'pencil'}
@@ -102,7 +103,7 @@ export default function AthleteProfileModal({
               color={COLORS.primary}
             />
             <Text style={styles.editToggleText}>{isEditing ? 'Save' : 'Edit'}</Text>
-          </TouchableOpacity>
+          </BouncyButton>
         </View>
 
         <ScrollView
@@ -111,12 +112,13 @@ export default function AthleteProfileModal({
           showsVerticalScrollIndicator={false}
         >
           {/* Main Profile Header Card */}
-          <LinearGradient
-            colors={['#00685f', '#004d46']}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 1 }}
-            style={styles.profileHeaderCard}
-          >
+          <PopInView delay={0}>
+            <LinearGradient
+              colors={['#00685f', '#004d46']}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
+              style={styles.profileHeaderCard}
+            >
             <View style={styles.avatarRow}>
               <View style={styles.avatarContainer}>
                 <Image
@@ -224,11 +226,13 @@ export default function AthleteProfileModal({
                 </TouchableOpacity>
               </View>
             )}
-          </LinearGradient>
+            </LinearGradient>
+          </PopInView>
 
-          {/* Biometrics & Healthspan Grid (HRV Baseline removed) */}
-          <Text style={styles.sectionTitle}>Biology &amp; Performance Baselines</Text>
-          <View style={styles.gridContainer}>
+          {/* Biometrics & Healthspan Grid */}
+          <PopInView delay={120}>
+            <Text style={styles.sectionTitle}>Biology &amp; Performance Baselines</Text>
+            <View style={styles.gridContainer}>
             {/* Card 1: VO2 Max */}
             <View style={styles.metricCard}>
               <View style={styles.metricHeader}>
@@ -293,6 +297,7 @@ export default function AthleteProfileModal({
               </View>
             </View>
           </View>
+        </PopInView>
 
           {/* Personal Bests */}
           <Text style={styles.sectionTitle}>Personal Bests</Text>
@@ -357,10 +362,14 @@ export default function AthleteProfileModal({
           </View>
 
           {/* Bottom Action Button */}
-          <TouchableOpacity style={styles.logoutBtn} onPress={onLogout} activeOpacity={0.85}>
+          <BouncyButton
+            style={styles.logoutBtn}
+            onPress={onLogout}
+            shakeOnPress={true}
+          >
             <Ionicons name="log-out" size={18} color="#ffffff" />
             <Text style={styles.logoutBtnText}>Log Out / Switch Account</Text>
-          </TouchableOpacity>
+          </BouncyButton>
         </ScrollView>
       </SafeAreaView>
     </Modal>

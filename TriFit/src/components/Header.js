@@ -3,6 +3,8 @@ import { View, Text, StyleSheet, Image, TouchableOpacity } from 'react-native';
 import { MaterialCommunityIcons, Ionicons } from '@expo/vector-icons';
 import { COLORS } from '../theme';
 
+import { BouncyButton } from './AnimatedComponents';
+
 const coachMayaAvatar = require('../../assets/coach_maya.png');
 
 export default function Header({ onOpenProfile, onOpenCoach, onOpenAuth, currentUser, streakDays = 0, xpPoints = 0 }) {
@@ -31,10 +33,10 @@ export default function Header({ onOpenProfile, onOpenCoach, onOpenAuth, current
         </View>
 
         {/* Profile Avatar / Auth Button */}
-        <TouchableOpacity
+        <BouncyButton
           style={styles.profileBtn}
           onPress={currentUser ? onOpenProfile : onOpenAuth}
-          activeOpacity={0.8}
+          shakeOnPress={false}
         >
           <Image
             source={{ uri: 'https://cdn-icons-png.flaticon.com/512/847/847969.png' }}
@@ -42,7 +44,7 @@ export default function Header({ onOpenProfile, onOpenCoach, onOpenAuth, current
             style={styles.avatarImg}
           />
           <View style={[styles.dotIndicator, currentUser && { backgroundColor: '#10b981' }]} />
-        </TouchableOpacity>
+        </BouncyButton>
       </View>
     </View>
   );

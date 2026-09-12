@@ -14,6 +14,7 @@ import {
 } from 'react-native';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
+import { PopInView, BouncyButton } from '../components/AnimatedComponents';
 
 export default function LoginScreen({ onLoginSuccess }) {
   const [authMode, setAuthMode] = useState('login'); // 'login' | 'signup'
@@ -146,67 +147,71 @@ export default function LoginScreen({ onLoginSuccess }) {
             `}</style>
           )}
 
-          {/* Top Header */}
-          <View style={styles.topHeader}>
-            <View style={styles.brandRow}>
-              <View style={styles.logoBadge}>
-                <MaterialCommunityIcons name="lightning-bolt" size={22} color="#ffffff" />
-              </View>
-              <View>
-                <Text style={styles.brandTitle}>
-                  Tri<Text style={styles.brandTitleTeal}>Fit</Text>
-                </Text>
-                <Text style={styles.brandSubtitle}>ENDURANCE & LONGEVITY</Text>
+          {/* Top Header & Hero Section with Pop-In */}
+          <PopInView delay={0}>
+            <View style={styles.topHeader}>
+              <View style={styles.brandRow}>
+                <View style={styles.logoBadge}>
+                  <MaterialCommunityIcons name="lightning-bolt" size={22} color="#ffffff" />
+                </View>
+                <View>
+                  <Text style={styles.brandTitle}>
+                    Tri<Text style={styles.brandTitleTeal}>Fit</Text>
+                  </Text>
+                  <Text style={styles.brandSubtitle}>ENDURANCE & LONGEVITY</Text>
+                </View>
               </View>
             </View>
-          </View>
 
-          {/* Hero Section */}
-          <View style={styles.heroSection}>
-            <Text style={styles.heroTitle}>
-              Train Fast.{'\n'}
-              <Text style={styles.heroTitleGradient}>Live Longer.</Text>
-            </Text>
-            <Text style={styles.heroSubtitle}>
-              Smart endurance training optimized for your biology.
-            </Text>
-          </View>
+            {/* Hero Section */}
+            <View style={styles.heroSection}>
+              <Text style={styles.heroTitle}>
+                Train Fast.{'\n'}
+                <Text style={styles.heroTitleGradient}>Live Longer.</Text>
+              </Text>
+              <Text style={styles.heroSubtitle}>
+                Smart endurance training optimized for your biology.
+              </Text>
+            </View>
+          </PopInView>
 
           {/* Auth Mode Toggle Tabs (Log In vs Sign Up) */}
-          <View style={styles.tabSelector}>
-            <TouchableOpacity
-              style={[styles.tabBtn, authMode === 'login' && styles.tabBtnActive]}
-              onPress={() => setAuthMode('login')}
-              activeOpacity={0.8}
-            >
-              <Text
-                style={[
-                  styles.tabBtnText,
-                  authMode === 'login' && styles.tabBtnTextActive,
-                ]}
+          <PopInView delay={100}>
+            <View style={styles.tabSelector}>
+              <TouchableOpacity
+                style={[styles.tabBtn, authMode === 'login' && styles.tabBtnActive]}
+                onPress={() => setAuthMode('login')}
+                activeOpacity={0.8}
               >
-                Log In
-              </Text>
-            </TouchableOpacity>
+                <Text
+                  style={[
+                    styles.tabBtnText,
+                    authMode === 'login' && styles.tabBtnTextActive,
+                  ]}
+                >
+                  Log In
+                </Text>
+              </TouchableOpacity>
 
-            <TouchableOpacity
-              style={[styles.tabBtn, authMode === 'signup' && styles.tabBtnActive]}
-              onPress={() => setAuthMode('signup')}
-              activeOpacity={0.8}
-            >
-              <Text
-                style={[
-                  styles.tabBtnText,
-                  authMode === 'signup' && styles.tabBtnTextActive,
-                ]}
+              <TouchableOpacity
+                style={[styles.tabBtn, authMode === 'signup' && styles.tabBtnActive]}
+                onPress={() => setAuthMode('signup')}
+                activeOpacity={0.8}
               >
-                Sign Up
-              </Text>
-            </TouchableOpacity>
-          </View>
+                <Text
+                  style={[
+                    styles.tabBtnText,
+                    authMode === 'signup' && styles.tabBtnTextActive,
+                  ]}
+                >
+                  Sign Up
+                </Text>
+              </TouchableOpacity>
+            </View>
+          </PopInView>
 
         {/* Input Form */}
-        <View style={styles.formSection}>
+        <PopInView delay={180} style={styles.formSection}>
           {authMode === 'signup' && (
             <View style={styles.inputGroup}>
               <Text style={styles.inputLabel}>Athlete Name</Text>
@@ -322,11 +327,11 @@ export default function LoginScreen({ onLoginSuccess }) {
             </View>
           ) : null}
 
-          {/* Submit Button */}
-          <TouchableOpacity
+          {/* Submit Button with Shake & Bounce */}
+          <BouncyButton
             style={styles.submitBtn}
             onPress={() => handleSubmit('Email Form')}
-            activeOpacity={0.88}
+            shakeOnPress={true}
             disabled={isLoading}
           >
             <LinearGradient
@@ -340,11 +345,12 @@ export default function LoginScreen({ onLoginSuccess }) {
               </Text>
               <Ionicons name="arrow-forward" size={18} color="#ffffff" />
             </LinearGradient>
-          </TouchableOpacity>
+          </BouncyButton>
 
-          {/* Demo Button */}
-          <TouchableOpacity
+          {/* Demo Button with Shake & Bounce */}
+          <BouncyButton
             style={styles.demoBtn}
+            shakeOnPress={true}
             onPress={() => {
               onLoginSuccess({
                 email: 'demo@trifit.io',
@@ -362,7 +368,6 @@ export default function LoginScreen({ onLoginSuccess }) {
                 isDemo: true,
               });
             }}
-            activeOpacity={0.8}
           >
             <View style={styles.demoBtnInner}>
               <MaterialCommunityIcons name="flask-outline" size={15} color="#0d9488" />
@@ -371,11 +376,11 @@ export default function LoginScreen({ onLoginSuccess }) {
               </Text>
               <Ionicons name="chevron-forward" size={14} color="#94a3b8" />
             </View>
-          </TouchableOpacity>
-        </View>
+          </BouncyButton>
+        </PopInView>
 
         {/* Trust Pillars Footer */}
-        <View style={styles.footerSection}>
+        <PopInView delay={280} style={styles.footerSection}>
           <View style={styles.trustChipsRow}>
             <View style={styles.trustChip}>
               <Text style={styles.trustChipEmoji}>🛡️</Text>
@@ -396,7 +401,7 @@ export default function LoginScreen({ onLoginSuccess }) {
             <Text style={styles.legalLink}>Terms of Service</Text> &{' '}
             <Text style={styles.legalLink}>Longevity Health Policy</Text>.
           </Text>
-        </View>
+        </PopInView>
       </ScrollView>
     </KeyboardAvoidingView>
   );

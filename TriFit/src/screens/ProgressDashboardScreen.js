@@ -12,6 +12,7 @@ import {
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { COLORS } from '../theme';
 import { computeBioAge } from '../bioAge';
+import { PopInView, ScrollPopView, BouncyButton } from '../components/AnimatedComponents';
 
 const PERSONAL_BESTS = [
   {
@@ -116,33 +117,35 @@ export default function ProgressDashboardScreen({ currentUser, userProfile, xp =
       contentContainerStyle={styles.scrollContent}
       showsVerticalScrollIndicator={false}
     >
-      {/* Sub-header */}
-      <View style={styles.subHeader}>
-        <View style={styles.pillRow}>
-          <View style={styles.programPill}>
-            <MaterialCommunityIcons name="weight-lifter" size={13} color="#9d4300" />
-            <Text style={styles.programPillText}>HYROX BUILD</Text>
+      {/* Sub-header & Title Block */}
+      <PopInView delay={0}>
+        <View style={styles.subHeader}>
+          <View style={styles.pillRow}>
+            <View style={styles.programPill}>
+              <MaterialCommunityIcons name="weight-lifter" size={13} color="#9d4300" />
+              <Text style={styles.programPillText}>HYROX BUILD</Text>
+            </View>
+            <View style={styles.levelPill}>
+              <Text style={styles.levelPillText}>Level 7 Athlete</Text>
+            </View>
           </View>
-          <View style={styles.levelPill}>
-            <Text style={styles.levelPillText}>Level 7 Athlete</Text>
+          <View style={styles.trackBadge}>
+            <Ionicons name="checkmark-circle" size={14} color={COLORS.primary} />
+            <Text style={styles.trackBadgeText}>Self-Paced Track</Text>
           </View>
         </View>
-        <View style={styles.trackBadge}>
-          <Ionicons name="checkmark-circle" size={14} color={COLORS.primary} />
-          <Text style={styles.trackBadgeText}>Self-Paced Track</Text>
-        </View>
-      </View>
 
-      {/* Screen Title */}
-      <View style={styles.titleBlock}>
-        <Text style={styles.screenTitle}>Your Progress</Text>
-        <Text style={styles.screenSubtitle}>
-          Compete only with yesterday's self. Consistency over ego.
-        </Text>
-      </View>
+        {/* Screen Title */}
+        <View style={styles.titleBlock}>
+          <Text style={styles.screenTitle}>Your Progress</Text>
+          <Text style={styles.screenSubtitle}>
+            Compete only with yesterday's self. Consistency over ego.
+          </Text>
+        </View>
+      </PopInView>
 
       {/* Tier Bento Card */}
-      <View style={styles.tierCard}>
+      <PopInView delay={100} style={styles.tierCard}>
         <View style={styles.tierTopRow}>
           {/* Shield Badge */}
           <View style={styles.shieldOuter}>
@@ -202,10 +205,10 @@ export default function ProgressDashboardScreen({ currentUser, userProfile, xp =
             <Text style={[styles.microStatSub, { color: '#00628d' }]}>This Block</Text>
           </View>
         </View>
-      </View>
+      </PopInView>
 
       {/* New Personal Best Callout */}
-      <View style={styles.newPBCard}>
+      <PopInView delay={180} style={styles.newPBCard}>
         <View style={styles.newPBHeader}>
           <View style={styles.newPBTitleRow}>
             <Text style={styles.newPBEmoji}>🎯</Text>
@@ -227,10 +230,10 @@ export default function ProgressDashboardScreen({ currentUser, userProfile, xp =
             <Text style={styles.newPBTagText}>Pacing Guard On</Text>
           </View>
         </View>
-      </View>
+      </PopInView>
 
       {/* Personal Bests Grid */}
-      <View style={styles.pbSection}>
+      <ScrollPopView delay={100} style={styles.pbSection}>
         <View style={styles.sectionHeader}>
           <View style={styles.sectionTitleRow}>
             <MaterialCommunityIcons name="trophy" size={20} color={COLORS.primary} />
@@ -252,17 +255,17 @@ export default function ProgressDashboardScreen({ currentUser, userProfile, xp =
               <Text style={styles.pbLabel}>{pb.label}</Text>
               <Text style={styles.pbValue}>{pb.value}</Text>
               <Text style={[styles.pbImprovement, { color: pb.improvColor }]}>{pb.improvement}</Text>
-              <TouchableOpacity style={styles.historyBtn} activeOpacity={0.8}>
+              <BouncyButton style={styles.historyBtn} shakeOnPress={false}>
                 <Ionicons name="time-outline" size={13} color="#3d4947" />
                 <Text style={styles.historyBtnText}>History</Text>
-              </TouchableOpacity>
+              </BouncyButton>
             </View>
           ))}
         </View>
-      </View>
+      </ScrollPopView>
 
       {/* Milestones Trophy Case */}
-      <View style={styles.milestonesCard}>
+      <ScrollPopView delay={140} style={styles.milestonesCard}>
         <View style={styles.sectionHeader}>
           <View style={styles.sectionTitleRow}>
             <MaterialCommunityIcons name="star-circle-outline" size={18} color="#64748b" />
@@ -271,13 +274,13 @@ export default function ProgressDashboardScreen({ currentUser, userProfile, xp =
               <Text style={styles.zeroEarnedBadgeText}>0/18</Text>
             </View>
           </View>
-          <TouchableOpacity
+          <BouncyButton
             style={styles.seeAllMilestonesLink}
             onPress={() => setIsMilestoneModalOpen(true)}
-            activeOpacity={0.7}
+            shakeOnPress={false}
           >
             <Text style={styles.seeAllMilestonesLinkText}>See all ›</Text>
-          </TouchableOpacity>
+          </BouncyButton>
         </View>
 
         <ScrollView
@@ -303,7 +306,7 @@ export default function ProgressDashboardScreen({ currentUser, userProfile, xp =
             </View>
           ))}
         </ScrollView>
-      </View>
+      </ScrollPopView>
 
       {/* Unclaimed Milestones Modal */}
       <Modal
