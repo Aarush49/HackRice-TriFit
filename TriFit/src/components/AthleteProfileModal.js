@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
   Modal,
   View,
@@ -8,19 +8,70 @@ import {
   Image,
   ScrollView,
   SafeAreaView,
+  TextInput,
+  Platform,
 } from 'react-native';
-import { Ionicons, MaterialCommunityIcons, FontAwesome5 } from '@expo/vector-icons';
+import { Ionicons, MaterialCommunityIcons, FontAwesome5, Feather } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { COLORS } from '../theme';
 
-export default function AthleteProfileModal({ visible, onClose, onLogout, userProfile = {}, xp = 0, streakDays = 0 }) {
-  const name = userProfile?.name || 'Athlete';
-  const email = userProfile?.email || 'Logged In Athlete';
-  const targetRace = userProfile?.race_type ? userProfile.race_type.toUpperCase() : 'London Hyrox Open';
+const RACE_OPTIONS = [
+  'Sprint Triathlon',
+  'Olympic Triathlon',
+  '70.3 Half Ironman',
+  '140.6 Full Ironman',
+  'Hyrox',
+  'Marathon / Half Marathon',
+];
+
+export default function AthleteProfileModal({
+  visible,
+  onClose,
+  onLogout,
+  userProfile = {},
+  onUpdateProfile,
+  xp = 0,
+  streakDays = 0,
+}) {
+  const [isEditing, setIsEditing] = useState(false);
+  const [editName, setEditName] = useState(userProfile?.name || 'Athlete');
+  const [editEmail, setEditEmail] = useState(userProfile?.email || '');
+  const [editRaceType, setEditRaceType] = useState(userProfile?.race_type || 'Hyrox');
+  const [editRaceDate, setEditRaceDate] = useState(userProfile?.race_date || '2026-11-20');
+  const [editVo2Max, setEditVo2Max] = useState('54.2');
+  const [editBioAge, setEditBioAge] = useState('26');
+
+  // Sync state when modal opens
+  React.useEffect(() => {
+    if (visible) {
+      setEditName(userProfile?.name || 'Athlete');
+      setEditEmail(userProfile?.email || '');
+      setEditRaceType(userProfile?.race_type || 'Hyrox');
+      setEditRaceDate(userProfile?.race_date || '2026-11-20');
+      setIsEditing(false);
+    }
+  }, [visible, userProfile]);
+
+  const handleSave = () => {
+    if (onUpdateProfile) {
+      onUpdateProfile({
+        name: editName.trim() || 'Athlete',
+        email: editEmail.trim(),
+        race_type: editRaceType,
+        race_date: editRaceDate,
+      });
+    }
+    setIsEditing(false);
+  };
+
+  const name = userProfile?.name || editName || 'Athlete';
+  const email = userProfile?.email || editEmail || 'Logged In Athlete';
+  const targetRace = (userProfile?.race_type || editRaceType || 'Hyrox').toUpperCase();
 
   let daysLeftText = '68D LEFT';
-  if (userProfile?.race_date) {
-    const parsed = new Date(userProfile.race_date);
+  const activeRaceDate = userProfile?.race_date || editRaceDate;
+  if (activeRaceDate) {
+    const parsed = new Date(activeRaceDate);
     if (!isNaN(parsed.getTime())) {
       const diffDays = Math.ceil((parsed - new Date()) / (1000 * 60 * 60 * 24));
       daysLeftText = diffDays > 0 ? `${diffDays}D LEFT` : 'RACE DAY!';
@@ -30,13 +81,23 @@ export default function AthleteProfileModal({ visible, onClose, onLogout, userPr
   return (
     <Modal visible={visible} animationType="slide" transparent={false} onRequestClose={onClose}>
       <SafeAreaView style={styles.safeArea}>
+        {/* Top Navigation Bar */}
         <View style={styles.topBar}>
           <TouchableOpacity style={styles.closeBtn} onPress={onClose} activeOpacity={0.7}>
             <Ionicons name="chevron-back" size={24} color="#0f172a" />
           </TouchableOpacity>
           <Text style={styles.headerTitle}>Athlete Profile</Text>
-          <TouchableOpacity style={styles.logoutTopBtn} onPress={onLogout} activeOpacity={0.7}>
-            <Ionicons name="log-out-outline" size={22} color="#e11d48" />
+          <TouchableOpacity
+            style={styles.editToggleBtn}
+            onPress={() => (isEditing ? handleSave() : setIsEditing(true))}
+            activeOpacity={0.7}
+          >
+            <Ionicons
+              name={isEditing ? 'checkmark' : 'pencil'}
+              size={18}
+              color={COLORS.primary}
+            />
+            <Text style={styles.editToggleText}>{isEditing ? 'Save' : 'Edit'}</Text>
           </TouchableOpacity>
         </View>
 
@@ -60,54 +121,111 @@ export default function AthleteProfileModal({ visible, onClose, onLogout, userPr
                   }}
                   style={styles.avatarImage}
                 />
-                <View style={styles.proBadge}>
-                  <Text style={styles.proBadgeText}>PRO</Text>
-                </View>
               </View>
 
               <View style={styles.athleteDetails}>
-                <Text style={styles.athleteName}>{name}</Text>
-                <Text style={styles.athleteEmail}>{email}</Text>
-                <View style={styles.tierPill}>
-                  <Ionicons name="shield-checkmark" size={12} color="#89f5e7" />
-                  <Text style={styles.tierText}>TriFit Athlete</Text>
-                </View>
+                {isEditing ? (
+                  <View style={styles.editInputGroup}>
+                    <Text style={styles.editInputLabel}>ATHLETE NAME</Text>
+                    <TextInput
+                      style={styles.editTextInput}
+                      value={editName}
+                      onChangeText={setEditName}
+                      placeholder="Your Name"
+                      placeholderTextColor="rgba(255,255,255,0.6)"
+                    />
+                  </View>
+                ) : (
+                  <>
+                    <Text style={styles.athleteName}>{name}</Text>
+                    <Text style={styles.athleteEmail}>{email}</Text>
+                    <View style={styles.tierPill}>
+                      <Ionicons name="shield-checkmark" size={12} color="#89f5e7" />
+                      <Text style={styles.tierText}>TriFit Athlete</Text>
+                    </View>
+                  </>
+                )}
               </View>
             </View>
 
-            {/* Target Event Banner */}
-            <View style={styles.eventBanner}>
-              <View style={styles.eventBannerLeft}>
-                <MaterialCommunityIcons name="trophy-outline" size={18} color="#f59e0b" />
-                <View>
-                  <Text style={styles.eventLabel}>NEXT TARGET RACE</Text>
-                  <Text style={styles.eventName}>{targetRace}</Text>
+            {/* Target Event Banner / Edit Target Event */}
+            {isEditing ? (
+              <View style={styles.editEventSection}>
+                <Text style={styles.editInputLabel}>TARGET EVENT / SPORT</Text>
+                <View style={styles.raceOptionsGrid}>
+                  {RACE_OPTIONS.map((race) => (
+                    <TouchableOpacity
+                      key={race}
+                      style={[
+                        styles.raceOptionChip,
+                        editRaceType.toLowerCase() === race.toLowerCase() &&
+                          styles.raceOptionChipSelected,
+                      ]}
+                      onPress={() => setEditRaceType(race)}
+                      activeOpacity={0.8}
+                    >
+                      <Text
+                        style={[
+                          styles.raceOptionText,
+                          editRaceType.toLowerCase() === race.toLowerCase() &&
+                            styles.raceOptionTextSelected,
+                        ]}
+                      >
+                        {race}
+                      </Text>
+                    </TouchableOpacity>
+                  ))}
+                </View>
+
+                <Text style={[styles.editInputLabel, { marginTop: 10 }]}>TARGET RACE DATE (YYYY-MM-DD)</Text>
+                <TextInput
+                  style={styles.editTextInput}
+                  value={editRaceDate}
+                  onChangeText={setEditRaceDate}
+                  placeholder="2026-11-20"
+                  placeholderTextColor="rgba(255,255,255,0.6)"
+                />
+              </View>
+            ) : (
+              <View style={styles.eventBanner}>
+                <View style={styles.eventBannerLeft}>
+                  <MaterialCommunityIcons name="trophy-outline" size={18} color="#f59e0b" />
+                  <View>
+                    <Text style={styles.eventLabel}>NEXT TARGET RACE</Text>
+                    <Text style={styles.eventName}>{targetRace}</Text>
+                  </View>
+                </View>
+                <View style={styles.countdownBadge}>
+                  <Text style={styles.countdownText}>{daysLeftText}</Text>
                 </View>
               </View>
-              <View style={styles.countdownBadge}>
-                <Text style={styles.countdownText}>{daysLeftText}</Text>
+            )}
+
+            {isEditing && (
+              <View style={styles.editActionRow}>
+                <TouchableOpacity
+                  style={styles.saveProfileBtn}
+                  onPress={handleSave}
+                  activeOpacity={0.85}
+                >
+                  <Ionicons name="checkmark-circle" size={16} color="#004d46" />
+                  <Text style={styles.saveProfileBtnText}>Save Profile</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={styles.cancelEditBtn}
+                  onPress={() => setIsEditing(false)}
+                  activeOpacity={0.85}
+                >
+                  <Text style={styles.cancelEditBtnText}>Cancel</Text>
+                </TouchableOpacity>
               </View>
-            </View>
+            )}
           </LinearGradient>
 
-          {/* Biometrics & Healthspan Grid */}
-          <Text style={styles.sectionTitle}>Biology & Performance Baselines</Text>
+          {/* Biometrics & Healthspan Grid (HRV Baseline removed) */}
+          <Text style={styles.sectionTitle}>Biology &amp; Performance Baselines</Text>
           <View style={styles.gridContainer}>
-            {/* Card 1: HRV */}
-            <View style={styles.metricCard}>
-              <View style={styles.metricHeader}>
-                <View style={[styles.iconBox, { backgroundColor: '#ccfbf1' }]}>
-                  <Ionicons name="heart-pulse" size={18} color="#0d9488" />
-                </View>
-                <Text style={styles.metricLabel}>HRV Baseline</Text>
-              </View>
-              <Text style={styles.metricValue}>68 <Text style={styles.metricUnit}>ms</Text></Text>
-              <View style={styles.statusPillTeal}>
-                <Text style={styles.statusPillTealText}>Optimal Recovery</Text>
-              </View>
-            </View>
-
-            {/* Card 2: VO2 Max */}
+            {/* Card 1: VO2 Max */}
             <View style={styles.metricCard}>
               <View style={styles.metricHeader}>
                 <View style={[styles.iconBox, { backgroundColor: '#e0f2fe' }]}>
@@ -115,13 +233,15 @@ export default function AthleteProfileModal({ visible, onClose, onLogout, userPr
                 </View>
                 <Text style={styles.metricLabel}>VO2 Max</Text>
               </View>
-              <Text style={styles.metricValue}>54.2 <Text style={styles.metricUnit}>ml/kg</Text></Text>
+              <Text style={styles.metricValue}>
+                {editVo2Max} <Text style={styles.metricUnit}>ml/kg</Text>
+              </Text>
               <View style={styles.statusPillBlue}>
                 <Text style={styles.statusPillBlueText}>Top 5% for Age</Text>
               </View>
             </View>
 
-            {/* Card 3: Fitness Age */}
+            {/* Card 2: Fitness / Biological Age */}
             <View style={styles.metricCard}>
               <View style={styles.metricHeader}>
                 <View style={[styles.iconBox, { backgroundColor: '#fef3c7' }]}>
@@ -129,23 +249,43 @@ export default function AthleteProfileModal({ visible, onClose, onLogout, userPr
                 </View>
                 <Text style={styles.metricLabel}>Biological Age</Text>
               </View>
-              <Text style={styles.metricValue}>26 <Text style={styles.metricUnit}>yrs</Text></Text>
+              <Text style={styles.metricValue}>
+                {editBioAge} <Text style={styles.metricUnit}>yrs</Text>
+              </Text>
               <View style={styles.statusPillAmber}>
                 <Text style={styles.statusPillAmberText}>-4 yrs younger</Text>
               </View>
             </View>
 
-            {/* Card 4: Streak & XP */}
+            {/* Card 3: Streak & Consistency */}
             <View style={styles.metricCard}>
               <View style={styles.metricHeader}>
                 <View style={[styles.iconBox, { backgroundColor: '#ffdbca' }]}>
                   <MaterialCommunityIcons name="fire" size={18} color="#ea580c" />
                 </View>
-                <Text style={styles.metricLabel}>Streak & XP</Text>
+                <Text style={styles.metricLabel}>Streak &amp; XP</Text>
               </View>
-              <Text style={styles.metricValue}>{streakDays}D <Text style={styles.metricUnit}>• {xp} XP</Text></Text>
+              <Text style={styles.metricValue}>
+                {streakDays}D <Text style={styles.metricUnit}>• {xp} XP</Text>
+              </Text>
               <View style={styles.statusPillOrange}>
                 <Text style={styles.statusPillOrangeText}>Consistent 🔥</Text>
+              </View>
+            </View>
+
+            {/* Card 4: Resting Heart Rate */}
+            <View style={styles.metricCard}>
+              <View style={styles.metricHeader}>
+                <View style={[styles.iconBox, { backgroundColor: '#f0fdf4' }]}>
+                  <Ionicons name="heart" size={18} color="#15803d" />
+                </View>
+                <Text style={styles.metricLabel}>Resting HR</Text>
+              </View>
+              <Text style={styles.metricValue}>
+                48 <Text style={styles.metricUnit}>bpm</Text>
+              </Text>
+              <View style={styles.statusPillGreen}>
+                <Text style={styles.statusPillGreenText}>Elite Athlete</Text>
               </View>
             </View>
           </View>
@@ -190,7 +330,7 @@ export default function AthleteProfileModal({ visible, onClose, onLogout, userPr
           </View>
 
           {/* Connected Gear & Apps */}
-          <Text style={styles.sectionTitle}>Connected Gear & Integrations</Text>
+          <Text style={styles.sectionTitle}>Connected Gear &amp; Integrations</Text>
           <View style={styles.gearCard}>
             <View style={styles.gearItem}>
               <Ionicons name="watch-outline" size={22} color="#0f172a" />
@@ -212,7 +352,7 @@ export default function AthleteProfileModal({ visible, onClose, onLogout, userPr
             </View>
           </View>
 
-          {/* Action Buttons */}
+          {/* Bottom Action Button */}
           <TouchableOpacity style={styles.logoutBtn} onPress={onLogout} activeOpacity={0.85}>
             <Ionicons name="log-out" size={18} color="#ffffff" />
             <Text style={styles.logoutBtnText}>Log Out / Switch Account</Text>
@@ -246,8 +386,21 @@ const styles = StyleSheet.create({
     fontWeight: '800',
     color: '#0f172a',
   },
-  logoutTopBtn: {
-    padding: 6,
+  editToggleBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    backgroundColor: '#f0fdfa',
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: 14,
+    borderWidth: 1,
+    borderColor: '#99f6e4',
+  },
+  editToggleText: {
+    fontSize: 12,
+    fontWeight: '800',
+    color: COLORS.primary,
   },
   scrollContainer: {
     flex: 1,
@@ -280,20 +433,6 @@ const styles = StyleSheet.create({
     borderRadius: 34,
     borderWidth: 3,
     borderColor: '#89f5e7',
-  },
-  proBadge: {
-    position: 'absolute',
-    bottom: -4,
-    alignSelf: 'center',
-    backgroundColor: '#f59e0b',
-    paddingHorizontal: 6,
-    paddingVertical: 1,
-    borderRadius: 8,
-  },
-  proBadgeText: {
-    color: '#ffffff',
-    fontSize: 9,
-    fontWeight: '900',
   },
   athleteDetails: {
     flex: 1,
@@ -361,6 +500,97 @@ const styles = StyleSheet.create({
     fontSize: 10,
     fontWeight: '900',
   },
+
+  /* Edit Mode Styles */
+  editInputGroup: {
+    width: '100%',
+    gap: 4,
+  },
+  editInputLabel: {
+    fontSize: 10,
+    fontWeight: '800',
+    color: '#89f5e7',
+    letterSpacing: 0.5,
+  },
+  editTextInput: {
+    backgroundColor: 'rgba(255, 255, 255, 0.18)',
+    borderRadius: 10,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    fontSize: 14,
+    fontWeight: '700',
+    color: '#ffffff',
+    borderWidth: 1,
+    borderColor: 'rgba(137, 245, 231, 0.4)',
+  },
+  editEventSection: {
+    marginTop: 14,
+    paddingTop: 14,
+    borderTopWidth: 1,
+    borderTopColor: 'rgba(255, 255, 255, 0.15)',
+    gap: 6,
+  },
+  raceOptionsGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 6,
+    marginTop: 4,
+  },
+  raceOptionChip: {
+    backgroundColor: 'rgba(255, 255, 255, 0.12)',
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.2)',
+  },
+  raceOptionChipSelected: {
+    backgroundColor: '#89f5e7',
+    borderColor: '#ffffff',
+  },
+  raceOptionText: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: '#ffffff',
+  },
+  raceOptionTextSelected: {
+    color: '#004d46',
+    fontWeight: '800',
+  },
+  editActionRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    marginTop: 16,
+  },
+  saveProfileBtn: {
+    flex: 1,
+    backgroundColor: '#89f5e7',
+    paddingVertical: 10,
+    borderRadius: 12,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+  },
+  saveProfileBtnText: {
+    fontSize: 13,
+    fontWeight: '800',
+    color: '#004d46',
+  },
+  cancelEditBtn: {
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+    borderRadius: 12,
+    backgroundColor: 'rgba(255, 255, 255, 0.15)',
+  },
+  cancelEditBtnText: {
+    fontSize: 13,
+    fontWeight: '700',
+    color: '#ffffff',
+  },
+
+  /* Metric Cards */
   sectionTitle: {
     fontSize: 15,
     fontWeight: '800',
@@ -415,18 +645,6 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     color: '#64748b',
   },
-  statusPillTeal: {
-    backgroundColor: '#ccfbf1',
-    paddingHorizontal: 8,
-    paddingVertical: 2,
-    borderRadius: 10,
-    alignSelf: 'flex-start',
-  },
-  statusPillTealText: {
-    color: '#0f766e',
-    fontSize: 10,
-    fontWeight: '800',
-  },
   statusPillBlue: {
     backgroundColor: '#e0f2fe',
     paddingHorizontal: 8,
@@ -460,6 +678,18 @@ const styles = StyleSheet.create({
   },
   statusPillOrangeText: {
     color: '#9d4300',
+    fontSize: 10,
+    fontWeight: '800',
+  },
+  statusPillGreen: {
+    backgroundColor: '#f0fdf4',
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: 10,
+    alignSelf: 'flex-start',
+  },
+  statusPillGreenText: {
+    color: '#15803d',
     fontSize: 10,
     fontWeight: '800',
   },

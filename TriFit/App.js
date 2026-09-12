@@ -266,6 +266,12 @@ export default function App() {
         onClose={() => setProfileVisible(false)}
         onLogout={handleLogout}
         userProfile={userProfile}
+        onUpdateProfile={(updated) => {
+          setUserProfile((prev) => ({ ...prev, ...updated }));
+          if (updated.name) {
+            setCurrentUser((prev) => (prev ? { ...prev, name: updated.name, username: updated.name } : prev));
+          }
+        }}
         xp={xp}
         streakDays={streakDays}
       />
