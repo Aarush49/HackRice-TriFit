@@ -14,6 +14,14 @@ SECRET_KEY = os.getenv("JWT_SECRET", "trifit_super_secure_jwt_secret_key_2026_ti
 ALGORITHM = "HS256"
 TOKEN_EXPIRE_HOURS = 24
 
+# Initialize ElevenLabs client if API key is present
+ELEVENLABS_API_KEY = os.getenv("ELEVENLABS_API_KEY")
+eleven_client = ElevenLabs(api_key=ELEVENLABS_API_KEY) if ELEVENLABS_API_KEY else None
+
+# Initialize Gemini client if API key is present
+GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
+gemini_client = genai.Client(api_key=GEMINI_API_KEY) if GEMINI_API_KEY else None
+
 app = FastAPI(title="TriFit API")
 
 # Enable CORS
@@ -132,3 +140,17 @@ def get_user_info(credentials: HTTPAuthorizationCredentials = Depends(security))
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=True)
+
+# Helper function to generate response using Gemini API
+def generate_gemini_response(prompt: str, model: str = "gemini-2.5-flash") -> str:
+    """
+    Generates text using Google Gemini API given a prompt.
+    """
+    if not gemini_client:
+        raise HTTPException(status_code=500, detail="GEMINI_API_KEY is not configured.")
+    
+    response = gemini_client.models.generate_content(
+        model=model,
+        contents=prompt,
+    )
+    return response.text
