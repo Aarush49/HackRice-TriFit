@@ -249,7 +249,8 @@ export default function DailyMissionsScreen({
     }
   };
 
-  const completedCount = 1 + Object.values(completedHabits).filter(Boolean).length;
+  const isStepsDone = (wearableData.steps || 0) >= 8000 || !!completedHabits['habit_2'];
+  const completedCount = 1 + Object.values(completedHabits).filter(Boolean).length + (isStepsDone && !completedHabits['habit_2'] ? 1 : 0);
   const targetRace = userProfile?.race_type ? userProfile.race_type.toUpperCase() : 'HYROX BUILD';
   const planDay = streakDays > 0 ? streakDays : 14;
 
@@ -514,24 +515,26 @@ export default function DailyMissionsScreen({
           </View>
 
           {/* Habit Card 2 */}
-          <View style={styles.habitCard}>
+          <View style={[styles.habitCard, isStepsDone && { borderColor: '#bbf7d0', backgroundColor: '#f0fdf4' }]}>
             <View style={styles.habitContent}>
               <View style={styles.habitTopRow}>
-                <View style={[styles.habitIconBox, { backgroundColor: '#ffedd5' }]}>
-                  <Ionicons name="footsteps" size={15} color="#ea580c" />
+                <View style={[styles.habitIconBox, { backgroundColor: isStepsDone ? '#dcfce7' : '#ffedd5' }]}>
+                  <Ionicons name="footsteps" size={15} color={isStepsDone ? '#15803d' : '#ea580c'} />
                 </View>
-                <View style={styles.habitXpBadge}>
-                  <Text style={styles.habitXpText}>+30 XP</Text>
+                <View style={[styles.habitXpBadge, isStepsDone && { backgroundColor: '#bbf7d0' }]}>
+                  <Text style={[styles.habitXpText, isStepsDone && { color: '#15803d' }]}>
+                    {isStepsDone ? '✓ +30 XP' : '+30 XP'}
+                  </Text>
                 </View>
               </View>
 
               <Text style={styles.habitCardTitle}>Target 8k Steps</Text>
               <View style={styles.stepsStatsRow}>
-                <Text style={styles.stepsCount}>
-                  {completedHabits['habit_2'] ? '8.0k / 8.0k' : `${(wearableData.steps / 1000).toFixed(1)}k / 8.0k`}
+                <Text style={[styles.stepsCount, isStepsDone && { color: '#15803d', fontWeight: '700' }]}>
+                  {`${((wearableData.steps || 0) / 1000).toFixed(1)}k / 8.0k`}
                 </Text>
-                <Text style={styles.stepsPercent}>
-                  {completedHabits['habit_2'] ? '100%' : `${Math.min(100, Math.round((wearableData.steps / 8000) * 100))}%`}
+                <Text style={[styles.stepsPercent, isStepsDone && { color: '#15803d', fontWeight: '800' }]}>
+                  {`${Math.min(100, Math.round(((wearableData.steps || 0) / 8000) * 100))}%`}
                 </Text>
               </View>
             </View>
@@ -540,15 +543,18 @@ export default function DailyMissionsScreen({
               onPress={handleSyncWearables}
               activeOpacity={0.8}
               disabled={isSyncing}
-              style={styles.habitActionBtn}
+              style={[
+                styles.habitActionBtn,
+                isStepsDone && styles.habitActionBtnActive,
+              ]}
             >
               <MaterialCommunityIcons
-                name="sync"
+                name={isSyncing ? 'sync' : (isStepsDone ? 'check-circle' : 'sync')}
                 size={13}
-                color="#c2410c"
+                color={isSyncing ? '#ea580c' : (isStepsDone ? '#15803d' : '#c2410c')}
               />
-              <Text style={[styles.habitActionText, { color: '#c2410c' }]}>
-                {isSyncing ? 'Syncing...' : 'Sync'}
+              <Text style={[styles.habitActionText, { color: isSyncing ? '#ea580c' : (isStepsDone ? '#15803d' : '#c2410c') }]}>
+                {isSyncing ? 'Syncing...' : (isStepsDone ? 'Completed' : 'Sync')}
               </Text>
             </TouchableOpacity>
           </View>

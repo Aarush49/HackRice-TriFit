@@ -382,6 +382,7 @@ export default function TrainingScheduleScreen({ currentUser, userProfile, onSta
               <Text style={styles.targetEventTitle}>{targetRace}</Text>
               <Text style={styles.targetEventDate}>{targetDate}</Text>
             </View>
+          </View>
           <TouchableOpacity
             style={styles.adjustBtn}
             onPress={handleOpenAdjustModal}
