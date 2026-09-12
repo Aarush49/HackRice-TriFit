@@ -37,9 +37,7 @@ export default function App() {
       name: userData?.name || 'Alex Rivers',
       email: userData?.email || 'alex@endurance.io',
     });
-    if (userData?.method === 'signup' || userData?.name) {
-      setXp((prev) => prev + 25);
-    }
+    setCurrentUser(userData || { name: 'Alex Rivers' });
     setIsLoggedIn(true);
     // When login is successful, they go to the questionnaire if they need it.
     setActiveTab('today');
@@ -49,6 +47,7 @@ export default function App() {
     setProfileVisible(false);
     setCoachVisible(false);
     setIsLoggedIn(false);
+    setCurrentUser(null);
     // Optional: reset onboarding so they see it again if they sign up again.
     setNeedsOnboarding(true);
   };

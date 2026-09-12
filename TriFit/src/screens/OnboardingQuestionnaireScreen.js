@@ -14,7 +14,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 
 export default function OnboardingQuestionnaireScreen({ onComplete }) {
   const [currentStep, setCurrentStep] = useState(1);
-  const totalSteps = 5;
+  const totalSteps = 4;
 
   // Answers State
   const [raceType, setRaceType] = useState(null);
@@ -248,7 +248,10 @@ export default function OnboardingQuestionnaireScreen({ onComplete }) {
             ]}
             onPress={() => toggleEquipment(item)}
           >
-            <View style={styles.checkbox}>
+            <View style={[
+              styles.checkbox,
+              equipment.includes(item) && styles.checkboxChecked,
+            ]}>
               {equipment.includes(item) && <Ionicons name="checkmark" size={16} color="#ffffff" />}
             </View>
             <Text
@@ -439,44 +442,6 @@ export default function OnboardingQuestionnaireScreen({ onComplete }) {
     </View>
   );
 
-  const renderStep5 = () => (
-    <View style={styles.stepContainer}>
-      <Text style={styles.sectionTitle}>Section 5: AI Coach Preference</Text>
-
-      <Text style={styles.questionLabel}>What kind of coaching style motivates you?</Text>
-      {[
-        'The Pusher - Hard truth, high accountability',
-        'The Educator - Explains the science and "why"',
-        'The Supporter - Encouraging, focuses on consistency',
-      ].map((style) => (
-        <TouchableOpacity
-          key={style}
-          style={[
-            styles.optionCardRow,
-            coachStyle === style && styles.optionCardSelected,
-          ]}
-          onPress={() => setCoachStyle(style)}
-        >
-          <Text
-            style={[
-              styles.optionText,
-              coachStyle === style && styles.optionTextSelected,
-            ]}
-          >
-            {style}
-          </Text>
-        </TouchableOpacity>
-      ))}
-
-      <View style={styles.summaryBox}>
-        <Ionicons name="sparkles" size={24} color="#0d9488" />
-        <Text style={styles.summaryTitle}>Almost ready!</Text>
-        <Text style={styles.summaryText}>
-          We will use this data alongside your HRV and daily check-ins to build a dynamic, adapting training plan.
-        </Text>
-      </View>
-    </View>
-  );
 
   return (
     <View style={styles.container}>
@@ -497,7 +462,6 @@ export default function OnboardingQuestionnaireScreen({ onComplete }) {
           {currentStep === 2 && renderStep2()}
           {currentStep === 3 && renderStep3()}
           {currentStep === 4 && renderStep4()}
-          {currentStep === 5 && renderStep5()}
         </ScrollView>
 
         <View style={styles.footer}>
@@ -706,6 +670,10 @@ const styles = StyleSheet.create({
     marginRight: 12,
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  checkboxChecked: {
+    backgroundColor: '#0d9488',
+    borderColor: '#0d9488',
   },
   summaryBox: {
     backgroundColor: '#f0fdfa',

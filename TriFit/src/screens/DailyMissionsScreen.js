@@ -49,47 +49,6 @@ export default function DailyMissionsScreen({ onStartRun, onOpenCoach, xp, setXp
         </LinearGradient>
       </View>
 
-      {/* Coach Maya Speech Bubble Card */}
-      <View style={styles.mayaCard}>
-        <LinearGradient
-          colors={['#ecfdf5', '#f0fdfa', '#fefce8']}
-          style={styles.mayaGradient}
-        >
-          <View style={styles.mayaHeader}>
-            <View style={styles.mayaProfile}>
-              <View style={styles.avatarWrap}>
-                <Image
-                  source={{
-                    uri: 'https://lh3.googleusercontent.com/aida-public/AB6AXuDkV_Kd98o6DF09QGU3Gv4u4RHrWKdogf2D9arDcGv7Q2Vk-EFcwI-DUvPk06TqN1p7jMDTnyDAtO9Eut9Gg0SuOHxBLr6fjQZf-jVpL8FXVtywrDY7hIXe-MtvSbm4lJxvH33wjLyLAYHWJF0xAcl7H5IDxuWt2gTWNvt4MrnZiPmCs41s4CuDkgUULkPUD6Kba0pSdzqTetGtAlJdKyark3WqzqdqaCxkkRcLLGwn6YCYWjgbgx1-',
-                  }}
-                  style={styles.mayaAvatar}
-                />
-                <View style={styles.boltDot}>
-                  <Ionicons name="flash" size={10} color="#ffffff" />
-                </View>
-              </View>
-              <View>
-                <View style={styles.mayaNameRow}>
-                  <Text style={styles.mayaName}>Coach Maya</Text>
-                  <View style={styles.tunedPill}>
-                    <Text style={styles.tunedText}>TUNED</Text>
-                  </View>
-                </View>
-                <Text style={styles.shieldText}>
-                  <Ionicons name="heart" size={12} color="#0d9488" /> HR & Tendon Shield
-                </Text>
-              </View>
-            </View>
-          </View>
-
-          <TouchableOpacity style={styles.speechBox} onPress={onOpenCoach} activeOpacity={0.85}>
-            <Text style={styles.speechText}>
-              “HRV dipped slightly — swapped intervals for an easy Zone 2 cruise. Tendons happy, stamina banked! ☕️👟”
-            </Text>
-          </TouchableOpacity>
-        </LinearGradient>
-      </View>
-
       {/* Today's Missions Section */}
       <View style={styles.missionsSection}>
         <View style={styles.sectionHeader}>
