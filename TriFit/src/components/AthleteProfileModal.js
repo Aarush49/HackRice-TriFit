@@ -39,7 +39,6 @@ export default function AthleteProfileModal({
   const [editRaceType, setEditRaceType] = useState(userProfile?.race_type || 'Hyrox');
   const [editRaceDate, setEditRaceDate] = useState(userProfile?.race_date || '2026-11-20');
   const [editVo2Max, setEditVo2Max] = useState('54.2');
-  const [editBioAge, setEditBioAge] = useState('26');
 
   // Sync state when modal opens
   React.useEffect(() => {
@@ -77,6 +76,30 @@ export default function AthleteProfileModal({
       daysLeftText = diffDays > 0 ? `${diffDays}D LEFT` : 'RACE DAY!';
     }
   }
+
+  // Dynamic biological age from userProfile
+  const chronoAge = parseInt(userProfile?.age, 10) || 25;
+  const fitnessLevel = userProfile?.fitness_level || '';
+  const trainingDays = parseInt(userProfile?.training_days, 10) || 4;
+  const getBioAgeAdj = () => {
+    let adj = 0;
+    if (fitnessLevel.includes('race-trained') || fitnessLevel.includes('Already')) adj -= 5;
+    else if (fitnessLevel.includes('regularly') || fitnessLevel.includes('regular')) adj -= 3;
+    else if (fitnessLevel.includes('occasionally') || fitnessLevel.includes('Train occ')) adj -= 1;
+    else if (fitnessLevel.includes('New') || fitnessLevel.includes('new')) adj += 2;
+    if (trainingDays >= 6) adj -= 3;
+    else if (trainingDays >= 4) adj -= 2;
+    else if (trainingDays >= 3) adj -= 1;
+    else adj += 1;
+    return adj;
+  };
+  const bioAgeAdj = getBioAgeAdj();
+  const biologicalAge = Math.max(15, chronoAge + bioAgeAdj);
+  const bioAgeTagText = bioAgeAdj < 0
+    ? `${Math.abs(bioAgeAdj)} yrs younger`
+    : bioAgeAdj > 0 ? `${bioAgeAdj} yrs older` : 'Same as chrono age';
+  const bioAgeTagColor = bioAgeAdj < -2 ? '#16a34a' : bioAgeAdj < 0 ? '#0d9488' : bioAgeAdj > 2 ? '#dc2626' : '#b45309';
+  const bioAgeTagBg = bioAgeAdj < 0 ? '#f0fdf4' : bioAgeAdj > 0 ? '#fef2f2' : '#fef3c7';
 
   return (
     <Modal visible={visible} animationType="slide" transparent={false} onRequestClose={onClose}>
@@ -241,7 +264,7 @@ export default function AthleteProfileModal({
               </View>
             </View>
 
-            {/* Card 2: Fitness / Biological Age */}
+            {/* Card 2: Fitness / Biological Age (computed from activeness) */}
             <View style={styles.metricCard}>
               <View style={styles.metricHeader}>
                 <View style={[styles.iconBox, { backgroundColor: '#fef3c7' }]}>
@@ -250,10 +273,10 @@ export default function AthleteProfileModal({
                 <Text style={styles.metricLabel}>Biological Age</Text>
               </View>
               <Text style={styles.metricValue}>
-                {editBioAge} <Text style={styles.metricUnit}>yrs</Text>
+                {biologicalAge} <Text style={styles.metricUnit}>yrs</Text>
               </Text>
-              <View style={styles.statusPillAmber}>
-                <Text style={styles.statusPillAmberText}>-4 yrs younger</Text>
+              <View style={[styles.statusPillAmber, { backgroundColor: bioAgeTagBg }]}>
+                <Text style={[styles.statusPillAmberText, { color: bioAgeTagColor }]}>{bioAgeTagText}</Text>
               </View>
             </View>
 
