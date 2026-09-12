@@ -19,6 +19,7 @@ export default function DailyMissionsScreen({
   onOpenCoach,
   xp,
   setXp,
+  streakDays = 0,
 }) {
   const { width } = useWindowDimensions();
   const isWide = width >= 860;
@@ -33,6 +34,23 @@ export default function DailyMissionsScreen({
 
   const athleteName = (currentUser?.name || userProfile?.name || 'Aarush').toUpperCase();
 
+  const streakCount = streakDays || 0;
+  const targetRaceTitle = userProfile?.race_type
+    ? `${userProfile.race_type.toUpperCase()} TARGET`
+    : 'London Hyrox Open';
+
+  // Calculate real days left if target date is set
+  let daysLeftDisplay = '68D LEFT';
+  if (userProfile?.race_date) {
+    const parsed = new Date(userProfile.race_date);
+    if (!isNaN(parsed.getTime())) {
+      const diffDays = Math.ceil((parsed - new Date()) / (1000 * 60 * 60 * 24));
+      daysLeftDisplay = diffDays > 0 ? `${diffDays}D LEFT` : 'RACE DAY!';
+    }
+  }
+
+  const todayDow = (new Date().getDay() + 6) % 7; // 0 = Mon, 6 = Sun
+
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
       {/* 1. Top Greeting & Target Race Countdown */}
@@ -40,11 +58,11 @@ export default function DailyMissionsScreen({
         <View style={styles.headlineRow}>
           <Ionicons name="sunny" size={26} color="#F59E0B" />
           <Text style={styles.headlineTitle}>
-            Day 14 <Text style={styles.orangeDot}>•</Text> Zone In!
+            Day {streakCount > 0 ? streakCount : 1} <Text style={styles.orangeDot}>•</Text> Zone In!
           </Text>
         </View>
 
-        {/* London Hyrox Open Countdown Pill */}
+        {/* Target Race Countdown Pill */}
         <LinearGradient
           colors={['#e0f2fe', '#ecfeff', '#fef3c7']}
           start={{ x: 0, y: 0 }}
@@ -55,17 +73,17 @@ export default function DailyMissionsScreen({
             <View style={styles.raceTimerIconBox}>
               <MaterialCommunityIcons name="timer" size={20} color="#0284c7" />
             </View>
-            <Text style={styles.raceNameText}>London Hyrox Open</Text>
+            <Text style={styles.raceNameText} numberOfLines={1}>{targetRaceTitle}</Text>
           </View>
 
           <View style={styles.daysLeftBadge}>
-            <Text style={styles.daysLeftText}>68D LEFT</Text>
+            <Text style={styles.daysLeftText}>{daysLeftDisplay}</Text>
             <Ionicons name="flag" size={13} color="#ffffff" />
           </View>
         </LinearGradient>
       </View>
 
-      {/* 2. Daily Consistency & Streak Tracker (Placed above everything, below AI Coach) */}
+      {/* 2. Daily Consistency & Streak Tracker */}
       <View style={styles.streakSection}>
         <View style={styles.streakHeader}>
           <View style={styles.streakTitleRow}>
@@ -78,15 +96,15 @@ export default function DailyMissionsScreen({
             </View>
           </View>
           <View style={styles.streakNumberBadge}>
-            <Text style={styles.streakNumberText}>14 Days 🔥</Text>
+            <Text style={styles.streakNumberText}>{streakCount} Days 🔥</Text>
           </View>
         </View>
 
         {/* Days Row */}
         <View style={styles.daysRow}>
           {['M', 'T', 'W', 'T', 'F', 'S', 'S'].map((day, idx) => {
-            const isCompleted = idx < 3;
-            const isToday = idx === 3;
+            const isCompleted = streakCount > 0 && idx < (streakCount % 7 || 7);
+            const isToday = idx === todayDow;
             return (
               <View key={idx} style={styles.dayCol}>
                 <Text style={[styles.dayLetter, isToday && styles.todayLetter]}>{day}</Text>
@@ -116,7 +134,11 @@ export default function DailyMissionsScreen({
           <View style={styles.milestoneTextWrap}>
             <Text style={styles.milestoneTag}>NEXT MILESTONE</Text>
             <Text style={styles.milestoneDesc}>
-              3 more days to win the <Text style={styles.boldText}>Golden Kettlebell</Text>! 🏆
+              {streakCount === 0
+                ? 'Complete your first run to start building your streak! 🏆'
+                : `${Math.max(1, 3 - (streakCount % 3))} more days to win the `}
+              {streakCount > 0 && <Text style={styles.boldText}>Golden Kettlebell</Text>}
+              {streakCount > 0 && '! 🏆'}
             </Text>
           </View>
         </LinearGradient>

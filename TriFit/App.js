@@ -26,20 +26,56 @@ export default function App() {
   const [authVisible, setAuthVisible] = useState(false);
   const [currentUser, setCurrentUser] = useState(null);
   const [token, setToken] = useState(null);
-  const [xp, setXp] = useState(420);
-  const [streakDays, setStreakDays] = useState(14);
+  const [xp, setXp] = useState(0);
+  const [streakDays, setStreakDays] = useState(0);
   const [userProfile, setUserProfile] = useState({
-    name: 'Alex Rivers',
-    email: 'alex@endurance.io',
+    name: '',
+    email: '',
+    race_type: '',
+    race_date: '',
   });
 
-  const handleLoginSuccess = (userData) => {
+  const fetchUserStats = async (username) => {
+    if (!username) return;
+    try {
+      const res = await fetch(`http://localhost:8000/api/user-stats?username=${encodeURIComponent(username)}`);
+      if (res.ok) {
+        const data = await res.json();
+        if (data.user) {
+          setXp(data.user.xp || 0);
+          setStreakDays(data.user.streak_days || 0);
+          setUserProfile((prev) => ({
+            ...prev,
+            name: data.user.username || data.user.email?.split('@')[0] || 'Athlete',
+            email: data.user.email || '',
+            race_type: data.profile?.race_type || '',
+            race_date: data.profile?.race_date || '',
+            fitness_level: data.profile?.fitness_level || '',
+            training_days: data.profile?.training_days || 4,
+            equipment: data.profile?.equipment || [],
+            baseline_metrics: data.profile?.baseline_metrics || {},
+          }));
+        }
+      }
+    } catch (e) {
+      console.log('Error fetching user stats:', e);
+    }
+  };
+
+  const handleLoginSuccess = async (userData) => {
+    const name = userData?.username || userData?.name || userData?.email?.split('@')[0] || '';
+    const email = userData?.email || '';
+
     setUserProfile({
-      name: userData?.name || 'Alex Rivers',
-      email: userData?.email || 'alex@endurance.io',
+      name,
+      email,
+      race_type: '',
+      race_date: '',
     });
-    setCurrentUser(userData || { name: 'Alex Rivers' });
+    setCurrentUser(userData || { username: name, email });
     setIsLoggedIn(true);
+
+    await fetchUserStats(userData?.username || name);
 
     // Only show onboarding when creating a new account (signup)
     if (userData?.isSignup) {
@@ -56,15 +92,37 @@ export default function App() {
     setIsLoggedIn(false);
     setCurrentUser(null);
     setNeedsOnboarding(false);
+    setXp(0);
+    setStreakDays(0);
+    setUserProfile({ name: '', email: '', race_type: '', race_date: '' });
   };
 
-  const handleFinishRun = () => {
+  const handleFinishRun = async () => {
     setXp((prev) => prev + 120);
+    setStreakDays((prev) => (prev === 0 ? 1 : prev));
+    if (currentUser?.username) {
+      try {
+        await fetch('http://localhost:8000/api/add-xp', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            username: currentUser.username,
+            xp_to_add: 120,
+            increment_streak: true,
+          }),
+        });
+      } catch (err) {
+        console.log('Error syncing run xp:', err);
+      }
+    }
   };
 
   const handleAuthSuccess = (user, authToken) => {
     setCurrentUser(user);
     setToken(authToken);
+    if (user?.username) {
+      fetchUserStats(user.username);
+    }
   };
 
   // 1. Show Splash Screen first on launch
@@ -144,6 +202,15 @@ export default function App() {
   return (
     <SafeAreaView style={styles.safeArea}>
       <StatusBar barStyle="dark-content" backgroundColor={COLORS.background} />
+      {Platform.OS === 'web' && (
+        <style>{`
+          html, body, #root {
+            height: 100% !important;
+            min-height: 100dvh !important;
+            overscroll-behavior-y: none;
+          }
+        `}</style>
+      )}
 
       {/* Main Header */}
       <Header
@@ -165,16 +232,21 @@ export default function App() {
             onOpenCoach={() => setCoachVisible(true)}
             xp={xp}
             setXp={setXp}
+            streakDays={streakDays}
           />
         )}
         {activeTab === 'schedule' && (
           <TrainingScheduleScreen
+            currentUser={currentUser}
+            userProfile={userProfile}
             onStartWorkout={() => setRunVisible(true)}
             onOpenCoach={() => setCoachVisible(true)}
           />
         )}
         {activeTab === 'longevity' && (
           <LongevityDashboardScreen
+            currentUser={currentUser}
+            userProfile={userProfile}
             onOpenCoach={() => setCoachVisible(true)}
             xp={xp}
             setXp={setXp}
@@ -207,6 +279,7 @@ export default function App() {
         visible={coachVisible}
         onClose={() => setCoachVisible(false)}
         onLogout={handleLogout}
+        currentUser={currentUser}
       />
 
       {/* Active Quest Run Overlay */}

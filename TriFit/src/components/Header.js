@@ -3,7 +3,7 @@ import { View, Text, StyleSheet, Image, TouchableOpacity } from 'react-native';
 import { MaterialCommunityIcons, Ionicons } from '@expo/vector-icons';
 import { COLORS } from '../theme';
 
-export default function Header({ onOpenProfile, onOpenCoach, onOpenAuth, currentUser, streakDays = 14, xpPoints = 420 }) {
+export default function Header({ onOpenProfile, onOpenCoach, onOpenAuth, currentUser, streakDays = 0, xpPoints = 0 }) {
   return (
     <View style={styles.container}>
       {/* Brand Title */}

@@ -12,12 +12,12 @@ import { MaterialCommunityIcons, Ionicons, Feather, FontAwesome5 } from '@expo/v
 import { LinearGradient } from 'expo-linear-gradient';
 import { COLORS } from '../theme';
 
-export default function TrainingScheduleScreen({ onStartWorkout, onOpenCoach }) {
+export default function TrainingScheduleScreen({ currentUser, userProfile, onStartWorkout, onOpenCoach }) {
   const [viewMode, setViewMode] = useState('week'); // 'week' | 'month'
   const [selectedDay, setSelectedDay] = useState(12); // Wed 12 is today
   const [adaptedPlan, setAdaptedPlan] = useState(null);
-  const [targetRace, setTargetRace] = useState('Hyrox Open / Pro');
-  const [targetDate, setTargetDate] = useState('November 15, 2025');
+  const [targetRace, setTargetRace] = useState(userProfile?.race_type || 'Hyrox Open / Pro');
+  const [targetDate, setTargetDate] = useState(userProfile?.race_date || 'November 15, 2025');
 
   const days = [
     { day: 'M', date: 10, status: 'completed', icon: 'check', iconType: 'ion', bg: '#f1f5f9', iconColor: '#ffffff', iconBg: COLORS.primary },

@@ -13,9 +13,19 @@ import { Ionicons, MaterialCommunityIcons, FontAwesome5 } from '@expo/vector-ico
 import { LinearGradient } from 'expo-linear-gradient';
 import { COLORS } from '../theme';
 
-export default function AthleteProfileModal({ visible, onClose, onLogout, userProfile = {}, xp = 420, streakDays = 14 }) {
-  const name = userProfile?.name || 'Alex Rivers';
-  const email = userProfile?.email || 'alex@endurance.io';
+export default function AthleteProfileModal({ visible, onClose, onLogout, userProfile = {}, xp = 0, streakDays = 0 }) {
+  const name = userProfile?.name || 'Athlete';
+  const email = userProfile?.email || 'Logged In Athlete';
+  const targetRace = userProfile?.race_type ? userProfile.race_type.toUpperCase() : 'London Hyrox Open';
+
+  let daysLeftText = '68D LEFT';
+  if (userProfile?.race_date) {
+    const parsed = new Date(userProfile.race_date);
+    if (!isNaN(parsed.getTime())) {
+      const diffDays = Math.ceil((parsed - new Date()) / (1000 * 60 * 60 * 24));
+      daysLeftText = diffDays > 0 ? `${diffDays}D LEFT` : 'RACE DAY!';
+    }
+  }
 
   return (
     <Modal visible={visible} animationType="slide" transparent={false} onRequestClose={onClose}>
@@ -60,7 +70,7 @@ export default function AthleteProfileModal({ visible, onClose, onLogout, userPr
                 <Text style={styles.athleteEmail}>{email}</Text>
                 <View style={styles.tierPill}>
                   <Ionicons name="shield-checkmark" size={12} color="#89f5e7" />
-                  <Text style={styles.tierText}>TriFit Gold Athlete</Text>
+                  <Text style={styles.tierText}>TriFit Athlete</Text>
                 </View>
               </View>
             </View>
@@ -71,11 +81,11 @@ export default function AthleteProfileModal({ visible, onClose, onLogout, userPr
                 <MaterialCommunityIcons name="trophy-outline" size={18} color="#f59e0b" />
                 <View>
                   <Text style={styles.eventLabel}>NEXT TARGET RACE</Text>
-                  <Text style={styles.eventName}>London Hyrox Open</Text>
+                  <Text style={styles.eventName}>{targetRace}</Text>
                 </View>
               </View>
               <View style={styles.countdownBadge}>
-                <Text style={styles.countdownText}>68D LEFT</Text>
+                <Text style={styles.countdownText}>{daysLeftText}</Text>
               </View>
             </View>
           </LinearGradient>

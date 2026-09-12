@@ -278,21 +278,60 @@ def get_onboarding(username: Optional[str] = None):
 
 security = HTTPBearer()
 
-# 4. GET USER INFO
-@app.get("/user")
-def get_user_info(credentials: HTTPAuthorizationCredentials = Depends(security)):
-    token = credentials.credentials.strip().strip('"').strip("'")
-    if token.lower().startswith("bearer "):
-        token = token[7:].strip()
+# 4. GET USER INFO & STATS
+class UpdateStatsRequest(BaseModel):
+    username: str
+    xp_to_add: Optional[int] = 0
+    increment_streak: Optional[bool] = False
 
+@app.get("/user")
+@app.get("/api/user-stats")
+def get_user_stats(username: Optional[str] = None):
+    conn = get_db()
     try:
-        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
-        username = payload.get("sub")
-        if not username:
-            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid token")
-        return {"username": username}
-    except Exception:
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid or expired token")
+        with conn.cursor(cursor_factory=RealDictCursor) as cur:
+            if not username:
+                cur.execute("SELECT id, username, email, xp, streak_days, created_at FROM users ORDER BY id DESC LIMIT 1;")
+            else:
+                cur.execute("SELECT id, username, email, xp, streak_days, created_at FROM users WHERE username = %s;", (username,))
+            user = cur.fetchone()
+            if not user:
+                raise HTTPException(status_code=404, detail="User not found")
+            
+            # Also get athlete profile if available
+            cur.execute("SELECT * FROM athlete_profiles WHERE username = %s;", (user["username"],))
+            profile = cur.fetchone()
+
+            return {
+                "success": True,
+                "user": user,
+                "profile": profile or {}
+            }
+    finally:
+        conn.close()
+
+@app.post("/api/add-xp")
+def add_xp(data: UpdateStatsRequest):
+    conn = get_db()
+    try:
+        with conn.cursor(cursor_factory=RealDictCursor) as cur:
+            streak_sql = ", streak_days = streak_days + 1" if data.increment_streak else ""
+            cur.execute(
+                f"""
+                UPDATE users
+                SET xp = COALESCE(xp, 0) + %s {streak_sql}
+                WHERE username = %s
+                RETURNING id, username, xp, streak_days;
+                """,
+                (data.xp_to_add or 0, data.username)
+            )
+            updated = cur.fetchone()
+            conn.commit()
+            if not updated:
+                raise HTTPException(status_code=404, detail="User not found")
+            return {"success": True, "user": updated}
+    finally:
+        conn.close()
 
 if __name__ == "__main__":
     import uvicorn

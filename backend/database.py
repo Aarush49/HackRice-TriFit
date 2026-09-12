@@ -42,8 +42,14 @@ def init_db():
                     username VARCHAR(100) UNIQUE NOT NULL,
                     email VARCHAR(255),
                     password_hash VARCHAR(255) NOT NULL,
+                    xp INT DEFAULT 0,
+                    streak_days INT DEFAULT 0,
                     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
                 );
+
+                -- Ensure columns exist if table was already created
+                ALTER TABLE users ADD COLUMN IF NOT EXISTS xp INT DEFAULT 0;
+                ALTER TABLE users ADD COLUMN IF NOT EXISTS streak_days INT DEFAULT 0;
 
                 CREATE TABLE IF NOT EXISTS athlete_profiles (
                     id SERIAL PRIMARY KEY,

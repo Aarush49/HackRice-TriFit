@@ -12,7 +12,7 @@ import { Ionicons, MaterialCommunityIcons, FontAwesome5 } from '@expo/vector-ico
 import { LinearGradient } from 'expo-linear-gradient';
 import { COLORS } from '../theme';
 
-export default function LongevityDashboardScreen({ onOpenCoach, xp, setXp }) {
+export default function LongevityDashboardScreen({ currentUser, userProfile, onOpenCoach, xp, setXp }) {
   const [boostClaimed, setBoostClaimed] = useState(false);
 
   const handleBoostKarma = () => {

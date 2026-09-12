@@ -15,12 +15,13 @@ import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { COLORS } from '../theme';
 
-export default function CoachMayaModal({ visible, onClose, onLogout }) {
+export default function CoachMayaModal({ visible, onClose, onLogout, currentUser }) {
+  const athleteName = currentUser?.name || currentUser?.username || 'there';
   const [messages, setMessages] = useState([
     {
       id: '1',
       sender: 'maya',
-      text: "Hey Alex! 🏃‍♀️ I noticed your HRV dipped slightly last night, so I tuned today's quest to an easy Zone 2 cruise. How are your legs feeling?",
+      text: `Hey ${athleteName}! 🏃‍♀️ I'm Coach Maya, your AI endurance & longevity coach. What questions can I answer about your training, pacing, or recovery today?`,
       time: 'Just now',
     },
   ]);
