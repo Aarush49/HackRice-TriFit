@@ -12,6 +12,7 @@ import ActiveRunModal from './src/components/ActiveRunModal';
 import AthleteProfileModal from './src/components/AthleteProfileModal';
 import AuthModal from './src/components/AuthModal';
 import TrainingScheduleScreen from './src/screens/TrainingScheduleScreen';
+import ProgressDashboardScreen from './src/screens/ProgressDashboardScreen';
 import { COLORS } from './src/theme';
 
 export default function App() {
@@ -249,6 +250,14 @@ export default function App() {
             onOpenCoach={() => setCoachVisible(true)}
             xp={xp}
             setXp={setXp}
+          />
+        )}
+        {activeTab === 'progress' && (
+          <ProgressDashboardScreen
+            currentUser={currentUser}
+            userProfile={userProfile}
+            xp={xp}
+            streakDays={streakDays}
           />
         )}
       </View>

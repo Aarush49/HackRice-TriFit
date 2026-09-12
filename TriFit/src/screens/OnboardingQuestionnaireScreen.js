@@ -835,8 +835,6 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     color: '#0f172a',
     paddingVertical: 0,
-    outlineStyle: 'none',
-    outlineWidth: 0,
   },
   daysRow: {
     flexDirection: 'row',

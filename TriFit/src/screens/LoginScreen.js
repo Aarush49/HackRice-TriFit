@@ -588,28 +588,21 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     paddingHorizontal: 12,
     height: 50,
-    transition: 'border-color 0.15s ease',
   },
   inputWrapperFocused: {
     borderColor: '#0d9488',
     backgroundColor: '#ffffff',
-    shadowColor: '#0d9488',
-    shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0.15,
-    shadowRadius: 4,
   },
   inputIcon: {
     marginRight: 8,
   },
   inputField: {
     flex: 1,
+    height: 48,
     fontSize: 14,
     fontWeight: '600',
     color: '#0f172a',
     paddingVertical: 0,
-    // Web specific outline elimination
-    outlineStyle: 'none',
-    outlineWidth: 0,
   },
   passwordToggle: {
     padding: 4,

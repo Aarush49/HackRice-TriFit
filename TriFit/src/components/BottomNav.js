@@ -7,6 +7,7 @@ export default function BottomNav({ activeTab, setActiveTab, onOpenCoach }) {
   const tabs = [
     { id: 'today', label: 'Home', icon: 'home', iconFamily: 'Ionicons' },
     { id: 'recovery', label: 'Recovery', icon: 'heart-pulse', iconFamily: 'MaterialCommunityIcons' },
+    { id: 'progress', label: 'Progress', icon: 'trophy', iconFamily: 'MaterialCommunityIcons' },
     { id: 'schedule', label: 'Schedule', icon: 'calendar-month', iconFamily: 'MaterialCommunityIcons' },
     { id: 'coach', label: 'Coach', icon: 'chatbubbles', iconFamily: 'Ionicons' },
   ];
