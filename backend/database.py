@@ -8,13 +8,17 @@ _current_dir = Path(__file__).resolve().parent
 _parent_dir = _current_dir.parent
 
 for _env_file in [
+    _current_dir / "tiger-cloud-trifit-credentials.env.local",
+    _parent_dir / "tiger-cloud-trifit-credentials.env.local",
     _current_dir / "tiger-cloud-trifit-credentials.env",
     _parent_dir / "tiger-cloud-trifit-credentials.env",
+    _current_dir / ".env.local",
+    _parent_dir / ".env.local",
     _current_dir / ".env",
     _parent_dir / ".env",
 ]:
     if _env_file.exists():
-        load_dotenv(dotenv_path=str(_env_file))
+        load_dotenv(dotenv_path=str(_env_file), override=True)
 
 DATABASE_URL = os.getenv(
     "TIMESCALE_SERVICE_URL",

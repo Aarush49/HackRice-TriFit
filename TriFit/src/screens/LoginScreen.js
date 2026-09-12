@@ -38,18 +38,16 @@ export default function LoginScreen({ onLoginSuccess }) {
     if (errorMessage) setErrorMessage('');
   };
 
-  const handleSubmit = (method = 'Email Form') => {
+  const API_BASE_URL = 'http://localhost:8000';
+
+  const handleSubmit = async (method = 'Email Form') => {
     if (method === 'Email Form') {
       if (authMode === 'signup' && !name.trim()) {
         setErrorMessage('Please enter your athlete name.');
         return;
       }
       if (!email.trim()) {
-        setErrorMessage('Please enter your email address.');
-        return;
-      }
-      if (!email.includes('@') || !email.includes('.')) {
-        setErrorMessage('Please enter a valid email address.');
+        setErrorMessage('Please enter your email or username.');
         return;
       }
       if (!password.trim()) {
@@ -60,14 +58,39 @@ export default function LoginScreen({ onLoginSuccess }) {
 
     setErrorMessage('');
     setIsLoading(true);
-    setTimeout(() => {
+
+    const endpoint = authMode === 'signup' ? '/signup' : '/login';
+    const payload = authMode === 'signup'
+      ? { username: name.trim() || email.split('@')[0], email: email.trim(), password: password.trim(), name: name.trim() }
+      : { email: email.trim(), username: email.trim(), password: password.trim() };
+
+    try {
+      const response = await fetch(`${API_BASE_URL}${endpoint}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(payload),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.detail || 'Authentication failed. Please try again.');
+      }
+
       setIsLoading(false);
       onLoginSuccess({
-        email: email.trim() || 'athlete@trifit.io',
-        name: authMode === 'signup' ? (name.trim() || 'New Athlete') : (email ? email.split('@')[0] : 'Alex Rivers'),
+        email: data.user?.email || email.trim(),
+        name: data.user?.username || name.trim() || 'Athlete',
+        token: data.access_token,
+        user: data.user,
         method,
       });
-    }, 300);
+    } catch (err) {
+      setIsLoading(false);
+      setErrorMessage(err.message || 'Could not connect to database server.');
+    }
   };
 
   return (
