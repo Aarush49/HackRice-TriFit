@@ -46,10 +46,10 @@ Bright, friendly, habit-forming UI — closer to Duolingo than a clinical sports
 
 ## Tech Stack
 
-- **Frontend:** Android/Kotlin
+- **Frontend:** JavaScript
 - **Backend:** FastAPI (Python)
-- **Database/Auth:** Firebase/Firestore
-- **LLM:** Claude or GPT API (structured JSON output for plan generation/adjustment)
+- **Database/Auth:** TigerData
+- **LLM:** Gemini API (structured JSON output for plan generation/adjustment)
 - **Training load calculations:** `trainingload` (PyPI)
 
 ## Datasets
