@@ -8,7 +8,7 @@ import {
   Image,
   Animated,
 } from 'react-native';
-import { MaterialCommunityIcons, Ionicons, Feather } from '@expo/vector-icons';
+import { MaterialCommunityIcons, Ionicons, Feather, FontAwesome5 } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { COLORS } from '../theme';
 
@@ -16,6 +16,8 @@ export default function TrainingScheduleScreen({ onStartWorkout, onOpenCoach }) 
   const [viewMode, setViewMode] = useState('week'); // 'week' | 'month'
   const [selectedDay, setSelectedDay] = useState(12); // Wed 12 is today
   const [adaptedPlan, setAdaptedPlan] = useState(null);
+  const [targetRace, setTargetRace] = useState('Hyrox Open / Pro');
+  const [targetDate, setTargetDate] = useState('November 15, 2025');
 
   const days = [
     { day: 'M', date: 10, status: 'completed', icon: 'check', iconType: 'ion', bg: '#f1f5f9', iconColor: '#ffffff', iconBg: COLORS.primary },
@@ -26,6 +28,67 @@ export default function TrainingScheduleScreen({ onStartWorkout, onOpenCoach }) 
     { day: 'S', date: 15, status: 'long', icon: 'heart', iconType: 'mc', bg: '#ffffff', iconColor: '#00685f', iconBg: '#89f5e7' },
     { day: 'S', date: 16, status: 'rest', icon: 'bed', iconType: 'mc', bg: '#ffffff', iconColor: '#64748b', iconBg: '#e2e8f0' },
   ];
+
+  const monthDays = [
+    // Week 1 (Oct 26 - Nov 1)
+    { date: 26, isOtherMonth: true },
+    { date: 27, isOtherMonth: true },
+    { date: 28, isOtherMonth: true },
+    { date: 29, isOtherMonth: true },
+    { date: 30, isOtherMonth: true },
+    { date: 31, isOtherMonth: true },
+    { date: 1, type: 'long', icon: 'heart', iconColor: '#00685f', iconBg: '#89f5e7' },
+
+    // Week 2 (Nov 2 - Nov 8)
+    { date: 2, type: 'rest', icon: 'bed', iconColor: '#64748b', iconBg: '#e2e8f0' },
+    { date: 3, type: 'easy', icon: 'run', iconColor: '#00685f', iconBg: '#89f5e7' },
+    { date: 4, type: 'intervals', icon: 'lightning-bolt', iconColor: '#ea580c', iconBg: '#ffdbca' },
+    { date: 5, type: 'easy', icon: 'run', iconColor: '#00685f', iconBg: '#89f5e7' },
+    { date: 6, type: 'strength', icon: 'dumbbell', iconColor: '#7c3aed', iconBg: '#ede9fe' },
+    { date: 7, type: 'rest', icon: 'spa', iconColor: '#64748b', iconBg: '#e2e8f0' },
+    { date: 8, type: 'long', icon: 'heart', iconColor: '#00685f', iconBg: '#89f5e7' },
+
+    // Week 3 (Nov 9 - Nov 15)
+    { date: 9, type: 'rest', icon: 'bed', iconColor: '#64748b', iconBg: '#e2e8f0' },
+    { date: 10, type: 'completed', icon: 'check', iconType: 'ion', iconColor: '#ffffff', iconBg: COLORS.primary },
+    { date: 11, type: 'completed', icon: 'check', iconType: 'ion', iconColor: '#ffffff', iconBg: COLORS.primary },
+    { date: 12, type: 'today', icon: 'run', iconColor: COLORS.primary, iconBg: '#ffffff', isToday: true },
+    { date: 13, type: 'intervals', icon: 'lightning-bolt', iconColor: '#ea580c', iconBg: '#ffdbca' },
+    { date: 14, type: 'rest', icon: 'spa', iconColor: '#64748b', iconBg: '#e2e8f0' },
+    { date: 15, type: 'long', icon: 'heart', iconColor: '#00685f', iconBg: '#89f5e7' },
+
+    // Week 4 (Nov 16 - Nov 22)
+    { date: 16, type: 'rest', icon: 'bed', iconColor: '#64748b', iconBg: '#e2e8f0' },
+    { date: 17, type: 'easy', icon: 'run', iconColor: '#00685f', iconBg: '#89f5e7' },
+    { date: 18, type: 'intervals', icon: 'lightning-bolt', iconColor: '#ea580c', iconBg: '#ffdbca' },
+    { date: 19, type: 'easy', icon: 'run', iconColor: '#00685f', iconBg: '#89f5e7' },
+    { date: 20, type: 'strength', icon: 'dumbbell', iconColor: '#7c3aed', iconBg: '#ede9fe' },
+    { date: 21, type: 'rest', icon: 'spa', iconColor: '#64748b', iconBg: '#e2e8f0' },
+    { date: 22, type: 'long', icon: 'heart', iconColor: '#00685f', iconBg: '#89f5e7' },
+
+    // Week 5 (Nov 23 - Nov 29)
+    { date: 23, type: 'rest', icon: 'bed', iconColor: '#64748b', iconBg: '#e2e8f0' },
+    { date: 24, type: 'easy', icon: 'run', iconColor: '#00685f', iconBg: '#89f5e7' },
+    { date: 25, type: 'intervals', icon: 'lightning-bolt', iconColor: '#ea580c', iconBg: '#ffdbca' },
+    { date: 26, type: 'easy', icon: 'run', iconColor: '#00685f', iconBg: '#89f5e7' },
+    { date: 27, type: 'strength', icon: 'dumbbell', iconColor: '#7c3aed', iconBg: '#ede9fe' },
+    { date: 28, type: 'rest', icon: 'spa', iconColor: '#64748b', iconBg: '#e2e8f0' },
+    { date: 29, type: 'long', icon: 'heart', iconColor: '#00685f', iconBg: '#89f5e7' },
+
+    // Week 6 (Nov 30 - Dec 6)
+    { date: 30, type: 'rest', icon: 'bed', iconColor: '#64748b', iconBg: '#e2e8f0' },
+    { date: 1, isOtherMonth: true },
+    { date: 2, isOtherMonth: true },
+    { date: 3, isOtherMonth: true },
+    { date: 4, isOtherMonth: true },
+    { date: 5, isOtherMonth: true },
+    { date: 6, isOtherMonth: true },
+  ];
+
+  const monthWeeks = [];
+  for (let i = 0; i < monthDays.length; i += 7) {
+    monthWeeks.push(monthDays.slice(i, i + 7));
+  }
 
   const handleAdapt = (type, label) => {
     if (adaptedPlan === type) {
@@ -41,24 +104,77 @@ export default function TrainingScheduleScreen({ onStartWorkout, onOpenCoach }) 
       contentContainerStyle={styles.scrollContent}
       showsVerticalScrollIndicator={false}
     >
-      {/* 1. Top Header & Week/Month Switcher */}
-      <View style={styles.topHeader}>
-        <View style={styles.headerLeft}>
-          <TouchableOpacity onPress={onOpenCoach} activeOpacity={0.85} style={styles.coachAvatarWrapper}>
-            <Image
-              source={{
-                uri: 'https://lh3.googleusercontent.com/aida-public/AB6AXuCAEsNjseeGCE734scFcz96x_HWKdSap5jgR_AYgkz_inJm0s80m7TjPdEAvjo4YSRSXNDCaHnvRdniP6v37kUaaO7pCO-098Goo8frI962Ert8mG3L4xfu60RkRm-eItgMuAufHEAL4xqJWYCYgQKUv9PtHah6rUmXZ9SIc8aMqM09OKVwKbRVI3gGMKOt1rABwPVLAF1JK1lRWRqgF1CSSqhq-27SjIoVbVAJfr9L8bF7qcJjS8Dp',
-              }}
-              style={styles.coachAvatar}
-            />
-          </TouchableOpacity>
-          <View>
-            <View style={styles.monthBadgeRow}>
-              <Ionicons name="calendar-outline" size={13} color={COLORS.primary} />
-              <Text style={styles.monthBadgeText}>NOVEMBER 2025</Text>
-            </View>
-            <Text style={styles.screenTitle}>Training Schedule</Text>
+      {/* 1. Step 2 of 4 Progress Header from Build Plan */}
+      <View style={styles.progressHeader}>
+        <View style={styles.progressTopRow}>
+          <View style={styles.stepBadge}>
+            <Ionicons name="sparkles" size={14} color={COLORS.primary} />
+            <Text style={styles.stepText}>Step 2 of 4: Your Target Race</Text>
           </View>
+          <Text style={styles.readyPct}>50% ready</Text>
+        </View>
+
+        {/* 4 Segmented Progress Bar */}
+        <View style={styles.progressBarRow}>
+          <View style={[styles.progressSegment, styles.segmentFilled]} />
+          <View style={[styles.progressSegment, styles.segmentFilledActive]} />
+          <View style={styles.progressSegment} />
+          <View style={styles.progressSegment} />
+        </View>
+      </View>
+
+      {/* Target Race & Timeline Countdown Banner */}
+      <View style={styles.targetEventCard}>
+        <View style={styles.targetEventTopRow}>
+          <View style={styles.targetEventLeft}>
+            <View style={styles.targetEventIconBox}>
+              <FontAwesome5 name="dumbbell" size={16} color={COLORS.primary} />
+            </View>
+            <View style={styles.targetEventTextWrap}>
+              <Text style={styles.targetEventLabel}>TARGET EVENT</Text>
+              <Text style={styles.targetEventTitle}>{targetRace}</Text>
+              <Text style={styles.targetEventDate}>{targetDate}</Text>
+            </View>
+          </View>
+          <TouchableOpacity
+            style={styles.adjustBtn}
+            onPress={() =>
+              setTargetDate((prev) =>
+                prev.includes('November') ? 'December 10, 2025' : 'November 15, 2025'
+              )
+            }
+            activeOpacity={0.8}
+          >
+            <Text style={styles.adjustBtnText}>Adjust</Text>
+          </TouchableOpacity>
+        </View>
+
+        {/* Timeline Ramp Pill */}
+        <View style={styles.targetRampPill}>
+          <View style={styles.trendingBox}>
+            <Ionicons name="trending-up" size={16} color="#783200" />
+          </View>
+          <View style={styles.rampTextWrap}>
+            <View style={styles.rampHeaderRow}>
+              <Text style={styles.rampWeeks}>18 Weeks Away</Text>
+              <View style={styles.dotSeparator} />
+              <Text style={styles.rampLabel}>Optimal Ramp</Text>
+            </View>
+            <Text style={styles.rampSub}>
+              Ample buffer to adapt tendons and elevate VO2 max gradually!
+            </Text>
+          </View>
+        </View>
+      </View>
+
+      {/* Title & Week/Month Switcher */}
+      <View style={styles.topHeader}>
+        <View>
+          <View style={styles.monthBadgeRow}>
+            <Ionicons name="calendar-outline" size={13} color={COLORS.primary} />
+            <Text style={styles.monthBadgeText}>NOVEMBER 2025</Text>
+          </View>
+          <Text style={styles.screenTitle}>Training Schedule</Text>
         </View>
 
         {/* Week / Month Toggle */}
@@ -84,57 +200,143 @@ export default function TrainingScheduleScreen({ onStartWorkout, onOpenCoach }) 
         </View>
       </View>
 
-      {/* 2. Week Horizontal Strip Calendar Card */}
-      <View style={styles.calendarCard}>
-        <View style={styles.calendarCardHeader}>
-          <View style={styles.weekThemeRow}>
-            <MaterialCommunityIcons name="dumbbell" size={18} color={COLORS.primary} />
-            <Text style={styles.weekThemeText}>Week 8 of 18 • Aerobic Base</Text>
+      {/* 2. Calendar Card: Week View vs Month View */}
+      {viewMode === 'week' ? (
+        /* Week Horizontal Strip Calendar Card */
+        <View style={styles.calendarCard}>
+          <View style={styles.calendarCardHeader}>
+            <View style={styles.weekThemeRow}>
+              <MaterialCommunityIcons name="dumbbell" size={18} color={COLORS.primary} />
+              <Text style={styles.weekThemeText}>Week 8 of 18 • Aerobic Base</Text>
+            </View>
+            <Text style={styles.weekDateRange}>Nov 10 – Nov 16</Text>
           </View>
-          <Text style={styles.weekDateRange}>Nov 10 – Nov 16</Text>
-        </View>
 
-        {/* 7 Day Grid */}
-        <View style={styles.daysGrid}>
-          {days.map((d) => {
-            const isSelected = selectedDay === d.date;
-            const isToday = d.isToday;
+          {/* 7 Day Grid */}
+          <View style={styles.daysGrid}>
+            {days.map((d) => {
+              const isSelected = selectedDay === d.date;
+              const isToday = d.isToday;
 
-            return (
-              <TouchableOpacity
-                key={d.date}
-                style={[
-                  styles.dayCard,
-                  isToday && styles.dayCardToday,
-                  isSelected && !isToday && styles.dayCardSelected,
-                ]}
-                onPress={() => setSelectedDay(d.date)}
-                activeOpacity={0.8}
-              >
-                <Text style={[styles.dayLabel, isToday && styles.dayLabelToday]}>
-                  {d.day}
-                </Text>
-                <Text style={[styles.dayNumber, isToday && styles.dayNumberToday]}>
-                  {d.date}
-                </Text>
-
-                <View
+              return (
+                <TouchableOpacity
+                  key={d.date}
                   style={[
-                    styles.dayStatusCircle,
-                    { backgroundColor: d.iconBg },
+                    styles.dayCard,
+                    isToday && styles.dayCardToday,
+                    isSelected && !isToday && styles.dayCardSelected,
                   ]}
+                  onPress={() => setSelectedDay(d.date)}
+                  activeOpacity={0.8}
                 >
-                  {d.iconType === 'ion' ? (
-                    <Ionicons name={d.icon} size={12} color={d.iconColor} />
-                  ) : (
-                    <MaterialCommunityIcons name={d.icon} size={12} color={d.iconColor} />
-                  )}
-                </View>
-              </TouchableOpacity>
-            );
-          })}
+                  <Text style={[styles.dayLabel, isToday && styles.dayLabelToday]}>
+                    {d.day}
+                  </Text>
+                  <Text style={[styles.dayNumber, isToday && styles.dayNumberToday]}>
+                    {d.date}
+                  </Text>
+
+                  <View
+                    style={[
+                      styles.dayStatusCircle,
+                      { backgroundColor: d.iconBg },
+                    ]}
+                  >
+                    {d.iconType === 'ion' ? (
+                      <Ionicons name={d.icon} size={12} color={d.iconColor} />
+                    ) : (
+                      <MaterialCommunityIcons name={d.icon} size={12} color={d.iconColor} />
+                    )}
+                  </View>
+                </TouchableOpacity>
+              );
+            })}
+          </View>
         </View>
-      </View>
+      ) : (
+        /* Expanded Big Month Calendar View */
+        <View style={styles.monthCalendarCard}>
+          <View style={styles.monthCalendarHeader}>
+            <View style={styles.monthHeaderTitleWrap}>
+              <Text style={styles.monthNameTitle}>November 2025</Text>
+              <Text style={styles.monthSubTitle}>18-Week Periodized Plan</Text>
+            </View>
+            <View style={styles.monthStatBadge}>
+              <Ionicons name="flame" size={14} color="#ea580c" />
+              <Text style={styles.monthStatText}>24 Sessions</Text>
+            </View>
+          </View>
+
+          {/* Day of Week Headers */}
+          <View style={styles.monthDOWRow}>
+            {['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'].map((dow, idx) => (
+              <Text key={idx} style={styles.monthDOWText}>
+                {dow}
+              </Text>
+            ))}
+          </View>
+
+          {/* Week-by-Week Rows */}
+          <View style={styles.monthWeeksContainer}>
+            {monthWeeks.map((week, wIdx) => (
+              <View key={wIdx} style={styles.monthWeekRow}>
+                {week.map((item, dIdx) => {
+                  if (item.isOtherMonth) {
+                    return (
+                      <View key={dIdx} style={styles.monthOtherMonthCell}>
+                        <Text style={styles.monthOtherMonthNum}>{item.date}</Text>
+                      </View>
+                    );
+                  }
+
+                  const isSelected = selectedDay === item.date;
+                  const isToday = item.isToday;
+
+                  return (
+                    <TouchableOpacity
+                      key={dIdx}
+                      style={[
+                        styles.monthDayCell,
+                        isToday && styles.monthDayCellToday,
+                        isSelected && !isToday && styles.monthDayCellSelected,
+                      ]}
+                      onPress={() => setSelectedDay(item.date)}
+                      activeOpacity={0.8}
+                    >
+                      <Text
+                        style={[
+                          styles.monthDayNum,
+                          isToday && styles.monthDayNumToday,
+                          isSelected && !isToday && styles.monthDayNumSelected,
+                        ]}
+                      >
+                        {item.date}
+                      </Text>
+
+                      {item.icon ? (
+                        <View
+                          style={[
+                            styles.monthDayDot,
+                            { backgroundColor: item.iconBg || '#e2e8f0' },
+                          ]}
+                        >
+                          {item.iconType === 'ion' ? (
+                            <Ionicons name={item.icon} size={10} color={item.iconColor} />
+                          ) : (
+                            <MaterialCommunityIcons name={item.icon} size={10} color={item.iconColor} />
+                          )}
+                        </View>
+                      ) : (
+                        <View style={styles.monthDayEmptyDot} />
+                      )}
+                    </TouchableOpacity>
+                  );
+                })}
+              </View>
+            ))}
+          </View>
+        </View>
+      )}
 
       {/* 3. What To Do Today Section */}
       <View style={styles.todaySection}>
@@ -334,9 +536,165 @@ const styles = StyleSheet.create({
   scrollContent: {
     paddingBottom: 40,
   },
-  topHeader: {
+  progressHeader: {
     paddingHorizontal: 16,
     paddingTop: 16,
+    paddingBottom: 4,
+    gap: 8,
+  },
+  progressTopRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  stepBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
+  stepText: {
+    fontSize: 12,
+    fontWeight: '900',
+    color: COLORS.primary,
+    letterSpacing: 0.5,
+  },
+  readyPct: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: '#6d7a77',
+  },
+  progressBarRow: {
+    flexDirection: 'row',
+    gap: 6,
+  },
+  progressSegment: {
+    flex: 1,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: '#dae2fd',
+  },
+  segmentFilled: {
+    backgroundColor: COLORS.primary,
+  },
+  segmentFilledActive: {
+    backgroundColor: COLORS.primary,
+    opacity: 0.8,
+  },
+  targetEventCard: {
+    marginHorizontal: 16,
+    marginTop: 8,
+    backgroundColor: '#ffffff',
+    borderRadius: 20,
+    padding: 14,
+    borderWidth: 2,
+    borderColor: '#eaedff',
+    borderBottomWidth: 4,
+    borderBottomColor: '#dae2fd',
+    elevation: 2,
+    gap: 10,
+  },
+  targetEventTopRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  targetEventLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+  },
+  targetEventIconBox: {
+    width: 38,
+    height: 38,
+    borderRadius: 12,
+    backgroundColor: '#89f5e7',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  targetEventTextWrap: {
+    gap: 1,
+  },
+  targetEventLabel: {
+    fontSize: 9,
+    fontWeight: '900',
+    color: '#6d7a77',
+    letterSpacing: 0.5,
+  },
+  targetEventTitle: {
+    fontSize: 15,
+    fontWeight: '900',
+    color: '#131b2e',
+    letterSpacing: -0.2,
+  },
+  targetEventDate: {
+    fontSize: 11,
+    fontWeight: '600',
+    color: '#6d7a77',
+  },
+  adjustBtn: {
+    backgroundColor: '#eaedff',
+    paddingHorizontal: 12,
+    paddingVertical: 5,
+    borderRadius: 14,
+  },
+  adjustBtnText: {
+    fontSize: 11,
+    fontWeight: '800',
+    color: COLORS.primary,
+  },
+  targetRampPill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#f6f7ff',
+    padding: 10,
+    borderRadius: 14,
+    gap: 10,
+    borderWidth: 1,
+    borderColor: '#eaedff',
+  },
+  trendingBox: {
+    width: 32,
+    height: 32,
+    borderRadius: 10,
+    backgroundColor: '#ffdbca',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  rampTextWrap: {
+    flex: 1,
+    gap: 1,
+  },
+  rampHeaderRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
+  rampWeeks: {
+    fontSize: 12,
+    fontWeight: '850',
+    color: '#783200',
+  },
+  dotSeparator: {
+    width: 4,
+    height: 4,
+    borderRadius: 2,
+    backgroundColor: '#783200',
+    opacity: 0.5,
+  },
+  rampLabel: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: '#ea580c',
+  },
+  rampSub: {
+    fontSize: 10.5,
+    fontWeight: '600',
+    color: '#6d7a77',
+    lineHeight: 14,
+  },
+  topHeader: {
+    paddingHorizontal: 16,
+    paddingTop: 10,
     paddingBottom: 8,
     flexDirection: 'row',
     alignItems: 'center',
@@ -499,6 +857,142 @@ const styles = StyleSheet.create({
     borderRadius: 11,
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  monthCalendarCard: {
+    marginHorizontal: 16,
+    marginTop: 12,
+    backgroundColor: '#ffffff',
+    borderRadius: 22,
+    padding: 16,
+    borderWidth: 2,
+    borderColor: '#eaedff',
+    borderBottomWidth: 4,
+    borderBottomColor: '#dae2fd',
+    elevation: 2,
+  },
+  monthCalendarHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 16,
+    paddingHorizontal: 4,
+  },
+  monthHeaderTitleWrap: {
+    gap: 2,
+  },
+  monthNameTitle: {
+    fontSize: 18,
+    fontWeight: '900',
+    color: '#131b2e',
+    letterSpacing: -0.3,
+  },
+  monthSubTitle: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: '#6d7a77',
+  },
+  monthStatBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    backgroundColor: '#fff0e5',
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: '#ffd8be',
+  },
+  monthStatText: {
+    fontSize: 11,
+    fontWeight: '850',
+    color: '#ea580c',
+  },
+  monthDOWRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 8,
+    gap: 6,
+  },
+  monthDOWText: {
+    flex: 1,
+    textAlign: 'center',
+    fontSize: 10,
+    fontWeight: '800',
+    color: '#6d7a77',
+    letterSpacing: 0.3,
+  },
+  monthWeeksContainer: {
+    gap: 6,
+  },
+  monthWeekRow: {
+    flexDirection: 'row',
+    gap: 6,
+    justifyContent: 'space-between',
+  },
+  monthOtherMonthCell: {
+    flex: 1,
+    minHeight: 52,
+    borderRadius: 12,
+    backgroundColor: '#fafbff',
+    borderWidth: 1,
+    borderColor: '#f0f2f8',
+    alignItems: 'center',
+    justifyContent: 'flex-start',
+    paddingTop: 6,
+    opacity: 0.35,
+  },
+  monthOtherMonthNum: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: '#94a3b8',
+  },
+  monthDayCell: {
+    flex: 1,
+    minHeight: 52,
+    borderRadius: 12,
+    backgroundColor: '#f8f9ff',
+    borderWidth: 1.5,
+    borderColor: '#eaedff',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingVertical: 5,
+    paddingHorizontal: 2,
+  },
+  monthDayCellToday: {
+    backgroundColor: COLORS.primary,
+    borderColor: '#89f5e7',
+    borderWidth: 2,
+    borderBottomWidth: 3,
+    borderBottomColor: '#004c44',
+  },
+  monthDayCellSelected: {
+    borderColor: COLORS.primary,
+    backgroundColor: '#f0fdfa',
+    borderWidth: 2,
+  },
+  monthDayNum: {
+    fontSize: 12,
+    fontWeight: '800',
+    color: '#131b2e',
+  },
+  monthDayNumToday: {
+    color: '#ffffff',
+    fontWeight: '900',
+  },
+  monthDayNumSelected: {
+    color: COLORS.primary,
+    fontWeight: '900',
+  },
+  monthDayDot: {
+    width: 20,
+    height: 20,
+    borderRadius: 10,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  monthDayEmptyDot: {
+    width: 20,
+    height: 20,
   },
   todaySection: {
     paddingHorizontal: 16,
