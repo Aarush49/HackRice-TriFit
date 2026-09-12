@@ -14,6 +14,7 @@ import {
 import { Ionicons, MaterialCommunityIcons, FontAwesome5, Feather } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { COLORS } from '../theme';
+import { computeBioAge } from '../bioAge';
 
 const RACE_OPTIONS = [
   'Sprint Triathlon',
@@ -77,29 +78,9 @@ export default function AthleteProfileModal({
     }
   }
 
-  // Dynamic biological age from userProfile
-  const chronoAge = parseInt(userProfile?.age, 10) || 25;
-  const fitnessLevel = userProfile?.fitness_level || '';
-  const trainingDays = parseInt(userProfile?.training_days, 10) || 4;
-  const getBioAgeAdj = () => {
-    let adj = 0;
-    if (fitnessLevel.includes('race-trained') || fitnessLevel.includes('Already')) adj -= 5;
-    else if (fitnessLevel.includes('regularly') || fitnessLevel.includes('regular')) adj -= 3;
-    else if (fitnessLevel.includes('occasionally') || fitnessLevel.includes('Train occ')) adj -= 1;
-    else if (fitnessLevel.includes('New') || fitnessLevel.includes('new')) adj += 2;
-    if (trainingDays >= 6) adj -= 3;
-    else if (trainingDays >= 4) adj -= 2;
-    else if (trainingDays >= 3) adj -= 1;
-    else adj += 1;
-    return adj;
-  };
-  const bioAgeAdj = getBioAgeAdj();
-  const biologicalAge = Math.max(15, chronoAge + bioAgeAdj);
-  const bioAgeTagText = bioAgeAdj < 0
-    ? `${Math.abs(bioAgeAdj)} yrs younger`
-    : bioAgeAdj > 0 ? `${bioAgeAdj} yrs older` : 'Same as chrono age';
-  const bioAgeTagColor = bioAgeAdj < -2 ? '#16a34a' : bioAgeAdj < 0 ? '#0d9488' : bioAgeAdj > 2 ? '#dc2626' : '#b45309';
-  const bioAgeTagBg = bioAgeAdj < 0 ? '#f0fdf4' : bioAgeAdj > 0 ? '#fef2f2' : '#fef3c7';
+  // Biological age — computed by the shared utility (same formula as Progress screen)
+  const { biologicalAge, bioAgeAdj, bioAgeTagText, bioAgeTagColor, bioAgeTagBg } =
+    computeBioAge(userProfile);
 
   return (
     <Modal visible={visible} animationType="slide" transparent={false} onRequestClose={onClose}>

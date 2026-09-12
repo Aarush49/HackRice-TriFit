@@ -11,6 +11,7 @@ import {
 } from 'react-native';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { COLORS } from '../theme';
+import { computeBioAge } from '../bioAge';
 
 const PERSONAL_BESTS = [
   {
@@ -90,6 +91,8 @@ export default function ProgressDashboardScreen({ currentUser, userProfile, xp =
   const tierXp = Math.min(xp, tierXpCap);
   const tierProgress = tierXp / tierXpCap;
   const xpToNextTier = Math.max(0, tierXpCap - tierXp);
+
+  const { biologicalAge, bioAgeAdj, bioAgeTagText } = computeBioAge(userProfile);
 
   const getTierName = (x) => {
     if (x >= 1000) return 'Platinum Tier';
@@ -187,8 +190,8 @@ export default function ProgressDashboardScreen({ currentUser, userProfile, xp =
               <MaterialCommunityIcons name="heart-pulse" size={13} color={COLORS.primary} />
               <Text style={styles.microStatLabelText}>Bio-Age</Text>
             </View>
-            <Text style={[styles.microStatValue, { color: COLORS.primary }]}>3.4 Yrs</Text>
-            <Text style={[styles.microStatSub, { color: COLORS.primary }]}>Younger</Text>
+            <Text style={[styles.microStatValue, { color: COLORS.primary }]}>{biologicalAge} yrs</Text>
+            <Text style={[styles.microStatSub, { color: COLORS.primary }]}>{bioAgeTagText}</Text>
           </View>
           <View style={styles.microStatItem}>
             <View style={styles.microStatLabel}>

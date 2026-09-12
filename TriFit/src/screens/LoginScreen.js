@@ -224,7 +224,7 @@ export default function LoginScreen({ onLoginSuccess }) {
                 />
                 <TextInput
                   style={styles.inputField}
-                  placeholder="Alex Rivers"
+                  placeholder="DemoAccount"
                   placeholderTextColor="#94a3b8"
                   value={name}
                   onChangeText={handleNameChange}
@@ -340,6 +340,37 @@ export default function LoginScreen({ onLoginSuccess }) {
               </Text>
               <Ionicons name="arrow-forward" size={18} color="#ffffff" />
             </LinearGradient>
+          </TouchableOpacity>
+
+          {/* Demo Button */}
+          <TouchableOpacity
+            style={styles.demoBtn}
+            onPress={() => {
+              onLoginSuccess({
+                email: 'demo@trifit.io',
+                name: 'DemoAccount',
+                username: 'DemoAccount',
+                token: 'demo-token',
+                user: {
+                  email: 'demo@trifit.io',
+                  username: 'DemoAccount',
+                  xp: 2450,
+                  streak_days: 7,
+                },
+                isSignup: false,
+                method: 'Demo',
+                isDemo: true,
+              });
+            }}
+            activeOpacity={0.8}
+          >
+            <View style={styles.demoBtnInner}>
+              <MaterialCommunityIcons name="flask-outline" size={15} color="#0d9488" />
+              <Text style={styles.demoBtnText}>
+                Try a <Text style={styles.demoBtnBold}>Demo</Text> — no account needed
+              </Text>
+              <Ionicons name="chevron-forward" size={14} color="#94a3b8" />
+            </View>
           </TouchableOpacity>
         </View>
 
@@ -658,6 +689,33 @@ const styles = StyleSheet.create({
     color: '#64748b',
   },
   demoBold: {
+    fontWeight: '800',
+    color: '#0d9488',
+  },
+  demoBtn: {
+    marginTop: 2,
+    borderRadius: 14,
+    borderWidth: 1.5,
+    borderColor: '#ccfbf1',
+    backgroundColor: '#f0fdfa',
+    overflow: 'hidden',
+  },
+  demoBtnInner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 11,
+    paddingHorizontal: 16,
+    gap: 6,
+  },
+  demoBtnText: {
+    flex: 1,
+    fontSize: 13,
+    fontWeight: '600',
+    color: '#334155',
+    textAlign: 'center',
+  },
+  demoBtnBold: {
     fontWeight: '800',
     color: '#0d9488',
   },

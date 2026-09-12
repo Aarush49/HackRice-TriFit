@@ -75,7 +75,13 @@ export default function App() {
     setCurrentUser(userData || { username: name, email });
     setIsLoggedIn(true);
 
-    await fetchUserStats(userData?.username || name);
+    if (userData?.isDemo) {
+      // Seed demo stats directly — no backend call needed
+      setXp(userData.user?.xp || 2450);
+      setStreakDays(userData.user?.streak_days || 7);
+    } else {
+      await fetchUserStats(userData?.username || name);
+    }
 
     // Only show onboarding when creating a new account (signup)
     if (userData?.isSignup) {
