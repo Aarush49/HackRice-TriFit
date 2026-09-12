@@ -15,7 +15,7 @@ import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { COLORS } from '../theme';
 
-export default function CoachMayaModal({ visible, onClose }) {
+export default function CoachMayaModal({ visible, onClose, onLogout }) {
   const [messages, setMessages] = useState([
     {
       id: '1',
@@ -116,9 +116,23 @@ export default function CoachMayaModal({ visible, onClose }) {
                 </View>
               </View>
 
-              <TouchableOpacity style={styles.closeBtn} onPress={onClose}>
-                <Ionicons name="close" size={22} color={COLORS.onSurfaceVariant} />
-              </TouchableOpacity>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                {onLogout && (
+                  <TouchableOpacity
+                    style={styles.closeBtn}
+                    onPress={() => {
+                      onClose();
+                      onLogout();
+                    }}
+                    title="Log Out"
+                  >
+                    <Ionicons name="log-out-outline" size={18} color="#94a3b8" />
+                  </TouchableOpacity>
+                )}
+                <TouchableOpacity style={styles.closeBtn} onPress={onClose}>
+                  <Ionicons name="close" size={22} color={COLORS.onSurfaceVariant} />
+                </TouchableOpacity>
+              </View>
             </View>
           </LinearGradient>
 

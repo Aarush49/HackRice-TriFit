@@ -3,7 +3,7 @@ import { View, Text, StyleSheet, Image, TouchableOpacity } from 'react-native';
 import { MaterialCommunityIcons, Ionicons } from '@expo/vector-icons';
 import { COLORS } from '../theme';
 
-export default function Header({ onOpenCoach, streakDays = 14, xpPoints = 420 }) {
+export default function Header({ onOpenProfile, onOpenCoach, onLogout, streakDays = 14, xpPoints = 420 }) {
   return (
     <View style={styles.container}>
       {/* Brand Title */}
@@ -28,8 +28,13 @@ export default function Header({ onOpenCoach, streakDays = 14, xpPoints = 420 })
           <Text style={styles.xpText}>{xpPoints}</Text>
         </View>
 
-        {/* Profile Avatar Button */}
-        <TouchableOpacity style={styles.profileBtn} onPress={onOpenCoach} activeOpacity={0.8}>
+        {/* Athlete Profile Avatar Button */}
+        <TouchableOpacity
+          style={styles.profileBtn}
+          onPress={onOpenProfile || onOpenCoach}
+          onLongPress={onLogout}
+          activeOpacity={0.8}
+        >
           <Image
             source={{
               uri: 'https://lh3.googleusercontent.com/aida-public/AB6AXuCNF6DrCWxMm5Lv1YkzwT2KVsurMoDrkDXgPAkoqmIC1Hcawc03Tu0S4b5z4t8OxsjsvqazCQkgNUKUOPKGxly21xtC-gahcc4q0ouhxWImTdz35f8wcCPy33ybK6REvfjcZkTPtS-r0yOcaRp1m6dt7AfXcD3D_RYh4JqLpuD0NRX4Jl0NKoPHuUkL8fTyeFOi6PSebBb2Ipdg5QMjLrHtCuiA_P2bFXg5n9nXK_yZ3L8lkwLSiWrj',

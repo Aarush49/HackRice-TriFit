@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" name="viewport"/>
+<title>TriFit - Sign In &amp; Get Moving</title>
+<!-- Load Tailwind CSS v3 with forms and container queries plugins -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<!-- Google Fonts: Plus Jakarta Sans -->
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet"/>
+<!-- Tailwind Configuration -->
+<script data-purpose="tailwind-config">
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['"Plus Jakarta Sans"', 'sans-serif'],
+          },
+          colors: {
+            trifit: {
+              teal: '#0D9488',
+              'teal-dark': '#0F766E',
+              'teal-light': '#CCFBF1',
+              orange: '#F97316',
+              amber: '#F59E0B',
+              coral: '#FC5200',
+              sky: '#0EA5E9',
+              bg: '#FAF9F6',
+              surface: '#FFFFFF',
+              card: '#F4F4F5',
+            }
+          },
+          boxShadow: {
+            'tactile': '0 4px 0 0 rgba(13, 148, 136, 0.25)',
+            'tactile-dark': '0 4px 0 0 #0f172a',
+            'tactile-primary': '0 4px 0 0 #0f766e',
+            'tactile-card': '0 2px 0 0 #e4e4e7',
+          }
+        }
+      }
+    }
+  </script>
+<!-- Custom Layout & Component Styles -->
+<style data-purpose="custom-layout">
+    body {
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      -webkit-tap-highlight-color: transparent;
+      background-color: #f5f5f4;
+    }
+    .mobile-frame {
+      max-width: 428px;
+      min-height: 100vh;
+      margin: 0 auto;
+      background-color: #FAFAF9;
+    }
+    .tap-effect:active {
+      transform: translateY(2px);
+      box-shadow: 0 1px 0 0 rgba(0,0,0,0.15) !important;
+    }
+  </style>
+</head>
+<body class="text-slate-800 antialiased selection:bg-teal-100 selection:text-teal-900">
+<div class="mobile-frame flex flex-col justify-between px-5 pt-4 pb-8 relative shadow-2xl overflow-x-hidden">
+<!-- BEGIN: TopBar -->
+<header class="w-full pt-1 pb-2">
+<!-- Status Notch Placeholder / Safe Area spacing -->
+<div class="flex items-center justify-between">
+<!-- Logo & Wordmark -->
+<div class="flex items-center space-x-2.5">
+<div class="w-10 h-10 rounded-2xl overflow-hidden shadow-sm flex items-center justify-center p-0.5 bg-teal-50 border border-teal-100">
+<img alt="TriFit Logo" class="w-full h-full object-cover rounded-xl" src="https://lh3.googleusercontent.com/aida/AEtjO1WTa8QuM-oSnpLWU_seHxsY1yASQThexDCgIEekq29jDygJNNPtjQkZaAAw_4X3tQ4dlmYpCQuGgpYNGNrsECFrD2_jJOrbdItG-6cGSwBjJ7m8COydlacNfDWONXFqK6EdksFbZQKCCJeCxNpIbZur5PCxw669XA0eHw49RFyI23HrIGRsa5_76WQRCUcSQ67g69KwTGl_2-x-l3YjmskMODJbDLhfByr-qC8bO0CeO_t5YQjDh1NTxHc"/>
+</div>
+<div class="flex flex-col">
+<span class="text-2xl font-extrabold tracking-tight text-slate-900 leading-none">Tri<span class="text-teal-600">Fit</span></span>
+<span class="text-[10px] font-bold uppercase tracking-wider text-slate-400 mt-0.5">Endurance &amp; Longevity</span>
+</div>
+</div>
+<!-- Community Streak / Stats Badge -->
+<div class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-amber-50 border border-amber-200/80 shadow-xs">
+<span class="text-sm animate-pulse">🔥</span>
+<span class="text-xs font-bold text-amber-900 leading-none">14k+ Athletes</span>
+</div>
+</div>
+</header>
+<!-- END: TopBar -->
+<main class="flex-1 flex flex-col justify-start mt-4">
+<!-- BEGIN: HeroSection -->
+<section class="space-y-3" data-purpose="hero-banner">
+<div>
+<h1 class="text-[28px] font-black tracking-tight text-slate-900 leading-tight">
+            Train Fast. <br/><span class="text-transparent bg-clip-text bg-gradient-to-r from-teal-600 via-emerald-600 to-sky-600">Live Longer.</span>
+</h1>
+<p class="text-slate-500 text-sm font-medium mt-1">Smart endurance training optimized for your biology.</p>
+</div>
+<!-- Coach Maya Voice Note Bubble Preview -->
+<div class="relative bg-gradient-to-br from-teal-50/90 to-emerald-50/60 border border-teal-100 rounded-3xl p-3.5 flex items-start gap-3 shadow-xs">
+<!-- Coach Maya Avatar -->
+<div class="relative flex-shrink-0">
+<div class="w-12 h-12 rounded-full ring-2 ring-teal-500/40 p-0.5 bg-white overflow-hidden shadow-sm">
+<img alt="Coach Maya" class="w-full h-full object-cover rounded-full object-top" src="https://lh3.googleusercontent.com/aida/AEtjO1VR4ud4NrEUCaCWlQGD4c8eO2MrSv_6iYhnM2zStshG0169JigIilqBI804BakKIqYsc4DudCRGLgD43AwKvhxYvTzeypmlZrJKwITjHERcX8pzi6a-IolGYS3wz-so_zxhnJIzzPb7oZ-G9WK7CFLki1I3PidjtySauGDogkX0J2LOzcKUGvQaFTJQwvbtxxpByJd0bA7yQSigP-vIhgIKTkjrgW5-9e75QQigtO-USq2wrK8ScpQuT7A"/>
+</div>
+<span class="absolute bottom-0 right-0 w-3.5 h-3.5 bg-emerald-500 border-2 border-white rounded-full"></span>
+</div>
+<!-- Coach Maya Speech Bubble -->
+<div class="flex-1 min-w-0 pr-1">
+<div class="flex items-center justify-between mb-0.5">
+<span class="text-xs font-bold text-teal-900 flex items-center gap-1">
+                Coach Maya
+                <svg class="w-3.5 h-3.5 text-teal-600 inline" fill="currentColor" viewbox="0 0 20 20">
+<path clip-rule="evenodd" d="M10 18a8 8 0 100-16 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" fill-rule="evenodd"></path>
+</svg>
+</span>
+<span class="text-[10px] font-bold text-teal-600 bg-teal-100/70 px-2 py-0.5 rounded-full">Physiologist</span>
+</div>
+<p class="text-xs font-semibold text-slate-700 leading-snug">
+              “Ready to bank some healthspan and crush today's baseline session? ⚡️”
+            </p>
+</div>
+</div>
+</section>
+<!-- END: HeroSection -->
+<!-- BEGIN: AuthTabs -->
+<section class="mt-5" data-purpose="auth-tab-selector">
+<div class="p-1 bg-slate-200/70 rounded-2xl flex items-center justify-between text-center relative font-bold text-sm">
+<button class="flex-1 py-2 rounded-xl bg-white text-slate-900 shadow-sm transition-all duration-150 flex items-center justify-center gap-1.5" id="tab-login">
+<span>Log In</span>
+</button>
+<button class="flex-1 py-2 rounded-xl text-slate-600 hover:text-slate-900 transition-all duration-150 flex items-center justify-center gap-1.5" id="tab-signup">
+<span>Sign Up</span>
+<span class="bg-teal-600 text-[10px] font-black text-white px-1.5 py-0.2 rounded-md uppercase tracking-wider">+25 XP</span>
+</button>
+</div>
+</section>
+<!-- END: AuthTabs -->
+<!-- BEGIN: SocialAuthButtons -->
+<section class="mt-4 space-y-2.5" data-purpose="social-identity-providers">
+<!-- Strava / Garmin Endurance Sync Auth -->
+<button class="tap-effect w-full flex items-center justify-between px-4 py-3 bg-[#FC5200] hover:bg-[#e64900] text-white font-bold text-sm rounded-2xl shadow-sm transition-transform duration-100">
+<div class="flex items-center gap-3">
+<svg class="w-5 h-5 fill-current" viewbox="0 0 24 24">
+<!-- Strava Icon Outline -->
+<path d="M15.387 17.944l-2.089-4.116h-3.065L15.387 24l5.15-10.172h-3.066m-7.008-5.599l2.836 5.598h4.172L10.463 0l-7.008 13.828h4.172"></path>
+</svg>
+<span>Sync with Strava / Garmin</span>
+</div>
+<span class="text-[11px] font-extrabold bg-white/25 px-2 py-0.5 rounded-full uppercase tracking-wider">Fast Track</span>
+</button>
+<div class="grid grid-cols-2 gap-2.5">
+<!-- Apple Sign In -->
+<button class="tap-effect flex items-center justify-center gap-2 py-2.5 px-3 bg-slate-900 text-white rounded-2xl text-xs font-bold shadow-sm">
+<svg class="w-4 h-4 fill-current mb-0.5" viewbox="0 0 170 170">
+<path d="M150.37 130.25c-2.45 5.66-5.35 10.87-8.71 15.66-4.58 6.53-8.33 11.05-11.22 13.56-4.48 4.12-9.28 6.23-14.42 6.35-3.69 0-8.14-1.05-13.32-3.18-5.19-2.12-9.97-3.17-14.34-3.17-4.58 0-9.49 1.05-14.75 3.17-5.26 2.13-9.5 3.24-12.74 3.35-4.35.13-9.16-1.9-14.42-6.08-3.69-3.06-7.6-7.85-11.75-14.37-6.53-10.3-11.83-21.72-15.9-34.25-4.08-12.53-6.12-24.16-6.12-34.88 0-14.12 3.52-25.79 10.56-35.02 7.04-9.23 15.77-13.9 26.19-14.02 5.06 0 10.58 1.41 16.56 4.23 5.98 2.82 10.05 4.3 12.22 4.44 1.76-.14 6.06-1.69 12.89-4.66 6.84-2.96 12.55-4.27 17.13-3.92 13.06.66 23.36 5.56 30.89 14.7-11.71 7.15-17.43 16.94-17.14 29.38.29 9.8 4.09 17.92 11.41 24.36 7.32 6.44 15.89 10.23 25.72 11.38-2.02 6.09-4.47 12.33-7.36 18.73zM119.22 33.36c-.22-5.46 1.63-10.87 5.55-16.24 3.92-5.37 9-9.35 15.24-11.94.33 1.34.5 2.65.5 3.93 0 5.62-1.97 11.1-5.91 16.44-3.94 5.34-8.99 9.27-15.15 11.79-.08-1.34-.17-2.67-.23-3.98z"></path>
+</svg>
+<span>Apple</span>
+</button>
+<!-- Google Sign In -->
+<button class="tap-effect flex items-center justify-center gap-2 py-2.5 px-3 bg-white border border-slate-200 text-slate-800 rounded-2xl text-xs font-bold shadow-xs">
+<svg class="w-4 h-4" viewbox="0 0 24 24">
+<path d="M23.745 12.27c0-.7-.06-1.4-.19-2.07H12v4.51h6.6c-.29 1.52-1.14 2.82-2.4 3.68v3.05h3.88c2.27-2.09 3.665-5.17 3.665-9.17z" fill="#4285F4"></path>
+<path d="M12 24c3.24 0 5.95-1.08 7.93-2.91l-3.88-3.05c-1.08.72-2.45 1.16-4.05 1.16-3.12 0-5.77-2.1-6.72-4.93H1.25v3.15C3.26 21.36 7.33 24 12 24z" fill="#34A853"></path>
+<path d="M5.28 14.27c-.25-.72-.38-1.49-.38-2.27s.13-1.55.38-2.27V6.58H1.25C.45 8.16 0 9.94 0 12s.45 3.84 1.25 5.42l4.03-3.15z" fill="#FBBC05"></path>
+<path d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.42-3.42C17.95 1.19 15.24 0 12 0 7.33 0 3.26 2.64 1.25 6.58l4.03 3.15c.95-2.83 3.6-4.98 6.72-4.98z" fill="#EA4335"></path>
+</svg>
+<span>Google</span>
+</button>
+</div>
+</section>
+<!-- END: SocialAuthButtons -->
+<!-- BEGIN: Divider -->
+<div class="relative flex py-4 items-center" data-purpose="form-divider">
+<div class="flex-grow border-t border-slate-200"></div>
+<span class="flex-shrink mx-3 text-[11px] font-bold text-slate-400 uppercase tracking-widest">or email</span>
+<div class="flex-grow border-t border-slate-200"></div>
+</div>
+<!-- END: Divider -->
+<!-- BEGIN: InputForm -->
+<form class="space-y-3" data-purpose="auth-email-form" onsubmit="event.preventDefault();">
+<!-- Email Input -->
+<div class="space-y-1">
+<label class="block text-xs font-bold text-slate-700 pl-1">Athlete Email</label>
+<div class="relative rounded-2xl shadow-xs">
+<div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
+<svg class="w-4 h-4" fill="none" stroke="currentColor" viewbox="0 0 24 24">
+<path d="M16 12a4 4 0 10-8 0 4 4 0 008 0zm0 0v1.5a2.5 2.5 0 005 0V12a9 9 0 10-9 9m4.5-1.206a8.959 8.959 0 01-4.5 1.206" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path>
+</svg>
+</div>
+<input class="w-full pl-10 pr-4 py-3 bg-white border border-slate-200 rounded-2xl text-sm font-semibold text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-all" placeholder="alex@endurance.io" type="email"/>
+</div>
+</div>
+<!-- Password Input -->
+<div class="space-y-1">
+<div class="flex justify-between items-center pl-1 pr-0.5">
+<label class="block text-xs font-bold text-slate-700">Password</label>
+<a class="text-xs font-bold text-teal-600 hover:text-teal-700 tracking-tight" href="#">Forgot password?</a>
+</div>
+<div class="relative rounded-2xl shadow-xs">
+<div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
+<svg class="w-4 h-4" fill="none" stroke="currentColor" viewbox="0 0 24 24">
+<path d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path>
+</svg>
+</div>
+<input class="w-full pl-10 pr-11 py-3 bg-white border border-slate-200 rounded-2xl text-sm font-semibold text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-all" placeholder="••••••••••••" type="password"/>
+<button class="absolute inset-y-0 right-0 pr-3.5 flex items-center text-slate-400 hover:text-slate-600" type="button">
+<svg class="w-4 h-4" fill="none" stroke="currentColor" viewbox="0 0 24 24">
+<path d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path>
+<path d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path>
+</svg>
+</button>
+</div>
+</div>
+<!-- Submit Button: Tactile & High Contrast -->
+<div class="pt-2">
+<button class="tap-effect w-full py-3.5 px-6 rounded-2xl bg-gradient-to-r from-teal-600 to-teal-700 hover:from-teal-500 hover:to-teal-600 text-white font-extrabold text-base shadow-tactile-primary flex items-center justify-center gap-2 border-b-2 border-teal-900 transition-all duration-100" type="submit">
+<span>Jump In</span>
+<svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewbox="0 0 24 24">
+<path d="M14 5l7 7m0 0l-7 7m7-7H3" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5"></path>
+</svg>
+</button>
+</div>
+</form>
+<!-- END: InputForm -->
+</main>
+<!-- BEGIN: TrustPillarsFooter -->
+<footer class="mt-6 pt-2 space-y-4" data-purpose="trust-and-legal">
+<!-- 3 Mini Trust Chips -->
+<div class="grid grid-cols-3 gap-2 text-center">
+<div class="bg-white/80 border border-slate-200/80 rounded-xl py-2 px-1 shadow-xs flex flex-col items-center">
+<span class="text-sm">🛡️</span>
+<span class="text-[10px] font-bold text-slate-700 mt-0.5">Privacy First</span>
+</div>
+<div class="bg-white/80 border border-slate-200/80 rounded-xl py-2 px-1 shadow-xs flex flex-col items-center">
+<span class="text-sm">🧬</span>
+<span class="text-[10px] font-bold text-slate-700 mt-0.5">HRV-Guided</span>
+</div>
+<div class="bg-white/80 border border-slate-200/80 rounded-xl py-2 px-1 shadow-xs flex flex-col items-center">
+<span class="text-sm">👟</span>
+<span class="text-[10px] font-bold text-slate-700 mt-0.5">All Levels</span>
+</div>
+</div>
+<!-- Legal disclaimer -->
+<p class="text-[11px] text-center text-slate-400 font-medium leading-relaxed px-4">
+        By joining TriFit, you agree to our 
+        <a class="underline hover:text-slate-600" href="#">Terms of Service</a> &amp; 
+        <a class="underline hover:text-slate-600" href="#">Longevity Health Policy</a>.
+      </p>
+</footer>
+<!-- END: TrustPillarsFooter -->
+</div>
+<!-- Interactive script to toggle tabs -->
+<script data-purpose="tab-switcher">
+    const tabLogin = document.getElementById('tab-login');
+    const tabSignup = document.getElementById('tab-signup');
+
+    tabSignup.addEventListener('click', () => {
+      tabSignup.className = 'flex-1 py-2 rounded-xl bg-white text-slate-900 shadow-sm transition-all duration-150 flex items-center justify-center gap-1.5 font-bold';
+      tabLogin.className = 'flex-1 py-2 rounded-xl text-slate-500 hover:text-slate-900 transition-all duration-150 flex items-center justify-center gap-1.5 font-bold';
+    });
+
+    tabLogin.addEventListener('click', () => {
+      tabLogin.className = 'flex-1 py-2 rounded-xl bg-white text-slate-900 shadow-sm transition-all duration-150 flex items-center justify-center gap-1.5 font-bold';
+      tabSignup.className = 'flex-1 py-2 rounded-xl text-slate-500 hover:text-slate-900 transition-all duration-150 flex items-center justify-center gap-1.5 font-bold';
+    });
+  </script>
+</body></html>
