@@ -65,6 +65,37 @@ const PERSONAL_BESTS = [
   },
 ];
 
+const DEMO_PERSONAL_BESTS = [
+  {
+    ...PERSONAL_BESTS[0],
+    value: '21:04',
+    improvement: '↓ 38 sec this month',
+    improvColor: '#15803d',
+    tag: 'New PR',
+  },
+  {
+    ...PERSONAL_BESTS[1],
+    value: '152 kg',
+    improvement: '↑ 10 kg this block',
+    improvColor: '#15803d',
+    tag: 'Season Best',
+  },
+  {
+    ...PERSONAL_BESTS[2],
+    value: '1:48',
+    improvement: '↓ 4 sec / 100m',
+    improvColor: '#15803d',
+    tag: 'New PR',
+  },
+  {
+    ...PERSONAL_BESTS[3],
+    value: '54.2',
+    improvement: '↑ 2.1 since July',
+    improvColor: '#15803d',
+    tag: 'Excellent',
+  },
+];
+
 const ALL_MILESTONES = [
   { id: 1, emoji: '🏆', title: 'Century Club', subtitle: '100km run logged', req: '0 / 100 km' },
   { id: 2, emoji: '⚡', title: 'Cold Grit', subtitle: '14 cold showers', req: '0 / 14 sessions' },
@@ -92,6 +123,8 @@ export default function ProgressDashboardScreen({ currentUser, userProfile, xp =
   const tierXp = Math.min(xp, tierXpCap);
   const tierProgress = tierXp / tierXpCap;
   const xpToNextTier = Math.max(0, tierXpCap - tierXp);
+  const isDemo = currentUser?.isDemo === true || currentUser?.username === 'DemoAccount';
+  const personalBests = isDemo ? DEMO_PERSONAL_BESTS : PERSONAL_BESTS;
 
   const { biologicalAge, bioAgeAdj, bioAgeTagText } = computeBioAge(userProfile);
 
@@ -192,7 +225,7 @@ export default function ProgressDashboardScreen({ currentUser, userProfile, xp =
               <Ionicons name="flash" size={13} color="#00628d" />
               <Text style={styles.microStatLabelText}>PRs Broken</Text>
             </View>
-            <Text style={styles.microStatValue}>0</Text>
+            <Text style={styles.microStatValue}>{isDemo ? 3 : 0}</Text>
             <Text style={[styles.microStatSub, { color: '#00628d' }]}>This Block</Text>
           </View>
         </View>
@@ -203,14 +236,16 @@ export default function ProgressDashboardScreen({ currentUser, userProfile, xp =
         <View style={styles.newPBHeader}>
           <View style={styles.newPBTitleRow}>
             <Text style={styles.newPBEmoji}>🎯</Text>
-            <Text style={styles.newPBTitle}>BENCHMARK YOUR PRs</Text>
+            <Text style={styles.newPBTitle}>{isDemo ? 'NEW PERSONAL BEST' : 'BENCHMARK YOUR PRs'}</Text>
           </View>
           <View style={styles.newPBDateBadge}>
-            <Text style={styles.newPBDate}>Get Started</Text>
+            <Text style={styles.newPBDate}>{isDemo ? 'Sep 8' : 'Get Started'}</Text>
           </View>
         </View>
-        <Text style={styles.newPBMetric}>Ready to log your first activity?</Text>
-        <Text style={styles.newPBImprovement}>Complete your daily mission or sync your wearables to log personal bests!</Text>
+        <Text style={styles.newPBMetric}>{isDemo ? '5k Tempo Run • 21:04' : 'Ready to log your first activity?'}</Text>
+        <Text style={styles.newPBImprovement}>
+          {isDemo ? '38 seconds faster than your previous best.' : 'Complete your daily mission or sync your wearables to log personal bests!'}
+        </Text>
         <View style={styles.newPBTags}>
           <View style={styles.newPBTag}>
             <Ionicons name="shield-checkmark" size={13} color={COLORS.primary} />
@@ -233,7 +268,7 @@ export default function ProgressDashboardScreen({ currentUser, userProfile, xp =
           <Text style={styles.sectionSubtitle}>Self-Benchmarked</Text>
         </View>
         <View style={styles.pbGrid}>
-          {PERSONAL_BESTS.map((pb) => (
+          {personalBests.map((pb) => (
             <View key={pb.id} style={styles.pbCard}>
               <View style={styles.pbCardTop}>
                 <View style={[styles.pbIconCircle, { backgroundColor: pb.iconBg }]}>

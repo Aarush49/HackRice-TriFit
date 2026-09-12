@@ -89,6 +89,7 @@ export default function AthleteProfileModal({
     userProfile?.wearable_metrics?.resting_hr
   );
   const hasRestingHr = Number.isFinite(restingHr) && restingHr > 0;
+  const isDemo = userProfile?.is_demo === true;
 
   return (
     <Modal visible={visible} animationType="slide" transparent={false} onRequestClose={onClose}>
@@ -320,9 +321,11 @@ export default function AthleteProfileModal({
               </View>
               <View style={styles.pbInfo}>
                 <Text style={styles.pbTitle}>5k Zone 2 Tempo Run</Text>
-                <Text style={styles.pbSub}>Pace: -- / km • Log workout to set</Text>
+                <Text style={styles.pbSub}>
+                  {isDemo ? 'Pace: 4:12 / km • Sep 8' : 'Pace: -- / km • Log workout to set'}
+                </Text>
               </View>
-              <Text style={styles.pbValue}>--:--</Text>
+              <Text style={styles.pbValue}>{isDemo ? '21:04' : '--:--'}</Text>
             </View>
             <View style={styles.dividerLine} />
 
@@ -332,9 +335,9 @@ export default function AthleteProfileModal({
               </View>
               <View style={styles.pbInfo}>
                 <Text style={styles.pbTitle}>Hyrox Sled Push (50m)</Text>
-                <Text style={styles.pbSub}>Log workout to set PR</Text>
+                <Text style={styles.pbSub}>{isDemo ? 'Improved by 10 kg • Aug 29' : 'Log workout to set PR'}</Text>
               </View>
-              <Text style={styles.pbValue}>-- kg</Text>
+              <Text style={styles.pbValue}>{isDemo ? '152 kg' : '-- kg'}</Text>
             </View>
             <View style={styles.dividerLine} />
 
@@ -344,9 +347,9 @@ export default function AthleteProfileModal({
               </View>
               <View style={styles.pbInfo}>
                 <Text style={styles.pbTitle}>750m Open Water Swim</Text>
-                <Text style={styles.pbSub}>Log workout to set PR</Text>
+                <Text style={styles.pbSub}>{isDemo ? 'Pace: 1:48 / 100m • Aug 17' : 'Log workout to set PR'}</Text>
               </View>
-              <Text style={styles.pbValue}>--:--</Text>
+              <Text style={styles.pbValue}>{isDemo ? '13:31' : '--:--'}</Text>
             </View>
           </View>
 

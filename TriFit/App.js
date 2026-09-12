@@ -137,6 +137,22 @@ export default function App() {
       // Seed demo stats directly — no backend call needed
       setXp(userData.user?.xp || 2450);
       setStreakDays(userData.user?.streak_days || 7);
+      setUserProfile({
+        name: 'DemoAccount',
+        email: 'demo@trifit.io',
+        race_type: 'Hyrox Open',
+        race_date: '2026-11-20',
+        fitness_level: 'Train regularly',
+        training_days: 5,
+        equipment: ['Running shoes', 'Gym access', 'Smart watch'],
+        baseline_metrics: {
+          vo2_max: 54.2,
+          swim_pace: '1:48 / 100m',
+          run_pace: '4:12 / km',
+        },
+        resting_hr: 52,
+        is_demo: true,
+      });
     } else {
       await fetchUserStats(userData?.username || name);
     }
