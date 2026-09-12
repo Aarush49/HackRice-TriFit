@@ -7,17 +7,26 @@ import OnboardingScreen from './src/screens/OnboardingScreen';
 import LongevityDashboardScreen from './src/screens/LongevityDashboardScreen';
 import CoachMayaModal from './src/components/CoachMayaModal';
 import ActiveRunModal from './src/components/ActiveRunModal';
+import AuthModal from './src/components/AuthModal';
 import { COLORS } from './src/theme';
 
 export default function App() {
   const [activeTab, setActiveTab] = useState('today');
   const [coachVisible, setCoachVisible] = useState(false);
   const [runVisible, setRunVisible] = useState(false);
+  const [authVisible, setAuthVisible] = useState(false);
+  const [currentUser, setCurrentUser] = useState(null);
+  const [token, setToken] = useState(null);
   const [xp, setXp] = useState(420);
   const [streakDays, setStreakDays] = useState(14);
 
   const handleFinishRun = () => {
     setXp((prev) => prev + 120);
+  };
+
+  const handleAuthSuccess = (user, authToken) => {
+    setCurrentUser(user);
+    setToken(authToken);
   };
 
   return (
@@ -27,6 +36,8 @@ export default function App() {
       {/* Main Header */}
       <Header
         onOpenCoach={() => setCoachVisible(true)}
+        onOpenAuth={() => setAuthVisible(true)}
+        currentUser={currentUser}
         streakDays={streakDays}
         xpPoints={xp}
       />
@@ -68,6 +79,13 @@ export default function App() {
         visible={runVisible}
         onClose={() => setRunVisible(false)}
         onFinishRun={handleFinishRun}
+      />
+
+      {/* Login & Account Creation Modal */}
+      <AuthModal
+        visible={authVisible}
+        onClose={() => setAuthVisible(false)}
+        onAuthSuccess={handleAuthSuccess}
       />
     </SafeAreaView>
   );
