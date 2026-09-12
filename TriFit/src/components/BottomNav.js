@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Platform } from 'react-native';
 import { MaterialCommunityIcons, Ionicons } from '@expo/vector-icons';
 import { COLORS } from '../theme';
 
@@ -60,7 +60,7 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(250, 248, 255, 0.95)',
     borderTopWidth: 1,
     borderTopColor: 'rgba(0, 104, 95, 0.08)',
-    paddingBottom: 20,
+    paddingBottom: Platform.OS === 'android' ? 14 : 20,
     elevation: 8,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: -2 },

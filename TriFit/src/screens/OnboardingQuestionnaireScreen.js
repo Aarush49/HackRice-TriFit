@@ -8,6 +8,9 @@ import {
   TextInput,
   Platform,
   KeyboardAvoidingView,
+  Keyboard,
+  TouchableWithoutFeedback,
+  StatusBar,
 } from 'react-native';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -36,7 +39,6 @@ export default function OnboardingQuestionnaireScreen({ onComplete, onBackToLogi
   const [stressLevel, setStressLevel] = useState(null);
   const [injuries, setInjuries] = useState('');
 
-  const [coachStyle, setCoachStyle] = useState(null);
   const [baselineNotSure, setBaselineNotSure] = useState(false);
 
   const toggleEquipment = (item) => {
@@ -58,6 +60,11 @@ export default function OnboardingQuestionnaireScreen({ onComplete, onBackToLogi
       }
       if (!raceDate || !raceDate.trim()) {
         return 'Please select or enter your target race date.';
+      }
+      // Validate 4-digit race year
+      const yearStr = raceDate.split('-')[0];
+      if (!yearStr || yearStr.length !== 4 || isNaN(parseInt(yearStr, 10)) || parseInt(yearStr, 10) < 2024 || parseInt(yearStr, 10) > 2099) {
+        return 'Please enter a valid 4-digit race year (e.g. 2026).';
       }
       if (!isFirstTime) {
         return 'Please indicate if this is your first time doing this type of event.';
@@ -159,38 +166,30 @@ export default function OnboardingQuestionnaireScreen({ onComplete, onBackToLogi
     if (currentStep > 1) {
       setCurrentStep(currentStep - 1);
     } else {
-      // Step 1: Back returns to login page
-      if (onBackToLogin) {
-        onBackToLogin();
-      }
+      onBackToLogin();
     }
   };
 
   const renderProgressBar = () => {
+    const progressPercent = ((currentStep) / totalSteps) * 100;
     return (
       <View style={styles.progressContainer}>
         <View style={styles.progressBarBg}>
-          <View
-            style={[
-              styles.progressBarFill,
-              { width: `${(currentStep / totalSteps) * 100}%` },
-            ]}
-          />
+          <View style={[styles.progressBarFill, { width: `${progressPercent}%` }]} />
         </View>
-        <Text style={styles.progressText}>
-          Step {currentStep} of {totalSteps}
-        </Text>
+        <Text style={styles.progressText}>Step {currentStep} of {totalSteps}</Text>
       </View>
     );
   };
 
   const renderStep1 = () => (
     <View style={styles.stepContainer}>
-      <Text style={styles.sectionTitle}>Section 1: Your Race</Text>
+      <Text style={styles.sectionTitle}>Section 1: Race Details</Text>
+      <Text style={styles.stepSubtitle}>Tell us about the event you want to crush.</Text>
 
-      <Text style={styles.questionLabel}>What are you training for? *</Text>
+      <Text style={styles.questionLabel}>What event are you training for? *</Text>
       <View style={styles.optionsGrid}>
-        {['Hyrox', 'Sprint/Olympic Triathlon', 'Half-distance Triathlon', 'Full-distance Triathlon', 'Other'].map(
+        {['Sprint Triathlon', 'Olympic Triathlon', '70.3 Half Ironman', '140.6 Full Ironman', 'Hyrox', 'Marathon / Half Marathon'].map(
           (type) => (
             <TouchableOpacity
               key={type}
@@ -222,6 +221,8 @@ export default function OnboardingQuestionnaireScreen({ onComplete, onBackToLogi
         {Platform.OS === 'web' ? (
           <input
             type="date"
+            min="2024-01-01"
+            max="2099-12-31"
             style={{
               flex: 1,
               border: 'none',
@@ -229,11 +230,20 @@ export default function OnboardingQuestionnaireScreen({ onComplete, onBackToLogi
               fontSize: 16,
               color: '#0f172a',
               backgroundColor: 'transparent',
+              fontFamily: 'inherit',
             }}
             value={raceDate}
             onChange={(e) => {
               setValidationError('');
-              setRaceDate(e.target.value);
+              let val = e.target.value;
+              if (val) {
+                const parts = val.split('-');
+                if (parts[0] && parts[0].length > 4) {
+                  parts[0] = parts[0].slice(0, 4);
+                  val = parts.join('-');
+                }
+              }
+              setRaceDate(val);
             }}
           />
         ) : (
@@ -241,10 +251,18 @@ export default function OnboardingQuestionnaireScreen({ onComplete, onBackToLogi
             style={styles.inputField}
             placeholder="YYYY-MM-DD"
             placeholderTextColor="#94a3b8"
+            keyboardType="numbers-and-punctuation"
+            maxLength={10}
             value={raceDate}
             onChangeText={(val) => {
               setValidationError('');
-              setRaceDate(val);
+              let cleaned = val.replace(/[^0-9-]/g, '');
+              const parts = cleaned.split('-');
+              if (parts[0] && parts[0].length > 4) {
+                parts[0] = parts[0].slice(0, 4);
+                cleaned = parts.join('-');
+              }
+              setRaceDate(cleaned);
             }}
           />
         )}
@@ -285,10 +303,11 @@ export default function OnboardingQuestionnaireScreen({ onComplete, onBackToLogi
               style={styles.inputField}
               placeholder="e.g. 2:30:00"
               placeholderTextColor="#94a3b8"
+              keyboardType="numbers-and-punctuation"
               value={previousTime}
               onChangeText={(val) => {
                 setValidationError('');
-                setPreviousTime(val);
+                setPreviousTime(val.replace(/[^0-9:]/g, ''));
               }}
             />
           </View>
@@ -425,63 +444,72 @@ export default function OnboardingQuestionnaireScreen({ onComplete, onBackToLogi
         </View>
       ) : isTriathlon ? (
         <>
-          <Text style={styles.questionLabel}>Current 400m Swim Time (estimated) *</Text>
+          <Text style={styles.questionLabel}>Current 400m Swim Time (min:sec) *</Text>
           <View style={styles.inputWrapper}>
             <MaterialCommunityIcons name="swim" size={18} color="#94a3b8" style={styles.inputIcon} />
             <TextInput
               style={styles.inputField}
               placeholder="e.g. 7:30"
               placeholderTextColor="#94a3b8"
+              keyboardType="numbers-and-punctuation"
+              inputMode="decimal"
               value={swimPace}
               onChangeText={(val) => {
                 setValidationError('');
-                setSwimPace(val);
+                setSwimPace(val.replace(/[^0-9:]/g, ''));
               }}
             />
           </View>
-          <Text style={styles.questionLabel}>Current Cycling FTP or 20min Power (watts) *</Text>
+
+          <Text style={styles.questionLabel}>Current Cycling FTP or 20min Power (watts only) *</Text>
           <View style={styles.inputWrapper}>
             <Ionicons name="bicycle" size={18} color="#94a3b8" style={styles.inputIcon} />
             <TextInput
               style={styles.inputField}
               placeholder="e.g. 220"
               placeholderTextColor="#94a3b8"
-              keyboardType="numeric"
+              keyboardType="number-pad"
+              inputMode="numeric"
               value={bikeFtp}
               onChangeText={(val) => {
                 setValidationError('');
-                setBikeFtp(val);
+                setBikeFtp(val.replace(/[^0-9]/g, ''));
               }}
             />
           </View>
-          <Text style={styles.questionLabel}>Current 5k or 10k Run Pace *</Text>
+
+          <Text style={styles.questionLabel}>Current 5k or 10k Run Pace (min:sec) *</Text>
           <View style={styles.inputWrapper}>
             <Ionicons name="walk" size={18} color="#94a3b8" style={styles.inputIcon} />
             <TextInput
               style={styles.inputField}
-              placeholder="e.g. 5:00 /km"
+              placeholder="e.g. 5:00"
               placeholderTextColor="#94a3b8"
+              keyboardType="numbers-and-punctuation"
+              inputMode="decimal"
               value={runPace}
               onChangeText={(val) => {
                 setValidationError('');
-                setRunPace(val);
+                setRunPace(val.replace(/[^0-9:]/g, ''));
               }}
             />
           </View>
         </>
       ) : isHyrox ? (
         <>
-          <Text style={styles.questionLabel}>Current 5k Run Time *</Text>
+          <Text style={styles.questionLabel}>Current 5k Run Time (min:sec) *</Text>
           <View style={styles.inputWrapper}>
             <Ionicons name="walk" size={18} color="#94a3b8" style={styles.inputIcon} />
             <TextInput
               style={styles.inputField}
               placeholder="e.g. 24:00"
               placeholderTextColor="#94a3b8"
+              keyboardType="numbers-and-punctuation"
+              inputMode="decimal"
               value={runPace}
               onChangeText={(val) => {
                 setValidationError('');
-                setRunPace(val);
+                setRunPace(val.replace(/[^0-9:]/g, ''));
               }}
             />
           </View>
@@ -598,66 +626,67 @@ export default function OnboardingQuestionnaireScreen({ onComplete, onBackToLogi
       <KeyboardAvoidingView
         style={{ flex: 1 }}
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        keyboardVerticalOffset={Platform.OS === 'ios' ? 40 : 0}
       >
-        <View style={styles.header}>
-          {renderProgressBar()}
-        </View>
-        <ScrollView
-          style={styles.scrollView}
-          contentContainerStyle={styles.scrollContent}
-          showsVerticalScrollIndicator={false}
-          keyboardShouldPersistTaps="handled"
-        >
-          {currentStep === 1 && renderStep1()}
-          {currentStep === 2 && renderStep2()}
-          {currentStep === 3 && renderStep3()}
-          {currentStep === 4 && renderStep4()}
-        </ScrollView>
-
-        {validationError ? (
-          <View style={styles.validationErrorBanner}>
-            <Ionicons name="alert-circle" size={18} color="#dc2626" />
-            <Text style={styles.validationErrorText}>{validationError}</Text>
-          </View>
-        ) : null}
-
-        <View style={styles.footer}>
-          <TouchableOpacity
-            style={styles.navBtn}
-            onPress={handleBack}
-            activeOpacity={0.7}
-          >
-            <Text style={styles.navBtnText}>
-              {currentStep === 1 ? '← Back to Login' : '← Back'}
-            </Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={styles.nextBtn}
-            onPress={handleNext}
-            activeOpacity={0.85}
-            disabled={isSaving}
-          >
-            <LinearGradient
-              colors={['#0d9488', '#0f766e']}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 0 }}
-              style={styles.nextGradient}
+        <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
+          <View style={{ flex: 1 }}>
+            <View style={styles.header}>
+              {renderProgressBar()}
+            </View>
+            <ScrollView
+              style={styles.scrollView}
+              contentContainerStyle={styles.scrollContent}
+              showsVerticalScrollIndicator={false}
+              keyboardShouldPersistTaps="handled"
+              keyboardDismissMode="on-drag"
             >
-              <Text style={styles.nextBtnText}>
-                {isSaving
-                  ? 'Saving Profile...'
-                  : currentStep === totalSteps
-                  ? 'Complete Setup'
-                  : 'Next'}
-              </Text>
-              <Ionicons
-                name={currentStep === totalSteps ? 'checkmark-circle' : 'arrow-forward'}
-                size={18}
-                color="#ffffff"
-              />
-            </LinearGradient>
-          </TouchableOpacity>
-        </View>
+              {currentStep === 1 && renderStep1()}
+              {currentStep === 2 && renderStep2()}
+              {currentStep === 3 && renderStep3()}
+              {currentStep === 4 && renderStep4()}
+            </ScrollView>
+
+            {validationError ? (
+              <View style={styles.validationErrorBanner}>
+                <Ionicons name="alert-circle" size={18} color="#dc2626" />
+                <Text style={styles.validationErrorText}>{validationError}</Text>
+              </View>
+            ) : null}
+
+            <View style={styles.footer}>
+              <TouchableOpacity
+                style={styles.navBtn}
+                onPress={handleBack}
+                activeOpacity={0.7}
+              >
+                <Text style={styles.navBtnText}>
+                  {currentStep === 1 ? '← Back to Login' : '← Back'}
+                </Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.nextBtn}
+                onPress={handleNext}
+                activeOpacity={0.85}
+                disabled={isSaving}
+              >
+                <LinearGradient
+                  colors={['#0d9488', '#0f766e']}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 0 }}
+                  style={styles.nextGradient}
+                >
+                  <Text style={styles.nextBtnText}>
+                    {isSaving
+                      ? 'Saving Profile...'
+                      : currentStep === totalSteps
+                      ? 'Complete Setup'
+                      : 'Next Step →'}
+                  </Text>
+                </LinearGradient>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </TouchableWithoutFeedback>
       </KeyboardAvoidingView>
     </View>
   );
@@ -667,15 +696,15 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#FAF9F6',
+    paddingTop: Platform.OS === 'android' ? (StatusBar.currentHeight || 20) : 0,
   },
   header: {
     paddingHorizontal: 20,
-    paddingTop: 20,
-    paddingBottom: 10,
-    backgroundColor: '#FAF9F6',
+    paddingTop: 16,
+    paddingBottom: 8,
   },
   progressContainer: {
-    marginBottom: 10,
+    marginBottom: 8,
   },
   progressBarBg: {
     height: 6,
@@ -795,6 +824,7 @@ const styles = StyleSheet.create({
   },
   inputField: {
     flex: 1,
+    height: 48,
     fontSize: 14,
     fontWeight: '600',
     color: '#0f172a',
@@ -848,57 +878,19 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     padding: 20,
     marginTop: 30,
-    alignItems: 'center',
     borderWidth: 1,
-    borderColor: '#ccfbf1',
+    borderColor: '#99f6e4',
   },
   summaryTitle: {
     fontSize: 18,
     fontWeight: '800',
-    color: '#134e4a',
-    marginTop: 12,
+    color: '#0f766e',
     marginBottom: 8,
   },
   summaryText: {
-    fontSize: 14,
-    color: '#0f766e',
-    textAlign: 'center',
+    fontSize: 13,
+    color: '#334155',
     lineHeight: 20,
-    fontWeight: '500',
-  },
-  footer: {
-    flexDirection: 'row',
-    paddingHorizontal: 20,
-    paddingVertical: 16,
-    backgroundColor: '#FAF9F6',
-    borderTopWidth: 1,
-    borderTopColor: '#f1f5f9',
-    alignItems: 'center',
-  },
-  navBtn: {
-    paddingVertical: 12,
-    paddingHorizontal: 20,
-  },
-  navBtnDisabled: {
-    opacity: 0.5,
-  },
-  navBtnText: {
-    fontSize: 16,
-    fontWeight: '700',
-    color: '#64748b',
-  },
-  nextBtn: {
-    flex: 1,
-    borderRadius: 16,
-    overflow: 'hidden',
-    marginLeft: 10,
-  },
-  nextGradient: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: 14,
-    gap: 8,
   },
   notSureBtn: {
     flexDirection: 'row',
@@ -906,10 +898,10 @@ const styles = StyleSheet.create({
     backgroundColor: '#ffffff',
     borderWidth: 1.5,
     borderColor: '#e2e8f0',
-    borderRadius: 16,
-    paddingVertical: 14,
-    paddingHorizontal: 16,
-    marginTop: 16,
+    borderRadius: 14,
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+    marginBottom: 16,
     gap: 10,
   },
   notSureBtnActive: {
@@ -917,60 +909,93 @@ const styles = StyleSheet.create({
     backgroundColor: '#f0fdfa',
   },
   notSureText: {
-    fontSize: 14,
+    fontSize: 13,
     fontWeight: '600',
-    color: '#94a3b8',
+    color: '#64748b',
   },
   notSureTextActive: {
     color: '#0f766e',
     fontWeight: '700',
   },
   notSureCard: {
-    backgroundColor: '#f8fafc',
-    borderRadius: 20,
-    padding: 24,
-    marginTop: 20,
-    alignItems: 'center',
+    backgroundColor: '#f0fdfa',
+    borderRadius: 16,
+    padding: 16,
     borderWidth: 1,
-    borderColor: '#e2e8f0',
+    borderColor: '#99f6e4',
+    alignItems: 'center',
+    gap: 6,
+    marginVertical: 10,
   },
   notSureCardEmoji: {
-    fontSize: 32,
-    marginBottom: 10,
+    fontSize: 28,
   },
   notSureCardTitle: {
     fontSize: 16,
     fontWeight: '800',
-    color: '#334155',
-    marginBottom: 8,
+    color: '#0f766e',
   },
   notSureCardText: {
     fontSize: 13,
-    color: '#64748b',
+    color: '#334155',
     textAlign: 'center',
-    lineHeight: 20,
-    fontWeight: '500',
-  },
-  nextBtnText: {
-    color: '#ffffff',
-    fontSize: 16,
-    fontWeight: '800',
+    lineHeight: 18,
   },
   validationErrorBanner: {
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: '#fef2f2',
-    borderTopWidth: 1,
-    borderBottomWidth: 1,
-    borderColor: '#fca5a5',
-    paddingHorizontal: 20,
+    borderColor: '#fecaca',
+    borderWidth: 1,
+    borderRadius: 12,
+    paddingHorizontal: 14,
     paddingVertical: 10,
+    marginHorizontal: 20,
+    marginBottom: 10,
     gap: 8,
   },
   validationErrorText: {
-    color: '#dc2626',
-    fontSize: 13,
-    fontWeight: '700',
     flex: 1,
+    fontSize: 12,
+    color: '#b91c1c',
+    fontWeight: '600',
+  },
+  footer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 20,
+    paddingTop: 12,
+    paddingBottom: Platform.OS === 'android' ? 24 : 20,
+    backgroundColor: '#ffffff',
+    borderTopWidth: 1,
+    borderTopColor: '#f1f5f9',
+  },
+  navBtn: {
+    paddingVertical: 12,
+    paddingHorizontal: 14,
+  },
+  navBtnText: {
+    fontSize: 14,
+    fontWeight: '700',
+    color: '#64748b',
+  },
+  nextBtn: {
+    borderRadius: 16,
+    overflow: 'hidden',
+    shadowColor: '#0d9488',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.2,
+    shadowRadius: 8,
+    elevation: 3,
+  },
+  nextGradient: {
+    paddingVertical: 14,
+    paddingHorizontal: 24,
+  },
+  nextBtnText: {
+    fontSize: 15,
+    fontWeight: '800',
+    color: '#ffffff',
   },
 });

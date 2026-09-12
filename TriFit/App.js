@@ -75,9 +75,14 @@ export default function App() {
   if (!isLoggedIn) {
     return (
       <SafeAreaView style={styles.safeArea}>
-        <StatusBar barStyle="dark-content" backgroundColor="#FAF9F6" />
+        <StatusBar barStyle="dark-content" backgroundColor="#FAF9F6" translucent={Platform.OS === 'android'} />
         {Platform.OS === 'web' && (
           <style>{`
+            html, body, #root {
+              height: 100% !important;
+              min-height: 100dvh !important;
+              overscroll-behavior-y: none;
+            }
             input,
             input:focus,
             input:active,
@@ -96,6 +101,12 @@ export default function App() {
               outline-color: transparent !important;
               box-shadow: none !important;
               -webkit-tap-highlight-color: transparent !important;
+            }
+            input, textarea {
+              -webkit-user-select: text !important;
+              user-select: text !important;
+              touch-action: manipulation !important;
+              pointer-events: auto !important;
             }
             input:-webkit-autofill,
             input:-webkit-autofill:hover,
@@ -147,6 +158,8 @@ export default function App() {
       <View style={styles.mainContent}>
         {activeTab === 'today' && (
           <DailyMissionsScreen
+            currentUser={currentUser}
+            userProfile={userProfile}
             onStartRun={() => setRunVisible(true)}
             onOpenCoach={() => setCoachVisible(true)}
             xp={xp}
@@ -210,6 +223,7 @@ const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
     backgroundColor: COLORS.background,
+    paddingTop: Platform.OS === 'android' ? (StatusBar.currentHeight || 24) : 0,
   },
   mainContent: {
     flex: 1,

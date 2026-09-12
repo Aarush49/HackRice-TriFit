@@ -9,6 +9,8 @@ import {
   Image,
   KeyboardAvoidingView,
   Platform,
+  Keyboard,
+  TouchableWithoutFeedback,
 } from 'react-native';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -98,106 +100,111 @@ export default function LoginScreen({ onLoginSuccess }) {
     <KeyboardAvoidingView
       style={styles.container}
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+      keyboardVerticalOffset={Platform.OS === 'ios' ? 20 : 0}
     >
       <ScrollView
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
         keyboardShouldPersistTaps="handled"
+        keyboardDismissMode="on-drag"
       >
-        {Platform.OS === 'web' && (
-          <style>{`
-            input,
-            input:focus,
-            input:active,
-            input:hover,
-            input:-webkit-autofill,
-            input:-webkit-autofill:hover,
-            input:-webkit-autofill:focus,
-            input:-webkit-autofill:active,
-            textarea:focus,
-            select:focus,
-            button:focus,
-            *:focus {
-              outline: none !important;
-              outline-width: 0 !important;
-              outline-style: none !important;
-              outline-color: transparent !important;
-              box-shadow: none !important;
-              -webkit-tap-highlight-color: transparent !important;
-            }
-            input:-webkit-autofill,
-            input:-webkit-autofill:hover,
-            input:-webkit-autofill:focus,
-            input:-webkit-autofill:active {
-              -webkit-box-shadow: 0 0 0px 1000px #ffffff inset !important;
-              box-shadow: 0 0 0px 1000px #ffffff inset !important;
-              -webkit-text-fill-color: #0f172a !important;
-              transition: background-color 50000s ease-in-out 0s;
-            }
-          `}</style>
-        )}
+          {Platform.OS === 'web' && (
+            <style>{`
+              input,
+              input:focus,
+              input:active,
+              input:hover,
+              input:-webkit-autofill,
+              input:-webkit-autofill:hover,
+              input:-webkit-autofill:focus,
+              input:-webkit-autofill:active,
+              textarea:focus,
+              select:focus,
+              button:focus,
+              *:focus {
+                outline: none !important;
+                outline-width: 0 !important;
+                outline-style: none !important;
+                outline-color: transparent !important;
+                box-shadow: none !important;
+                -webkit-tap-highlight-color: transparent !important;
+              }
+              input, textarea {
+                -webkit-user-select: text !important;
+                user-select: text !important;
+                touch-action: manipulation !important;
+                pointer-events: auto !important;
+              }
+              input:-webkit-autofill,
+              input:-webkit-autofill:hover,
+              input:-webkit-autofill:focus,
+              input:-webkit-autofill:active {
+                -webkit-box-shadow: 0 0 0px 1000px #ffffff inset !important;
+                box-shadow: 0 0 0px 1000px #ffffff inset !important;
+                -webkit-text-fill-color: #0f172a !important;
+                transition: background-color 50000s ease-in-out 0s;
+              }
+            `}</style>
+          )}
 
-        {/* Top Header */}
-        <View style={styles.topHeader}>
-          <View style={styles.brandRow}>
-            <View style={styles.logoBadge}>
-              <MaterialCommunityIcons name="lightning-bolt" size={22} color="#ffffff" />
-            </View>
-            <View>
-              <Text style={styles.brandTitle}>
-                Tri<Text style={styles.brandTitleTeal}>Fit</Text>
-              </Text>
-              <Text style={styles.brandSubtitle}>ENDURANCE & LONGEVITY</Text>
+          {/* Top Header */}
+          <View style={styles.topHeader}>
+            <View style={styles.brandRow}>
+              <View style={styles.logoBadge}>
+                <MaterialCommunityIcons name="lightning-bolt" size={22} color="#ffffff" />
+              </View>
+              <View>
+                <Text style={styles.brandTitle}>
+                  Tri<Text style={styles.brandTitleTeal}>Fit</Text>
+                </Text>
+                <Text style={styles.brandSubtitle}>ENDURANCE & LONGEVITY</Text>
+              </View>
             </View>
           </View>
-        </View>
 
-        {/* Hero Section */}
-        <View style={styles.heroSection}>
-          <Text style={styles.heroTitle}>
-            Train Fast.{'\n'}
-            <Text style={styles.heroTitleGradient}>Live Longer.</Text>
-          </Text>
-          <Text style={styles.heroSubtitle}>
-            Smart endurance training optimized for your biology.
-          </Text>
-        </View>
-
-        {/* Auth Mode Toggle Tabs (Log In vs Sign Up) */}
-        <View style={styles.tabSelector}>
-          <TouchableOpacity
-            style={[styles.tabBtn, authMode === 'login' && styles.tabBtnActive]}
-            onPress={() => setAuthMode('login')}
-            activeOpacity={0.8}
-          >
-            <Text
-              style={[
-                styles.tabBtnText,
-                authMode === 'login' && styles.tabBtnTextActive,
-              ]}
-            >
-              Log In
+          {/* Hero Section */}
+          <View style={styles.heroSection}>
+            <Text style={styles.heroTitle}>
+              Train Fast.{'\n'}
+              <Text style={styles.heroTitleGradient}>Live Longer.</Text>
             </Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            style={[styles.tabBtn, authMode === 'signup' && styles.tabBtnActive]}
-            onPress={() => setAuthMode('signup')}
-            activeOpacity={0.8}
-          >
-            <Text
-              style={[
-                styles.tabBtnText,
-                authMode === 'signup' && styles.tabBtnTextActive,
-              ]}
-            >
-              Sign Up
+            <Text style={styles.heroSubtitle}>
+              Smart endurance training optimized for your biology.
             </Text>
-            <View style={styles.xpBonusBadge}>
-              <Text style={styles.xpBonusText}>+25 XP</Text>
-            </View>
-          </TouchableOpacity>
-        </View>
+          </View>
+
+          {/* Auth Mode Toggle Tabs (Log In vs Sign Up) */}
+          <View style={styles.tabSelector}>
+            <TouchableOpacity
+              style={[styles.tabBtn, authMode === 'login' && styles.tabBtnActive]}
+              onPress={() => setAuthMode('login')}
+              activeOpacity={0.8}
+            >
+              <Text
+                style={[
+                  styles.tabBtnText,
+                  authMode === 'login' && styles.tabBtnTextActive,
+                ]}
+              >
+                Log In
+              </Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={[styles.tabBtn, authMode === 'signup' && styles.tabBtnActive]}
+              onPress={() => setAuthMode('signup')}
+              activeOpacity={0.8}
+            >
+              <Text
+                style={[
+                  styles.tabBtnText,
+                  authMode === 'signup' && styles.tabBtnTextActive,
+                ]}
+              >
+                Sign Up
+              </Text>
+            </TouchableOpacity>
+          </View>
 
         {/* Input Form */}
         <View style={styles.formSection}>

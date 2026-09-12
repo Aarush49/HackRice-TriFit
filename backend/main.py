@@ -11,17 +11,29 @@ import jwt
 
 from database import get_db, init_db
 
+# Optional: ElevenLabs
+try:
+    from elevenlabs import ElevenLabs
+except ImportError:
+    ElevenLabs = None
+
+# Optional: Google Gemini
+try:
+    from google import genai
+except ImportError:
+    genai = None
+
 SECRET_KEY = os.getenv("JWT_SECRET", "trifit_super_secure_jwt_secret_key_2026_timescaledb")
 ALGORITHM = "HS256"
 TOKEN_EXPIRE_HOURS = 24
 
 # Initialize ElevenLabs client if API key is present
 ELEVENLABS_API_KEY = os.getenv("ELEVENLABS_API_KEY")
-eleven_client = ElevenLabs(api_key=ELEVENLABS_API_KEY) if ELEVENLABS_API_KEY else None
+eleven_client = ElevenLabs(api_key=ELEVENLABS_API_KEY) if (ElevenLabs and ELEVENLABS_API_KEY) else None
 
 # Initialize Gemini client if API key is present
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
-gemini_client = genai.Client(api_key=GEMINI_API_KEY) if GEMINI_API_KEY else None
+gemini_client = genai.Client(api_key=GEMINI_API_KEY) if (genai and GEMINI_API_KEY) else None
 
 app = FastAPI(title="TriFit API")
 
@@ -279,7 +291,7 @@ def get_user_info(credentials: HTTPAuthorizationCredentials = Depends(security))
         if not username:
             raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid token")
         return {"username": username}
-    except jwt.PyJWTError:
+    except Exception:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid or expired token")
 
 if __name__ == "__main__":

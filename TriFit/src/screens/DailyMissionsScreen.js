@@ -7,49 +7,133 @@ import {
   TouchableOpacity,
   Image,
   Switch,
+  useWindowDimensions,
 } from 'react-native';
-import { Ionicons, MaterialCommunityIcons, FontAwesome5 } from '@expo/vector-icons';
+import { Ionicons, MaterialCommunityIcons, FontAwesome5, Feather } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { COLORS } from '../theme';
 
-export default function DailyMissionsScreen({ onStartRun, onOpenCoach, xp, setXp }) {
+export default function DailyMissionsScreen({
+  currentUser,
+  userProfile,
+  onStartRun,
+  onOpenCoach,
+  xp,
+  setXp,
+}) {
   const [audioGuideEnabled, setAudioGuideEnabled] = useState(true);
-  const [mobilityCompleted, setMobilityCompleted] = useState(true);
+  const { width } = useWindowDimensions();
+  const isWide = width >= 860;
+
+  // Format today's date (e.g., "Friday, September 11, 2026")
+  const dateStr = new Intl.DateTimeFormat('en-US', {
+    weekday: 'long',
+    month: 'long',
+    day: 'numeric',
+    year: 'numeric',
+  }).format(new Date());
+
+  const athleteName = (currentUser?.name || userProfile?.name || 'Aarush').toUpperCase();
 
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
-      {/* Top Greeting & Race Countdown Banner */}
-      <View style={styles.greetingSection}>
-        <View style={styles.titleRow}>
-          <Ionicons name="sunny" size={26} color="#f59e0b" />
-          <Text style={styles.greetingText}>
-            Day 14 <Text style={styles.orangeDot}>•</Text> Zone In!
-          </Text>
+      {/* 1. Top Welcome Header & Compact Ask AI Coach */}
+      <View style={[styles.topSection, isWide ? styles.topSectionWide : styles.topSectionMobile]}>
+        <View style={styles.welcomeTextGroup}>
+          <Text style={styles.welcomeTitle}>Welcome back, {athleteName}</Text>
+          <Text style={styles.welcomeDate}>{dateStr}</Text>
         </View>
 
-        <LinearGradient
-          colors={['#e0f2fe', '#ecfeff', '#fef3c7']}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 0 }}
-          style={styles.raceCard}
+        <TouchableOpacity
+          style={styles.aiCoachHeroCard}
+          onPress={onOpenCoach}
+          activeOpacity={0.88}
         >
-          <View style={styles.raceLeft}>
-            <Ionicons name="timer" size={20} color="#0284c7" />
-            <Text style={styles.raceTitle}>London Hyrox Open</Text>
-          </View>
           <LinearGradient
-            colors={['#ea580c', '#f97316']}
+            colors={['#241242', '#3b0764', '#4c0519']}
             start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 0 }}
-            style={styles.daysLeftBadge}
+            end={{ x: 1, y: 1 }}
+            style={styles.aiCoachHeroGradient}
           >
-            <Text style={styles.daysLeftText}>68D LEFT</Text>
-            <Ionicons name="flag" size={12} color="#ffffff" />
+            <View style={styles.aiCoachHeroHeader}>
+              <View style={styles.coachAvatarRing}>
+                <Image
+                  source={{
+                    uri: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80',
+                  }}
+                  style={styles.coachAvatarImg}
+                />
+              </View>
+              <View style={styles.aiCoachTextWrap}>
+                <Text style={styles.aiCoachHeroTitle}>Ask AI Coach</Text>
+                <Text style={styles.aiCoachHeroSub} numberOfLines={2}>
+                  Personalized cues from recent training + recovery.
+                </Text>
+              </View>
+              <Ionicons name="sparkles" size={14} color="#f0abfc" />
+            </View>
           </LinearGradient>
+        </TouchableOpacity>
+      </View>
+
+      {/* 2. Daily Consistency & Streak Tracker (Placed above everything, below AI Coach) */}
+      <View style={styles.streakSection}>
+        <View style={styles.streakHeader}>
+          <View style={styles.streakTitleRow}>
+            <View style={styles.fireBox}>
+              <MaterialCommunityIcons name="fire" size={22} color="#ffffff" />
+            </View>
+            <View>
+              <Text style={styles.streakTitle}>Streak</Text>
+              <Text style={styles.streakSub}>Consistency over grit</Text>
+            </View>
+          </View>
+          <View style={styles.streakNumberBadge}>
+            <Text style={styles.streakNumberText}>14 Days 🔥</Text>
+          </View>
+        </View>
+
+        {/* Days Row */}
+        <View style={styles.daysRow}>
+          {['M', 'T', 'W', 'T', 'F', 'S', 'S'].map((day, idx) => {
+            const isCompleted = idx < 3;
+            const isToday = idx === 3;
+            return (
+              <View key={idx} style={styles.dayCol}>
+                <Text style={[styles.dayLetter, isToday && styles.todayLetter]}>{day}</Text>
+                {isCompleted ? (
+                  <LinearGradient colors={['#f97316', '#fbbf24']} style={styles.dayBubbleDone}>
+                    <Ionicons name="checkmark" size={14} color="#ffffff" />
+                  </LinearGradient>
+                ) : isToday ? (
+                  <LinearGradient colors={['#06b6d4', '#0ea5e9']} style={styles.dayBubbleToday}>
+                    <Ionicons name="flash" size={16} color="#ffffff" />
+                  </LinearGradient>
+                ) : (
+                  <View style={styles.dayBubbleEmpty}>
+                    <View style={styles.emptyDot} />
+                  </View>
+                )}
+              </View>
+            );
+          })}
+        </View>
+
+        {/* Milestone Banner */}
+        <LinearGradient colors={['#fef3c7', '#fffbeb', '#fed7aa']} style={styles.milestoneCard}>
+          <View style={styles.trophyIconBox}>
+            <MaterialCommunityIcons name="trophy" size={22} color="#ffffff" />
+          </View>
+          <View style={styles.milestoneTextWrap}>
+            <Text style={styles.milestoneTag}>NEXT MILESTONE</Text>
+            <Text style={styles.milestoneDesc}>
+              3 more days to win the <Text style={styles.boldText}>Golden Kettlebell</Text>! 🏆
+            </Text>
+          </View>
         </LinearGradient>
       </View>
 
-      {/* Today's Missions Section */}
+      {/* 3. Today's Missions Section */}
       <View style={styles.missionsSection}>
         <View style={styles.sectionHeader}>
           <View style={styles.sectionTitleRow}>
@@ -169,68 +253,121 @@ export default function DailyMissionsScreen({ onStartRun, onOpenCoach, xp, setXp
         </View>
       </View>
 
-      {/* Daily Consistency & Streak Tracker */}
-      <View style={styles.streakSection}>
-        <View style={styles.streakHeader}>
-          <View style={styles.streakTitleRow}>
-            <View style={styles.fireBox}>
-              <MaterialCommunityIcons name="fire" size={22} color="#ffffff" />
-            </View>
-            <View>
-              <Text style={styles.streakTitle}>Streak</Text>
-              <Text style={styles.streakSub}>Consistency over grit</Text>
-            </View>
-          </View>
-          <View style={styles.streakNumberBadge}>
-            <Text style={styles.streakNumberText}>14 Days 🔥</Text>
-          </View>
-        </View>
+      {/* 4. Summary & Performance Cards Grid */}
+      <View style={[styles.dashboardGrid, isWide && styles.dashboardGridWide]}>
+        {/* CARD 1: WEEKLY SUMMARY */}
+        <View style={[styles.summaryCard, isWide && styles.cardFlex1]}>
+          <Text style={styles.cardHeaderLabel}>WEEKLY SUMMARY</Text>
+          <Text style={styles.planTitle} numberOfLines={1} ellipsizeMode="tail">
+            Middle Distance Low Volume Base...
+          </Text>
 
-        {/* Days Row */}
-        <View style={styles.daysRow}>
-          {['M', 'T', 'W', 'T', 'F', 'S', 'S'].map((day, idx) => {
-            const isCompleted = idx < 3;
-            const isToday = idx === 3;
-            return (
-              <View key={idx} style={styles.dayCol}>
-                <Text style={[styles.dayLetter, isToday && styles.todayLetter]}>{day}</Text>
-                {isCompleted ? (
-                  <LinearGradient colors={['#f97316', '#fbbf24']} style={styles.dayBubbleDone}>
-                    <Ionicons name="checkmark" size={14} color="#ffffff" />
-                  </LinearGradient>
-                ) : isToday ? (
-                  <LinearGradient colors={['#06b6d4', '#0ea5e9']} style={styles.dayBubbleToday}>
-                    <Ionicons name="flash" size={16} color="#ffffff" />
-                  </LinearGradient>
-                ) : (
-                  <View style={styles.dayBubbleEmpty}>
-                    <View style={styles.emptyDot} />
-                  </View>
-                )}
+          <View style={styles.metricsColsRow}>
+            {/* TOTAL */}
+            <View style={styles.metricCol}>
+              <View style={styles.colHeaderRow}>
+                <Ionicons name="calendar-outline" size={13} color="#0284c7" />
+                <Text style={styles.colHeaderLabel}>TOTAL</Text>
               </View>
-            );
-          })}
+              <View style={styles.metricValGroup}>
+                <Text style={styles.metricValBold}>0:00 <Text style={styles.metricValSub}>/2:41h</Text></Text>
+                <Text style={styles.metricValBold}>0 <Text style={styles.metricValSub}>/151 load</Text></Text>
+                <Text style={styles.metricValBold}>0km <Text style={styles.metricValSub}>/5.2km</Text></Text>
+              </View>
+            </View>
+
+            {/* BIKE */}
+            <View style={styles.metricCol}>
+              <View style={styles.colHeaderRow}>
+                <MaterialCommunityIcons name="bike" size={14} color="#d97706" />
+                <Text style={styles.colHeaderLabel}>BIKE</Text>
+              </View>
+              <View style={styles.metricValGroup}>
+                <Text style={styles.metricValBold}>0:00 <Text style={styles.metricValSub}>/1:49h</Text></Text>
+                <Text style={styles.metricValBold}>0 <Text style={styles.metricValSub}>/87 load</Text></Text>
+              </View>
+            </View>
+
+            {/* RUN */}
+            <View style={styles.metricCol}>
+              <View style={styles.colHeaderRow}>
+                <FontAwesome5 name="running" size={13} color="#ea580c" />
+                <Text style={styles.colHeaderLabel}>RUN</Text>
+              </View>
+              <View style={styles.metricValGroup}>
+                <Text style={styles.metricValBold}>0:00 <Text style={styles.metricValSub}>/0:52h</Text></Text>
+                <Text style={styles.metricValBold}>0 <Text style={styles.metricValSub}>/63 load</Text></Text>
+                <Text style={styles.metricValBold}>0km <Text style={styles.metricValSub}>/5.2km</Text></Text>
+              </View>
+            </View>
+          </View>
         </View>
 
-        {/* Milestone Banner */}
-        <LinearGradient colors={['#fef3c7', '#fffbeb', '#fed7aa']} style={styles.milestoneCard}>
-          <View style={styles.trophyIconBox}>
-            <MaterialCommunityIcons name="trophy" size={22} color="#ffffff" />
+        {/* CARD 2: WEEKLY PERFORMANCE */}
+        <View style={[styles.summaryCard, isWide && styles.cardFlex1]}>
+          <View style={styles.cardHeaderBetween}>
+            <Text style={styles.cardHeaderLabel}>WEEKLY PERFORMANCE</Text>
+            <TouchableOpacity activeOpacity={0.7} style={styles.detailsBtn}>
+              <Text style={styles.detailsText}>Details</Text>
+              <Feather name="external-link" size={12} color="#64748b" />
+            </TouchableOpacity>
           </View>
-          <View style={styles.milestoneTextWrap}>
-            <Text style={styles.milestoneTag}>NEXT MILESTONE</Text>
-            <Text style={styles.milestoneDesc}>
-              3 more days to win the <Text style={styles.boldText}>Golden Kettlebell</Text>! 🏆
+
+          {/* 3 Metric Figures */}
+          <View style={styles.perfMetricsRow}>
+            <View style={styles.perfCol}>
+              <View style={styles.perfNumRow}>
+                <Text style={styles.perfMinus}>— </Text>
+                <Text style={styles.perfNum}>25</Text>
+              </View>
+              <View style={styles.perfLabelWrap}>
+                <Text style={styles.perfLabel}>FITNESS</Text>
+                <Ionicons name="help-circle-outline" size={12} color="#94a3b8" />
+              </View>
+            </View>
+
+            <View style={styles.perfDivider} />
+
+            <View style={styles.perfCol}>
+              <View style={styles.perfNumRow}>
+                <Text style={styles.perfMinus}>— </Text>
+                <Text style={styles.perfNum}>22</Text>
+              </View>
+              <View style={styles.perfLabelWrap}>
+                <Text style={styles.perfLabel}>FATIGUE</Text>
+                <Ionicons name="help-circle-outline" size={12} color="#94a3b8" />
+              </View>
+            </View>
+
+            <View style={styles.perfDivider} />
+
+            <View style={styles.perfCol}>
+              <View style={styles.perfNumRow}>
+                <Text style={styles.perfMinus}>— </Text>
+                <Text style={styles.perfNum}>0</Text>
+              </View>
+              <View style={styles.perfLabelWrap}>
+                <Text style={styles.perfLabel}>FORM</Text>
+                <Ionicons name="help-circle-outline" size={12} color="#94a3b8" />
+              </View>
+            </View>
+          </View>
+
+          {/* Status Box */}
+          <View style={styles.readinessBox}>
+            <Text style={styles.readinessStatus}>Ready to Train</Text>
+            <Text style={styles.readinessDesc}>
+              Fitness and fatigue are in balance. Good conditions for training.
             </Text>
           </View>
-        </LinearGradient>
+        </View>
       </View>
 
-      {/* Maya Encouragement Banner */}
+      {/* 5. Encouragement Banner */}
       <View style={styles.encouragementBanner}>
         <Ionicons name="heart" size={20} color="#10b981" />
         <Text style={styles.encouragementText}>
-          Speed is built on easy miles. Enjoy it, Alex! 🏃💨
+          Speed is built on easy miles. Enjoy it, {athleteName}! 🏃💨
         </Text>
       </View>
     </ScrollView>
@@ -245,143 +382,220 @@ const styles = StyleSheet.create({
   content: {
     padding: 16,
     paddingBottom: 40,
-    gap: 20,
+    gap: 18,
   },
-  greetingSection: {
-    gap: 10,
+  topSection: {
+    gap: 12,
   },
-  titleRow: {
+  topSectionMobile: {
+    flexDirection: 'column',
+  },
+  topSectionWide: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
+    justifyContent: 'space-between',
   },
-  greetingText: {
+  welcomeTextGroup: {
+    flex: 1,
+  },
+  welcomeTitle: {
     fontSize: 24,
     fontWeight: '900',
-    color: COLORS.onSurface,
+    color: '#0f172a',
     letterSpacing: -0.5,
   },
-  orangeDot: {
-    color: '#f97316',
+  welcomeDate: {
+    fontSize: 13,
+    fontWeight: '500',
+    color: '#64748b',
+    marginTop: 2,
   },
-  raceCard: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 16,
+  aiCoachHeroCard: {
+    borderRadius: 16,
+    overflow: 'hidden',
+    shadowColor: '#581c87',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.18,
+    shadowRadius: 6,
+    elevation: 3,
+    maxWidth: 320,
+    alignSelf: 'flex-start',
+  },
+  aiCoachHeroGradient: {
+    paddingHorizontal: 12,
     paddingVertical: 10,
-    borderRadius: 20,
+    borderRadius: 16,
     borderWidth: 1,
-    borderColor: 'rgba(186, 230, 253, 0.6)',
+    borderColor: 'rgba(168, 85, 247, 0.35)',
   },
-  raceLeft: {
+  aiCoachHeroHeader: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
   },
-  raceTitle: {
-    fontSize: 15,
-    fontWeight: '700',
-    color: COLORS.onSurface,
-  },
-  daysLeftBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-    paddingHorizontal: 12,
-    paddingVertical: 5,
-    borderRadius: 20,
-  },
-  daysLeftText: {
-    color: '#ffffff',
-    fontSize: 11,
-    fontWeight: '900',
-  },
-  mayaCard: {
-    borderRadius: 24,
+  coachAvatarRing: {
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    borderWidth: 1.5,
+    borderColor: '#c084fc',
     overflow: 'hidden',
-    borderWidth: 2,
-    borderColor: 'rgba(110, 231, 183, 0.6)',
-    elevation: 3,
-    shadowColor: '#10b981',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.12,
-    shadowRadius: 8,
   },
-  mayaGradient: {
+  coachAvatarImg: {
+    width: '100%',
+    height: '100%',
+  },
+  aiCoachTextWrap: {
+    flex: 1,
+  },
+  aiCoachHeroTitle: {
+    fontSize: 13,
+    fontWeight: '800',
+    color: '#ffffff',
+    letterSpacing: -0.2,
+  },
+  aiCoachHeroSub: {
+    fontSize: 10,
+    color: '#e9d5ff',
+    lineHeight: 14,
+    fontWeight: '400',
+  },
+  streakSection: {
+    backgroundColor: '#ffffff',
+    borderRadius: 22,
     padding: 16,
-    gap: 12,
+    gap: 14,
+    elevation: 2,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.04,
+    shadowRadius: 6,
+    borderWidth: 1,
+    borderColor: '#e2e8f0',
   },
-  mayaHeader: {
+  streakHeader: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
   },
-  mayaProfile: {
+  streakTitleRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 12,
+    gap: 10,
   },
-  avatarWrap: {
-    position: 'relative',
-  },
-  mayaAvatar: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    borderWidth: 2,
-    borderColor: '#10b981',
-  },
-  boltDot: {
-    position: 'absolute',
-    bottom: -2,
-    right: -2,
-    width: 16,
-    height: 16,
-    borderRadius: 8,
-    backgroundColor: '#10b981',
+  fireBox: {
+    width: 38,
+    height: 38,
+    borderRadius: 14,
+    backgroundColor: '#f97316',
     alignItems: 'center',
     justifyContent: 'center',
   },
-  mayaNameRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-  },
-  mayaName: {
-    fontSize: 16,
+  streakTitle: {
+    fontSize: 18,
     fontWeight: '900',
     color: COLORS.onSurface,
   },
-  tunedPill: {
-    backgroundColor: '#06b6d4',
-    paddingHorizontal: 8,
-    paddingVertical: 2,
-    borderRadius: 12,
-  },
-  tunedText: {
-    color: '#ffffff',
-    fontSize: 10,
-    fontWeight: '800',
-  },
-  shieldText: {
+  streakSub: {
     fontSize: 12,
-    fontWeight: '600',
-    color: '#0d9488',
-    marginTop: 2,
+    fontWeight: '700',
+    color: '#059669',
   },
-  speechBox: {
-    backgroundColor: 'rgba(255, 255, 255, 0.9)',
-    padding: 14,
+  streakNumberBadge: {
+    backgroundColor: '#ffedd5',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
     borderRadius: 16,
     borderWidth: 1,
-    borderColor: 'rgba(167, 243, 208, 0.6)',
+    borderColor: '#fed7aa',
   },
-  speechText: {
-    fontSize: 14,
-    fontWeight: '500',
-    color: COLORS.onSurface,
-    lineHeight: 20,
+  streakNumberText: {
+    fontSize: 16,
+    fontWeight: '900',
+    color: '#ea580c',
+  },
+  daysRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    paddingHorizontal: 4,
+  },
+  dayCol: {
+    alignItems: 'center',
+    gap: 6,
+  },
+  dayLetter: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: '#64748b',
+  },
+  todayLetter: {
+    color: '#0284c7',
+    fontWeight: '900',
+  },
+  dayBubbleDone: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  dayBubbleToday: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  dayBubbleEmpty: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: '#f1f5f9',
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: '#e2e8f0',
+  },
+  emptyDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: '#cbd5e1',
+  },
+  milestoneCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 14,
+    borderRadius: 18,
+    gap: 12,
+    borderWidth: 1,
+    borderColor: '#fde68a',
+  },
+  trophyIconBox: {
+    width: 40,
+    height: 40,
+    borderRadius: 14,
+    backgroundColor: '#f59e0b',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  milestoneTextWrap: {
+    flex: 1,
+    gap: 2,
+  },
+  milestoneTag: {
+    fontSize: 10,
+    fontWeight: '900',
+    color: '#92400e',
+    letterSpacing: 0.5,
+  },
+  milestoneDesc: {
+    fontSize: 13,
+    color: '#78350f',
+    fontWeight: '600',
+  },
+  boldText: {
+    fontWeight: '900',
   },
   missionsSection: {
     gap: 12,
@@ -650,140 +864,145 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     color: '#334155',
   },
-  streakSection: {
-    backgroundColor: '#ffffff',
-    borderRadius: 24,
-    padding: 16,
+  dashboardGrid: {
     gap: 14,
-    elevation: 2,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 6,
   },
-  streakHeader: {
+  dashboardGridWide: {
     flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
   },
-  streakTitleRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 10,
+  cardFlex1: {
+    flex: 1,
   },
-  fireBox: {
-    width: 38,
-    height: 38,
-    borderRadius: 14,
-    backgroundColor: '#f97316',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  streakTitle: {
-    fontSize: 18,
-    fontWeight: '900',
-    color: COLORS.onSurface,
-  },
-  streakSub: {
-    fontSize: 12,
-    fontWeight: '700',
-    color: '#059669',
-  },
-  streakNumberBadge: {
-    backgroundColor: '#ffedd5',
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 16,
-    borderWidth: 1,
-    borderColor: '#fed7aa',
-  },
-  streakNumberText: {
-    fontSize: 16,
-    fontWeight: '900',
-    color: '#ea580c',
-  },
-  daysRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    paddingHorizontal: 4,
-  },
-  dayCol: {
-    alignItems: 'center',
-    gap: 6,
-  },
-  dayLetter: {
-    fontSize: 12,
-    fontWeight: '700',
-    color: '#64748b',
-  },
-  todayLetter: {
-    color: '#0284c7',
-    fontWeight: '900',
-  },
-  dayBubbleDone: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  dayBubbleToday: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  dayBubbleEmpty: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    backgroundColor: '#f1f5f9',
-    alignItems: 'center',
-    justifyContent: 'center',
+  summaryCard: {
+    backgroundColor: '#ffffff',
+    borderRadius: 20,
+    padding: 18,
     borderWidth: 1,
     borderColor: '#e2e8f0',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.04,
+    shadowRadius: 8,
+    elevation: 2,
+    gap: 12,
   },
-  emptyDot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-    backgroundColor: '#cbd5e1',
+  cardHeaderLabel: {
+    fontSize: 11,
+    fontWeight: '800',
+    color: '#64748b',
+    letterSpacing: 0.8,
   },
-  milestoneCard: {
+  cardHeaderBetween: {
     flexDirection: 'row',
     alignItems: 'center',
-    padding: 14,
-    borderRadius: 18,
-    gap: 12,
-    borderWidth: 1,
-    borderColor: '#fde68a',
+    justifyContent: 'space-between',
   },
-  trophyIconBox: {
-    width: 40,
-    height: 40,
-    borderRadius: 14,
-    backgroundColor: '#f59e0b',
+  detailsBtn: {
+    flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'center',
+    gap: 4,
   },
-  milestoneTextWrap: {
+  detailsText: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: '#64748b',
+  },
+  planTitle: {
+    fontSize: 15,
+    fontWeight: '800',
+    color: '#0f172a',
+    letterSpacing: -0.3,
+  },
+  metricsColsRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginTop: 4,
+    gap: 8,
+  },
+  metricCol: {
     flex: 1,
-    gap: 2,
+    gap: 6,
   },
-  milestoneTag: {
+  colHeaderRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+  },
+  colHeaderLabel: {
     fontSize: 10,
-    fontWeight: '900',
-    color: '#92400e',
+    fontWeight: '800',
+    color: '#475569',
     letterSpacing: 0.5,
   },
-  milestoneDesc: {
-    fontSize: 13,
-    color: '#78350f',
-    fontWeight: '600',
+  metricValGroup: {
+    gap: 2,
   },
-  boldText: {
+  metricValBold: {
+    fontSize: 12,
+    fontWeight: '800',
+    color: '#0f172a',
+  },
+  metricValSub: {
+    fontSize: 10,
+    fontWeight: '500',
+    color: '#64748b',
+  },
+  perfMetricsRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-around',
+    paddingVertical: 4,
+  },
+  perfCol: {
+    alignItems: 'center',
+    gap: 4,
+  },
+  perfNumRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  perfMinus: {
+    fontSize: 18,
+    fontWeight: '800',
+    color: '#10b981',
+  },
+  perfNum: {
+    fontSize: 22,
     fontWeight: '900',
+    color: '#0f172a',
+  },
+  perfLabelWrap: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 3,
+  },
+  perfLabel: {
+    fontSize: 10,
+    fontWeight: '800',
+    color: '#64748b',
+    letterSpacing: 0.5,
+  },
+  perfDivider: {
+    width: 1,
+    height: 32,
+    backgroundColor: '#f1f5f9',
+  },
+  readinessBox: {
+    borderTopWidth: 1,
+    borderTopColor: '#f1f5f9',
+    paddingTop: 8,
+    gap: 2,
+  },
+  readinessStatus: {
+    fontSize: 13,
+    fontWeight: '800',
+    color: '#10b981',
+  },
+  readinessDesc: {
+    fontSize: 11,
+    fontWeight: '500',
+    color: '#64748b',
+    lineHeight: 16,
   },
   encouragementBanner: {
     flexDirection: 'row',
