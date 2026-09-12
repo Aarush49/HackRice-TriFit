@@ -62,15 +62,6 @@ export default function CoachMayaModal({ visible, onClose, onLogout, currentUser
       : '';
   };
 
-  const blobToBase64 = (blob) => {
-    return new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.onloadend = () => resolve(reader.result);
-      reader.onerror = reject;
-      reader.readAsDataURL(blob);
-    });
-  };
-
   const handlePlayAudio = async (msgId, text) => {
     if (playingId === msgId) {
       stopCurrentAudio();
@@ -98,8 +89,15 @@ export default function CoachMayaModal({ visible, onClose, onLogout, currentUser
         throw new Error(`Backend TTS failed with status ${response.status}`);
       }
 
-      const blob = await response.blob();
-      const dataUri = await blobToBase64(blob);
+      const arrayBuffer = await response.arrayBuffer();
+      const bytes = new Uint8Array(arrayBuffer);
+      let binary = '';
+      const len = bytes.byteLength;
+      for (let i = 0; i < len; i++) {
+        binary += String.fromCharCode(bytes[i]);
+      }
+      const base64Str = typeof btoa !== 'undefined' ? btoa(binary) : global.btoa ? global.btoa(binary) : '';
+      const dataUri = `data:audio/mpeg;base64,${base64Str}`;
 
       if (Platform.OS === 'web') {
         const audio = new Audio(dataUri);
