@@ -98,8 +98,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 10,
     paddingVertical: 5,
     borderRadius: 20,
-    borderBottomWidth: 2,
-    borderBottomColor: '#ffb690',
   },
   streakText: {
     fontSize: 12,
@@ -114,8 +112,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 10,
     paddingVertical: 5,
     borderRadius: 20,
-    borderBottomWidth: 2,
-    borderBottomColor: '#6bd8cb',
   },
   xpText: {
     fontSize: 12,

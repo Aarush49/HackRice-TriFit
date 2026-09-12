@@ -1567,7 +1567,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#faf8ff',
   },
   scrollContent: {
-    paddingBottom: 40,
+    paddingBottom: 16,
   },
   progressHeader: {
     paddingHorizontal: 16,

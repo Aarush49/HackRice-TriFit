@@ -383,7 +383,7 @@ const styles = StyleSheet.create({
   scrollContent: {
     paddingHorizontal: 16,
     paddingTop: 20,
-    paddingBottom: 32,
+    paddingBottom: 16,
     gap: 14,
   },
   subHeader: {
@@ -661,7 +661,8 @@ const styles = StyleSheet.create({
     backgroundColor: '#fff',
     borderRadius: 14,
     padding: 14,
-    width: '47.5%',
+    flexBasis: '47%',
+    flexGrow: 1,
     gap: 4,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },

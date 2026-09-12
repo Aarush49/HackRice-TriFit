@@ -164,9 +164,9 @@ const styles = StyleSheet.create({
     zIndex: 0,
   },
   slidingIndicatorCircle: {
-    width: 58,
-    height: 48,
-    borderRadius: 24,
+    width: '94%',
+    height: 58,
+    borderRadius: 29,
     backgroundColor: 'rgba(0, 104, 95, 0.10)',
     borderWidth: 1,
     borderColor: 'rgba(0, 104, 95, 0.20)',
@@ -176,9 +176,8 @@ const styles = StyleSheet.create({
     shadowRadius: 6,
   },
   roomyIndicatorCircle: {
-    width: 64,
-    height: 56,
-    borderRadius: 28,
+    height: 64,
+    borderRadius: 32,
   },
   tabItem: {
     flex: 1,

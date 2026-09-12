@@ -850,6 +850,9 @@ export default function LongevityDashboardScreen({ currentUser, userProfile, onO
         visible={!!selectedRecipe}
         animationType="slide"
         transparent={false}
+        presentationStyle="fullScreen"
+        statusBarTranslucent
+        navigationBarTranslucent
         onRequestClose={() => setSelectedRecipe(null)}
       >
         {selectedRecipe && (
@@ -987,6 +990,9 @@ export default function LongevityDashboardScreen({ currentUser, userProfile, onO
         visible={isCustomMealModalOpen}
         animationType="slide"
         transparent={false}
+        presentationStyle="fullScreen"
+        statusBarTranslucent
+        navigationBarTranslucent
         onRequestClose={() => setIsCustomMealModalOpen(false)}
       >
         <SafeAreaView style={styles.modalSafeArea}>
@@ -1486,7 +1492,7 @@ const styles = StyleSheet.create({
   content: {
     paddingHorizontal: 16,
     paddingTop: 20,
-    paddingBottom: 40,
+    paddingBottom: 16,
     gap: 16,
   },
   headerSection: {
@@ -1882,7 +1888,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 8,
   },
   modalScrollContent: {
-    paddingBottom: 40,
+    paddingBottom: 16,
   },
   modalImageContainer: {
     position: 'relative',
