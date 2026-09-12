@@ -1,18 +1,20 @@
-import { useState } from 'react';
+import React, { useState } from 'react';
 import {
   View,
   Text,
-  StyleSheet,
   ScrollView,
   TouchableOpacity,
-  TextInput,
   Platform,
   KeyboardAvoidingView,
-  StatusBar,
 } from 'react-native';
-import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
+import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import API_BASE_URL from '../config';
+import styles from './styles/OnboardingQuestionnaireScreen.styles';
+import QuestionnaireStep1 from '../components/onboarding/QuestionnaireStep1';
+import QuestionnaireStep2 from '../components/onboarding/QuestionnaireStep2';
+import QuestionnaireStep3 from '../components/onboarding/QuestionnaireStep3';
+import QuestionnaireStep4 from '../components/onboarding/QuestionnaireStep4';
 
 export default function OnboardingQuestionnaireScreen({ onComplete, onBackToLogin, currentUser, token }) {
   const [currentStep, setCurrentStep] = useState(1);
@@ -178,7 +180,7 @@ export default function OnboardingQuestionnaireScreen({ onComplete, onBackToLogi
   };
 
   const renderProgressBar = () => {
-    const progressPercent = ((currentStep) / totalSteps) * 100;
+    const progressPercent = (currentStep / totalSteps) * 100;
     return (
       <View style={styles.progressContainer}>
         <View style={styles.progressBarBg}>
@@ -188,454 +190,6 @@ export default function OnboardingQuestionnaireScreen({ onComplete, onBackToLogi
       </View>
     );
   };
-
-  const renderStep1 = () => (
-    <View style={styles.stepContainer}>
-      <Text style={styles.sectionTitle}>Section 1: Race Details</Text>
-      <Text style={styles.stepSubtitle}>Tell us about the event you want to crush.</Text>
-
-      <Text style={styles.questionLabel}>What event are you training for? *</Text>
-      <View style={styles.optionsGrid}>
-        {['Sprint Triathlon', 'Olympic Triathlon', '70.3 Half Ironman', '140.6 Full Ironman', 'Hyrox', 'Marathon / Half Marathon'].map(
-          (type) => (
-            <TouchableOpacity
-              key={type}
-              style={[
-                styles.optionCard,
-                raceType === type && styles.optionCardSelected,
-              ]}
-              onPress={() => {
-                setValidationError('');
-                setRaceType(type);
-              }}
-            >
-              <Text
-                style={[
-                  styles.optionText,
-                  raceType === type && styles.optionTextSelected,
-                ]}
-              >
-                {type}
-              </Text>
-            </TouchableOpacity>
-          )
-        )}
-      </View>
-
-      <Text style={styles.questionLabel}>When is race day? *</Text>
-      <View style={styles.inputWrapper}>
-        <Ionicons name="calendar-outline" size={18} color="#94a3b8" style={styles.inputIcon} />
-        {Platform.OS === 'web' ? (
-          <input
-            type="date"
-            min="2024-01-01"
-            max="2099-12-31"
-            style={{
-              flex: 1,
-              border: 'none',
-              outline: 'none',
-              fontSize: 16,
-              color: '#0f172a',
-              backgroundColor: 'transparent',
-              fontFamily: 'inherit',
-            }}
-            value={raceDate}
-            onChange={(e) => {
-              setValidationError('');
-              let val = e.target.value;
-              if (val) {
-                const parts = val.split('-');
-                if (parts[0] && parts[0].length > 4) {
-                  parts[0] = parts[0].slice(0, 4);
-                  val = parts.join('-');
-                }
-              }
-              setRaceDate(val);
-            }}
-          />
-        ) : (
-          <TextInput
-            style={styles.inputField}
-            placeholder="YYYY-MM-DD"
-            placeholderTextColor="#94a3b8"
-            keyboardType="numbers-and-punctuation"
-            maxLength={10}
-            value={raceDate}
-            onChangeText={(val) => {
-              setValidationError('');
-              let cleaned = val.replace(/[^0-9-]/g, '');
-              const parts = cleaned.split('-');
-              if (parts[0] && parts[0].length > 4) {
-                parts[0] = parts[0].slice(0, 4);
-                cleaned = parts.join('-');
-              }
-              setRaceDate(cleaned);
-            }}
-          />
-        )}
-      </View>
-
-      <Text style={styles.questionLabel}>Is this your first time doing this type of event? *</Text>
-      <View style={styles.optionsRow}>
-        {['Yes', 'No'].map((ans) => (
-          <TouchableOpacity
-            key={ans}
-            style={[
-              styles.optionChip,
-              isFirstTime === ans && styles.optionChipSelected,
-            ]}
-            onPress={() => {
-              setValidationError('');
-              setIsFirstTime(ans);
-            }}
-          >
-            <Text
-              style={[
-                styles.optionText,
-                isFirstTime === ans && styles.optionTextSelected,
-              ]}
-            >
-              {ans}
-            </Text>
-          </TouchableOpacity>
-        ))}
-      </View>
-
-      {isFirstTime === 'No' && (
-        <>
-          <Text style={styles.questionLabel}>What was your best previous time? *</Text>
-          <View style={styles.inputWrapper}>
-            <Ionicons name="timer-outline" size={18} color="#94a3b8" style={styles.inputIcon} />
-            <TextInput
-              style={styles.inputField}
-              placeholder="e.g. 2:30:00"
-              placeholderTextColor="#94a3b8"
-              value={previousTime}
-              onChangeText={(val) => {
-                setValidationError('');
-                setPreviousTime(val);
-              }}
-            />
-          </View>
-        </>
-      )}
-    </View>
-  );
-
-  const renderStep2 = () => {
-    let equipOptions = ['None of these regularly'];
-    if (isHyrox) equipOptions = ['Gym with sleds/kettlebells', 'Regular gym/weights only', 'Outdoor running routes', ...equipOptions];
-    else if (isTriathlon) equipOptions = ['Pool', 'Bike', 'Gym/weights', 'Outdoor running routes', ...equipOptions];
-    else equipOptions = ['Gym', 'Outdoor running routes', ...equipOptions];
-
-    return (
-      <View style={styles.stepContainer}>
-        <Text style={styles.sectionTitle}>Section 2: Starting Point</Text>
-
-        <Text style={styles.questionLabel}>How old are you? *</Text>
-        <View style={styles.inputWrapper}>
-          <MaterialCommunityIcons name="cake-variant" size={18} color="#94a3b8" style={styles.inputIcon} />
-          <TextInput
-            style={styles.inputField}
-            placeholder="e.g. 28"
-            placeholderTextColor="#94a3b8"
-            keyboardType="number-pad"
-            maxLength={3}
-            value={age}
-            onChangeText={(val) => {
-              setValidationError('');
-              setAge(val.replace(/[^0-9]/g, ''));
-            }}
-          />
-          <Text style={{ fontSize: 14, color: '#64748b', paddingRight: 8 }}>years old</Text>
-        </View>
-
-        <Text style={styles.questionLabel}>How would you describe your current fitness level? *</Text>
-        {[
-          'New to structured training',
-          'Train occasionally',
-          'Train regularly, no race focus yet',
-          'Already race-trained',
-        ].map((level) => (
-          <TouchableOpacity
-            key={level}
-            style={[
-              styles.optionCardRow,
-              fitnessLevel === level && styles.optionCardSelected,
-            ]}
-            onPress={() => {
-              setValidationError('');
-              setFitnessLevel(level);
-            }}
-          >
-            <Text
-              style={[
-                styles.optionText,
-                fitnessLevel === level && styles.optionTextSelected,
-              ]}
-            >
-              {level}
-            </Text>
-          </TouchableOpacity>
-        ))}
-
-        <Text style={styles.questionLabel}>How many days a week can you realistically train? ({trainingDays} days) *</Text>
-        <View style={styles.daysRow}>
-          {[2, 3, 4, 5, 6, 7].map((num) => (
-            <TouchableOpacity
-              key={num}
-              style={[
-                styles.dayCircle,
-                trainingDays === num && styles.dayCircleSelected,
-              ]}
-              onPress={() => {
-                setValidationError('');
-                setTrainingDays(num);
-              }}
-            >
-              <Text
-                style={[
-                  styles.dayText,
-                  trainingDays === num && styles.dayTextSelected,
-                ]}
-              >
-                {num}
-              </Text>
-            </TouchableOpacity>
-          ))}
-        </View>
-
-        <Text style={styles.questionLabel}>Do you have access to: (Select all that apply) *</Text>
-        {equipOptions.map((item) => (
-          <TouchableOpacity
-            key={item}
-            style={[
-              styles.optionCardRow,
-              equipment.includes(item) && styles.optionCardSelected,
-            ]}
-            onPress={() => toggleEquipment(item)}
-          >
-            <View style={[
-              styles.checkbox,
-              equipment.includes(item) && styles.checkboxChecked,
-            ]}>
-              {equipment.includes(item) && <Ionicons name="checkmark" size={16} color="#ffffff" />}
-            </View>
-            <Text
-              style={[
-                styles.optionText,
-                equipment.includes(item) && styles.optionTextSelected,
-              ]}
-            >
-              {item}
-            </Text>
-          </TouchableOpacity>
-        ))}
-      </View>
-    );
-  };
-
-  const renderStep3 = () => (
-    <View style={styles.stepContainer}>
-      <Text style={styles.sectionTitle}>Section 3: Baseline Numbers</Text>
-      <Text style={styles.stepSubtitle}>Let's get an idea of where you are right now.</Text>
-
-      {/* Not sure toggle */}
-      <TouchableOpacity
-        style={[styles.notSureBtn, baselineNotSure && styles.notSureBtnActive]}
-        onPress={() => {
-          setValidationError('');
-          setBaselineNotSure(!baselineNotSure);
-        }}
-      >
-        <Ionicons
-          name={baselineNotSure ? 'checkmark-circle' : 'help-circle-outline'}
-          size={20}
-          color={baselineNotSure ? '#0d9488' : '#94a3b8'}
-        />
-        <Text style={[styles.notSureText, baselineNotSure && styles.notSureTextActive]}>
-          Not sure / I'll figure it out later
-        </Text>
-      </TouchableOpacity>
-
-      {baselineNotSure ? (
-        <View style={styles.notSureCard}>
-          <Text style={styles.notSureCardEmoji}>👍</Text>
-          <Text style={styles.notSureCardTitle}>No problem!</Text>
-          <Text style={styles.notSureCardText}>
-            We'll start you off with a beginner-friendly baseline and adjust your plan as we learn more about you through your check-ins.
-          </Text>
-        </View>
-      ) : isTriathlon ? (
-        <>
-          <Text style={styles.questionLabel}>Current 400m Swim Time (min:sec) *</Text>
-          <View style={styles.inputWrapper}>
-            <MaterialCommunityIcons name="swim" size={18} color="#94a3b8" style={styles.inputIcon} />
-            <TextInput
-              style={styles.inputField}
-              placeholder="e.g. 7:30"
-              placeholderTextColor="#94a3b8"
-              value={swimPace}
-              onChangeText={(val) => {
-                setValidationError('');
-                setSwimPace(val);
-              }}
-            />
-          </View>
-
-          <Text style={styles.questionLabel}>Current Cycling FTP or 20min Power (watts) *</Text>
-          <View style={styles.inputWrapper}>
-            <Ionicons name="bicycle" size={18} color="#94a3b8" style={styles.inputIcon} />
-            <TextInput
-              style={styles.inputField}
-              placeholder="e.g. 220"
-              placeholderTextColor="#94a3b8"
-              value={bikeFtp}
-              onChangeText={(val) => {
-                setValidationError('');
-                setBikeFtp(val);
-              }}
-            />
-          </View>
-
-          <Text style={styles.questionLabel}>Current 5k or 10k Run Pace (min:sec) *</Text>
-          <View style={styles.inputWrapper}>
-            <Ionicons name="walk" size={18} color="#94a3b8" style={styles.inputIcon} />
-            <TextInput
-              style={styles.inputField}
-              placeholder="e.g. 5:00"
-              placeholderTextColor="#94a3b8"
-              value={runPace}
-              onChangeText={(val) => {
-                setValidationError('');
-                setRunPace(val);
-              }}
-            />
-          </View>
-        </>
-      ) : isHyrox ? (
-        <>
-          <Text style={styles.questionLabel}>Current 5k Run Time (min:sec) *</Text>
-          <View style={styles.inputWrapper}>
-            <Ionicons name="walk" size={18} color="#94a3b8" style={styles.inputIcon} />
-            <TextInput
-              style={styles.inputField}
-              placeholder="e.g. 24:00"
-              placeholderTextColor="#94a3b8"
-              value={runPace}
-              onChangeText={(val) => {
-                setValidationError('');
-                setRunPace(val);
-              }}
-            />
-          </View>
-          <Text style={styles.questionLabel}>Strength Baseline: Wall Balls / Sled Push (describe briefly) *</Text>
-          <View style={[styles.inputWrapper, { height: 80, alignItems: 'flex-start', paddingTop: 10 }]}>
-            <TextInput
-              style={[styles.inputField, { textAlignVertical: 'top' }]}
-              placeholder="e.g. comfortable with 20lb wall balls"
-              placeholderTextColor="#94a3b8"
-              multiline
-              value={bikeFtp}
-              onChangeText={(val) => {
-                setValidationError('');
-                setBikeFtp(val);
-              }}
-            />
-          </View>
-        </>
-      ) : (
-        <>
-          <Text style={styles.questionLabel}>Any baseline metrics you want to track? (Pace, weight, etc.) *</Text>
-          <View style={[styles.inputWrapper, { height: 80, alignItems: 'flex-start', paddingTop: 10 }]}>
-            <TextInput
-              style={[styles.inputField, { textAlignVertical: 'top' }]}
-              placeholder="Enter your current baseline numbers here..."
-              placeholderTextColor="#94a3b8"
-              multiline
-              value={runPace}
-              onChangeText={(val) => {
-                setValidationError('');
-                setRunPace(val);
-              }}
-            />
-          </View>
-        </>
-      )}
-    </View>
-  );
-
-  const renderStep4 = () => (
-    <View style={styles.stepContainer}>
-      <Text style={styles.sectionTitle}>Section 4: Recovery & Lifestyle</Text>
-
-      <Text style={styles.questionLabel}>Average hours of sleep per night *</Text>
-      <View style={styles.optionsRow}>
-        {['< 6', '6-7', '7-8', '8+'].map((hrs) => (
-          <TouchableOpacity
-            key={hrs}
-            style={[
-              styles.optionChip,
-              sleepHours === hrs && styles.optionChipSelected,
-            ]}
-            onPress={() => {
-              setValidationError('');
-              setSleepHours(hrs);
-            }}
-          >
-            <Text
-              style={[
-                styles.optionText,
-                sleepHours === hrs && styles.optionTextSelected,
-              ]}
-            >
-              {hrs}
-            </Text>
-          </TouchableOpacity>
-        ))}
-      </View>
-
-      <Text style={styles.questionLabel}>Overall life stress level *</Text>
-      {[
-        'Low - Lots of time to recover',
-        'Moderate - Standard work/life balance',
-        'High - Demanding schedule/stress',
-      ].map((lvl) => (
-        <TouchableOpacity
-          key={lvl}
-          style={[
-            styles.optionCardRow,
-            stressLevel === lvl && styles.optionCardSelected,
-          ]}
-          onPress={() => {
-            setValidationError('');
-            setStressLevel(lvl);
-          }}
-        >
-          <Text
-            style={[
-              styles.optionText,
-              stressLevel === lvl && styles.optionTextSelected,
-            ]}
-          >
-            {lvl}
-          </Text>
-        </TouchableOpacity>
-      ))}
-
-      <Text style={styles.questionLabel}>Any ongoing injuries? (Optional)</Text>
-      <View style={[styles.inputWrapper, { height: 80, alignItems: 'flex-start', paddingTop: 10 }]}>
-        <TextInput
-          style={[styles.inputField, { textAlignVertical: 'top' }]}
-          placeholder="e.g. tight right calf, previous knee surgery, or none"
-          placeholderTextColor="#94a3b8"
-          multiline
-          value={injuries}
-          onChangeText={setInjuries}
-        />
-      </View>
-    </View>
-  );
 
   return (
     <View style={styles.container}>
@@ -669,10 +223,60 @@ export default function OnboardingQuestionnaireScreen({ onComplete, onBackToLogi
             showsVerticalScrollIndicator={false}
             keyboardShouldPersistTaps="handled"
           >
-            {currentStep === 1 && renderStep1()}
-            {currentStep === 2 && renderStep2()}
-            {currentStep === 3 && renderStep3()}
-            {currentStep === 4 && renderStep4()}
+            {currentStep === 1 && (
+              <QuestionnaireStep1
+                raceType={raceType}
+                setRaceType={setRaceType}
+                raceDate={raceDate}
+                setRaceDate={setRaceDate}
+                isFirstTime={isFirstTime}
+                setIsFirstTime={setIsFirstTime}
+                previousTime={previousTime}
+                setPreviousTime={setPreviousTime}
+                setValidationError={setValidationError}
+              />
+            )}
+            {currentStep === 2 && (
+              <QuestionnaireStep2
+                isHyrox={isHyrox}
+                isTriathlon={isTriathlon}
+                age={age}
+                setAge={setAge}
+                fitnessLevel={fitnessLevel}
+                setFitnessLevel={setFitnessLevel}
+                trainingDays={trainingDays}
+                setTrainingDays={setTrainingDays}
+                equipment={equipment}
+                toggleEquipment={toggleEquipment}
+                setValidationError={setValidationError}
+              />
+            )}
+            {currentStep === 3 && (
+              <QuestionnaireStep3
+                baselineNotSure={baselineNotSure}
+                setBaselineNotSure={setBaselineNotSure}
+                isTriathlon={isTriathlon}
+                isHyrox={isHyrox}
+                swimPace={swimPace}
+                setSwimPace={setSwimPace}
+                bikeFtp={bikeFtp}
+                setBikeFtp={setBikeFtp}
+                runPace={runPace}
+                setRunPace={setRunPace}
+                setValidationError={setValidationError}
+              />
+            )}
+            {currentStep === 4 && (
+              <QuestionnaireStep4
+                sleepHours={sleepHours}
+                setSleepHours={setSleepHours}
+                stressLevel={stressLevel}
+                setStressLevel={setStressLevel}
+                injuries={injuries}
+                setInjuries={setInjuries}
+                setValidationError={setValidationError}
+              />
+            )}
           </ScrollView>
 
           {validationError ? (
@@ -719,309 +323,3 @@ export default function OnboardingQuestionnaireScreen({ onComplete, onBackToLogi
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#FAF9F6',
-    paddingTop: Platform.OS === 'android' ? (StatusBar.currentHeight || 20) : 0,
-  },
-  header: {
-    paddingHorizontal: 20,
-    paddingTop: 16,
-    paddingBottom: 8,
-  },
-  progressContainer: {
-    marginBottom: 8,
-  },
-  progressBarBg: {
-    height: 6,
-    backgroundColor: '#e2e8f0',
-    borderRadius: 3,
-    overflow: 'hidden',
-    marginBottom: 8,
-  },
-  progressBarFill: {
-    height: '100%',
-    backgroundColor: '#0d9488',
-    borderRadius: 3,
-  },
-  progressText: {
-    fontSize: 12,
-    fontWeight: '700',
-    color: '#64748b',
-    textAlign: 'right',
-  },
-  scrollView: {
-    flex: 1,
-  },
-  scrollContent: {
-    paddingHorizontal: 20,
-    paddingBottom: 40,
-  },
-  stepContainer: {
-    flex: 1,
-  },
-  sectionTitle: {
-    fontSize: 24,
-    fontWeight: '900',
-    color: '#0f172a',
-    marginBottom: 6,
-    letterSpacing: -0.5,
-  },
-  stepSubtitle: {
-    fontSize: 14,
-    color: '#64748b',
-    fontWeight: '500',
-    marginBottom: 20,
-  },
-  questionLabel: {
-    fontSize: 14,
-    fontWeight: '800',
-    color: '#334155',
-    marginTop: 24,
-    marginBottom: 12,
-  },
-  optionsGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 10,
-  },
-  optionCard: {
-    backgroundColor: '#ffffff',
-    borderWidth: 1.5,
-    borderColor: '#e2e8f0',
-    borderRadius: 16,
-    paddingVertical: 12,
-    paddingHorizontal: 16,
-    marginBottom: 4,
-  },
-  optionCardRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#ffffff',
-    borderWidth: 1.5,
-    borderColor: '#e2e8f0',
-    borderRadius: 16,
-    paddingVertical: 14,
-    paddingHorizontal: 16,
-    marginBottom: 10,
-  },
-  optionCardSelected: {
-    borderColor: '#0d9488',
-    backgroundColor: '#f0fdfa',
-  },
-  optionText: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#475569',
-  },
-  optionTextSelected: {
-    color: '#0f766e',
-    fontWeight: '700',
-  },
-  optionsRow: {
-    flexDirection: 'row',
-    gap: 12,
-  },
-  optionChip: {
-    flex: 1,
-    backgroundColor: '#ffffff',
-    borderWidth: 1.5,
-    borderColor: '#e2e8f0',
-    borderRadius: 12,
-    paddingVertical: 12,
-    alignItems: 'center',
-  },
-  optionChipSelected: {
-    borderColor: '#0d9488',
-    backgroundColor: '#f0fdfa',
-  },
-  inputWrapper: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#ffffff',
-    borderWidth: 1.5,
-    borderColor: '#e2e8f0',
-    borderRadius: 16,
-    paddingHorizontal: 12,
-    height: 50,
-  },
-  inputIcon: {
-    marginRight: 8,
-  },
-  inputField: {
-    flex: 1,
-    height: 48,
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#0f172a',
-    paddingVertical: 0,
-  },
-  daysRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    paddingHorizontal: 10,
-  },
-  dayCircle: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: '#ffffff',
-    borderWidth: 1.5,
-    borderColor: '#e2e8f0',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  dayCircleSelected: {
-    borderColor: '#0d9488',
-    backgroundColor: '#0d9488',
-  },
-  dayText: {
-    fontSize: 16,
-    fontWeight: '700',
-    color: '#64748b',
-  },
-  dayTextSelected: {
-    color: '#ffffff',
-  },
-  checkbox: {
-    width: 22,
-    height: 22,
-    borderRadius: 6,
-    borderWidth: 2,
-    borderColor: '#0d9488',
-    marginRight: 12,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  checkboxChecked: {
-    backgroundColor: '#0d9488',
-    borderColor: '#0d9488',
-  },
-  summaryBox: {
-    backgroundColor: '#f0fdfa',
-    borderRadius: 20,
-    padding: 20,
-    marginTop: 30,
-    borderWidth: 1,
-    borderColor: '#99f6e4',
-  },
-  summaryTitle: {
-    fontSize: 18,
-    fontWeight: '800',
-    color: '#0f766e',
-    marginBottom: 8,
-  },
-  summaryText: {
-    fontSize: 13,
-    color: '#334155',
-    lineHeight: 20,
-  },
-  notSureBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#ffffff',
-    borderWidth: 1.5,
-    borderColor: '#e2e8f0',
-    borderRadius: 14,
-    paddingHorizontal: 14,
-    paddingVertical: 12,
-    marginBottom: 16,
-    gap: 10,
-  },
-  notSureBtnActive: {
-    borderColor: '#0d9488',
-    backgroundColor: '#f0fdfa',
-  },
-  notSureText: {
-    fontSize: 13,
-    fontWeight: '600',
-    color: '#64748b',
-  },
-  notSureTextActive: {
-    color: '#0f766e',
-    fontWeight: '700',
-  },
-  notSureCard: {
-    backgroundColor: '#f0fdfa',
-    borderRadius: 16,
-    padding: 16,
-    borderWidth: 1,
-    borderColor: '#99f6e4',
-    alignItems: 'center',
-    gap: 6,
-    marginVertical: 10,
-  },
-  notSureCardEmoji: {
-    fontSize: 28,
-  },
-  notSureCardTitle: {
-    fontSize: 16,
-    fontWeight: '800',
-    color: '#0f766e',
-  },
-  notSureCardText: {
-    fontSize: 13,
-    color: '#334155',
-    textAlign: 'center',
-    lineHeight: 18,
-  },
-  validationErrorBanner: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#fef2f2',
-    borderColor: '#fecaca',
-    borderWidth: 1,
-    borderRadius: 12,
-    paddingHorizontal: 14,
-    paddingVertical: 10,
-    marginHorizontal: 20,
-    marginBottom: 10,
-    gap: 8,
-  },
-  validationErrorText: {
-    flex: 1,
-    fontSize: 12,
-    color: '#b91c1c',
-    fontWeight: '600',
-  },
-  footer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 20,
-    paddingTop: 12,
-    paddingBottom: Platform.OS === 'android' ? 24 : 20,
-    backgroundColor: '#ffffff',
-    borderTopWidth: 1,
-    borderTopColor: '#f1f5f9',
-  },
-  navBtn: {
-    paddingVertical: 12,
-    paddingHorizontal: 14,
-  },
-  navBtnText: {
-    fontSize: 14,
-    fontWeight: '700',
-    color: '#64748b',
-  },
-  nextBtn: {
-    borderRadius: 16,
-    overflow: 'hidden',
-    shadowColor: '#0d9488',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.2,
-    shadowRadius: 8,
-    elevation: 3,
-  },
-  nextGradient: {
-    paddingVertical: 14,
-    paddingHorizontal: 24,
-  },
-  nextBtnText: {
-    fontSize: 15,
-    fontWeight: '800',
-    color: '#ffffff',
-  },
-});
