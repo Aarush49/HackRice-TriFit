@@ -82,6 +82,13 @@ export default function AthleteProfileModal({
   // Biological age — computed by the shared utility (same formula as Progress screen)
   const { biologicalAge, bioAgeAdj, bioAgeTagText, bioAgeTagColor, bioAgeTagBg } =
     computeBioAge(userProfile);
+  const hasActivity = streakDays > 0 || xp > 0;
+  const restingHr = Number(
+    userProfile?.resting_hr ??
+    userProfile?.restingHeartRate ??
+    userProfile?.wearable_metrics?.resting_hr
+  );
+  const hasRestingHr = Number.isFinite(restingHr) && restingHr > 0;
 
   return (
     <Modal visible={visible} animationType="slide" transparent={false} onRequestClose={onClose}>
@@ -276,8 +283,10 @@ export default function AthleteProfileModal({
               <Text style={styles.metricValue}>
                 {streakDays}D <Text style={styles.metricUnit}>• {xp} XP</Text>
               </Text>
-              <View style={styles.statusPillOrange}>
-                <Text style={styles.statusPillOrangeText}>Consistent 🔥</Text>
+              <View style={hasActivity ? styles.statusPillOrange : styles.statusPillNeutral}>
+                <Text style={hasActivity ? styles.statusPillOrangeText : styles.statusPillNeutralText}>
+                  {hasActivity ? 'Consistent 🔥' : 'No activity yet'}
+                </Text>
               </View>
             </View>
 
@@ -290,11 +299,14 @@ export default function AthleteProfileModal({
                 <Text style={styles.metricLabel}>Resting HR</Text>
               </View>
               <Text style={styles.metricValue}>
-                48 <Text style={styles.metricUnit}>bpm</Text>
+                {hasRestingHr ? restingHr : 'No data'}{' '}
+                {hasRestingHr && <Text style={styles.metricUnit}>bpm</Text>}
               </Text>
-              <View style={styles.statusPillGreen}>
-                <Text style={styles.statusPillGreenText}>Elite Athlete</Text>
-              </View>
+              {hasRestingHr && (
+                <View style={styles.statusPillGreen}>
+                  <Text style={styles.statusPillGreenText}>Resting baseline</Text>
+                </View>
+              )}
             </View>
           </View>
         </PopInView>
@@ -691,6 +703,18 @@ const styles = StyleSheet.create({
   },
   statusPillOrangeText: {
     color: '#9d4300',
+    fontSize: 10,
+    fontWeight: '800',
+  },
+  statusPillNeutral: {
+    backgroundColor: '#f1f5f9',
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: 10,
+    alignSelf: 'flex-start',
+  },
+  statusPillNeutralText: {
+    color: '#64748b',
     fontSize: 10,
     fontWeight: '800',
   },
