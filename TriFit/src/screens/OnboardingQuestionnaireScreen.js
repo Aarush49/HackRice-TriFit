@@ -12,10 +12,11 @@ import {
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 
-export default function OnboardingQuestionnaireScreen({ onComplete, onBackToLogin }) {
+export default function OnboardingQuestionnaireScreen({ onComplete, onBackToLogin, currentUser, token }) {
   const [currentStep, setCurrentStep] = useState(1);
   const totalSteps = 4;
   const [validationError, setValidationError] = useState('');
+  const [isSaving, setIsSaving] = useState(false);
 
   // Answers State
   const [raceType, setRaceType] = useState(null);
@@ -105,7 +106,7 @@ export default function OnboardingQuestionnaireScreen({ onComplete, onBackToLogi
     return null;
   };
 
-  const handleNext = () => {
+  const handleNext = async () => {
     const error = validateCurrentStep();
     if (error) {
       setValidationError(error);
@@ -116,8 +117,40 @@ export default function OnboardingQuestionnaireScreen({ onComplete, onBackToLogi
     if (currentStep < totalSteps) {
       setCurrentStep(currentStep + 1);
     } else {
-      // Finished
-      onComplete();
+      // Step 4 Complete: Save to TimescaleDB
+      setIsSaving(true);
+      const payload = {
+        username: currentUser?.username || currentUser?.name,
+        user_id: currentUser?.id,
+        race_type: raceType,
+        race_date: raceDate,
+        is_first_time: isFirstTime,
+        previous_time: previousTime || null,
+        fitness_level: fitnessLevel,
+        training_days: trainingDays,
+        equipment: equipment,
+        baseline_metrics: baselineNotSure
+          ? { not_sure: true }
+          : { swim_pace: swimPace, bike_ftp: bikeFtp, run_pace: runPace },
+        sleep_hours: sleepHours,
+        stress_level: stressLevel,
+        injuries: injuries || 'None',
+      };
+
+      try {
+        await fetch('http://localhost:8000/onboarding', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(payload),
+        });
+      } catch (err) {
+        console.log('Error saving onboarding data to database:', err);
+      } finally {
+        setIsSaving(false);
+        onComplete();
+      }
     }
   };
 
@@ -598,7 +631,12 @@ export default function OnboardingQuestionnaireScreen({ onComplete, onBackToLogi
               {currentStep === 1 ? '← Back to Login' : '← Back'}
             </Text>
           </TouchableOpacity>
-          <TouchableOpacity style={styles.nextBtn} onPress={handleNext} activeOpacity={0.85}>
+          <TouchableOpacity
+            style={styles.nextBtn}
+            onPress={handleNext}
+            activeOpacity={0.85}
+            disabled={isSaving}
+          >
             <LinearGradient
               colors={['#0d9488', '#0f766e']}
               start={{ x: 0, y: 0 }}
@@ -606,7 +644,11 @@ export default function OnboardingQuestionnaireScreen({ onComplete, onBackToLogi
               style={styles.nextGradient}
             >
               <Text style={styles.nextBtnText}>
-                {currentStep === totalSteps ? 'Complete Setup' : 'Next'}
+                {isSaving
+                  ? 'Saving Profile...'
+                  : currentStep === totalSteps
+                  ? 'Complete Setup'
+                  : 'Next'}
               </Text>
               <Ionicons
                 name={currentStep === totalSteps ? 'checkmark-circle' : 'arrow-forward'}
