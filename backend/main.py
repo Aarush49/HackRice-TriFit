@@ -1,7 +1,9 @@
 import os
+import re
 from datetime import datetime, timedelta
 from typing import Optional
 from fastapi import FastAPI, HTTPException, Depends, status
+from fastapi.responses import StreamingResponse
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
@@ -20,8 +22,10 @@ except ImportError:
 # Optional: Google Gemini
 try:
     from google import genai
+    from google.genai import types
 except ImportError:
     genai = None
+    types = None
 
 SECRET_KEY = os.getenv("JWT_SECRET", "trifit_super_secure_jwt_secret_key_2026_timescaledb")
 ALGORITHM = "HS256"
@@ -338,15 +342,143 @@ if __name__ == "__main__":
     uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=True)
 
 # Helper function to generate response using Gemini API
-def generate_gemini_response(prompt: str, model: str = "gemini-2.5-flash") -> str:
+def generate_gemini_response(
+    prompt: str,
+    system_instruction: Optional[str] = None,
+    model: str = "gemini-2.5-flash"
+) -> str:
     """
-    Generates text using Google Gemini API given a prompt.
+    Generates text using Google Gemini API given a prompt and optional system instruction.
     """
     if not gemini_client:
         raise HTTPException(status_code=500, detail="GEMINI_API_KEY is not configured.")
     
-    response = gemini_client.models.generate_content(
-        model=model,
-        contents=prompt,
-    )
-    return response.text
+    config = types.GenerateContentConfig(system_instruction=system_instruction) if (types and system_instruction) else None
+
+    try:
+        response = gemini_client.models.generate_content(
+            model=model,
+            contents=prompt,
+            config=config
+        )
+        return response.text
+    except Exception as e:
+        try:
+            response = gemini_client.models.generate_content(
+                model="gemini-2.0-flash",
+                contents=prompt,
+                config=config
+            )
+            return response.text
+        except Exception:
+            raise HTTPException(status_code=500, detail=f"Gemini API error: {str(e)}")
+
+def clean_markdown_for_speech(text: str) -> str:
+    # Remove markdown formatting characters (*, _, ~, `, #)
+    text = re.sub(r'[*_~`#]', '', text)
+    # Remove bullet markers at line starts
+    text = re.sub(r'^\s*[-+*]\s+', '', text, flags=re.MULTILINE)
+    # Normalize space & newline sequences
+    text = re.sub(r'\s+', ' ', text)
+    return text.strip()
+
+@app.post("/training-plan")
+@app.post("/api/training-plan")
+@app.get("/training-plan")
+@app.get("/api/training-plan")
+def generate_training_plan(
+    data: Optional[OnboardingData] = None,
+    username: Optional[str] = None
+):
+    """
+    Generates a custom triathlon training plan using Gemini API based on athlete profile,
+    converts it to audio via ElevenLabs TTS API, and streams the audio back in the HTTP response.
+    """
+    if not gemini_client:
+        raise HTTPException(status_code=500, detail="Gemini API key is missing or client is not initialized.")
+    
+    if not eleven_client:
+        raise HTTPException(status_code=500, detail="ElevenLabs API key is missing or client is not initialized.")
+
+    # 1. Retrieve profile details if not fully passed in request
+    target_username = username or (data.username if data else None)
+    profile_info = {}
+
+    if target_username or not data or not data.race_type:
+        conn = get_db()
+        try:
+            with conn.cursor(cursor_factory=RealDictCursor) as cur:
+                if target_username:
+                    cur.execute("SELECT * FROM athlete_profiles WHERE username = %s;", (target_username,))
+                else:
+                    cur.execute("SELECT * FROM athlete_profiles ORDER BY id DESC LIMIT 1;")
+                db_profile = cur.fetchone()
+                if db_profile:
+                    profile_info = dict(db_profile)
+        except Exception as e:
+            print(f"[DB WARN] Could not fetch athlete profile for training plan: {e}")
+        finally:
+            conn.close()
+
+    # Consolidate attributes from request data or DB profile
+    race_type = (data.race_type if data and data.race_type else None) or profile_info.get("race_type", "Sprint Triathlon")
+    race_date = (data.race_date if data and data.race_date else None) or profile_info.get("race_date", "Upcoming")
+    fitness_level = (data.fitness_level if data and data.fitness_level else None) or profile_info.get("fitness_level", "Intermediate")
+    training_days = (data.training_days if data and data.training_days else None) or profile_info.get("training_days", 4)
+    is_first_time = (data.is_first_time if data and data.is_first_time else None) or profile_info.get("is_first_time", "No")
+    previous_time = (data.previous_time if data and data.previous_time else None) or profile_info.get("previous_time", "N/A")
+    equipment = (data.equipment if data and data.equipment else None) or profile_info.get("equipment", [])
+    baseline_metrics = (data.baseline_metrics if data and data.baseline_metrics else None) or profile_info.get("baseline_metrics", {})
+    sleep_hours = (data.sleep_hours if data and data.sleep_hours else None) or profile_info.get("sleep_hours", "7-8 hours")
+    stress_level = (data.stress_level if data and data.stress_level else None) or profile_info.get("stress_level", "Moderate")
+    injuries = (data.injuries if data and data.injuries else None) or profile_info.get("injuries", "None")
+
+    # 2. Build system instruction and user prompt tailored for spoken audio
+    system_instruction = """You are an expert AI Personal Trainer and Triathlon Coach for TriFit. 
+Your goal is to provide encouraging, high-energy, and personalized audio training advice directly to athletes. 
+Never use markdown syntax (such as *, #, _, ~, or bullet points) in your response because your response will be converted directly into spoken audio using Text-to-Speech."""
+
+    prompt = f"""Create a personalized 1-week audio training plan summary for an athlete with the following profile:
+
+- Race Target: {race_type} (Target Date/Timeline: {race_date})
+- Fitness Level: {fitness_level}
+- Target Training Days/Week: {training_days}
+- First Time Racer: {is_first_time} (Previous Time: {previous_time})
+- Available Equipment: {equipment}
+- Baseline Metrics: {baseline_metrics}
+- Sleep & Stress: {sleep_hours}, Stress Level: {stress_level}
+- Current Injuries/Limitations: {injuries}
+
+Instructions:
+1. Speak directly to the athlete in a friendly, encouraging, professional, and coaching voice.
+2. Provide a structured overview of their weekly training split (swim, bike, run, and rest/recovery days tailored to their available equipment and fitness level).
+3. Include specific actionable advice regarding pace, effort zones, and injury prevention based on their profile.
+4. Keep the text concise (around 150 to 250 words) so it makes a great 1-minute audio coaching message.
+"""
+
+    # 3. Call Gemini API with system instruction
+    gemini_text = generate_gemini_response(prompt, system_instruction=system_instruction)
+    clean_text = clean_markdown_for_speech(gemini_text)
+
+    # 4. Convert text to TTS audio using ElevenLabs API and stream back to client
+    voice_id = os.getenv("ELEVENLABS_VOICE_ID", "21m00Tcm4TlvDq8ikWAM")  # Default Rachel voice
+    
+    try:
+        audio_stream = eleven_client.text_to_speech.convert(
+            voice_id=voice_id,
+            text=clean_text,
+            model_id="eleven_multilingual_v2",
+            output_format="mp3_44100_128"
+        )
+        
+        return StreamingResponse(
+            audio_stream,
+            media_type="audio/mpeg",
+            headers={
+                "Content-Disposition": "inline; filename=training_plan.mp3",
+                "X-Training-Plan-Text": clean_text
+            }
+        )
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"ElevenLabs TTS generation failed: {str(e)}")
+
