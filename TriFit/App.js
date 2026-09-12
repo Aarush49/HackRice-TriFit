@@ -8,6 +8,7 @@ import LongevityDashboardScreen from './src/screens/LongevityDashboardScreen';
 import LoginScreen from './src/screens/LoginScreen';
 import SplashScreen from './src/screens/SplashScreen';
 import CoachMayaModal from './src/components/CoachMayaModal';
+import CoachMayaTour from './src/components/CoachMayaTour';
 import ActiveRunModal from './src/components/ActiveRunModal';
 import AthleteProfileModal from './src/components/AthleteProfileModal';
 import AuthModal from './src/components/AuthModal';
@@ -22,6 +23,7 @@ export default function App() {
   const [needsOnboarding, setNeedsOnboarding] = useState(false);
   const [activeTab, setActiveTab] = useState('today');
   const [coachVisible, setCoachVisible] = useState(false);
+  const [tourVisible, setTourVisible] = useState(false);
   const [profileVisible, setProfileVisible] = useState(false);
   const [runVisible, setRunVisible] = useState(false);
   const [authVisible, setAuthVisible] = useState(false);
@@ -170,6 +172,7 @@ export default function App() {
   const handleLogout = () => {
     setProfileVisible(false);
     setCoachVisible(false);
+    setTourVisible(false);
     setIsLoggedIn(false);
     setCurrentUser(null);
     setNeedsOnboarding(false);
@@ -282,7 +285,11 @@ export default function App() {
         <OnboardingQuestionnaireScreen
           currentUser={currentUser}
           token={token}
-          onComplete={() => setNeedsOnboarding(false)}
+          onComplete={() => {
+            setNeedsOnboarding(false);
+            setActiveTab('today');
+            setTourVisible(true);
+          }}
           onBackToLogin={handleLogout}
         />
       </SafeAreaView>
@@ -384,6 +391,17 @@ export default function App() {
           setActiveTab(tab);
         }}
         onOpenCoach={() => setCoachVisible(true)}
+      />
+
+      {/* Coach-led quick tour shown only after new-account onboarding */}
+      <CoachMayaTour
+        visible={tourVisible}
+        athleteName={currentUser?.name || currentUser?.username}
+        onNavigate={setActiveTab}
+        onFinish={() => {
+          setTourVisible(false);
+          setActiveTab('today');
+        }}
       />
 
       {/* Athlete Profile Page Modal */}
