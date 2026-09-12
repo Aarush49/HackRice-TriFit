@@ -106,7 +106,6 @@ export default function LoginScreen({ onLoginSuccess }) {
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
         keyboardShouldPersistTaps="handled"
-        keyboardDismissMode="on-drag"
       >
           {Platform.OS === 'web' && (
             <style>{`
@@ -641,8 +640,6 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.25,
     shadowRadius: 8,
     elevation: 4,
-    borderBottomWidth: 3,
-    borderBottomColor: '#0f766e',
   },
   submitGradient: {
     flexDirection: 'row',

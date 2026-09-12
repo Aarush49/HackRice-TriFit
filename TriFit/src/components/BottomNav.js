@@ -6,7 +6,7 @@ import { COLORS } from '../theme';
 export default function BottomNav({ activeTab, setActiveTab, onOpenCoach }) {
   const tabs = [
     { id: 'today', label: 'Today', icon: 'sparkles', iconFamily: 'Ionicons' },
-    { id: 'longevity', label: 'Longevity', icon: 'heart-pulse', iconFamily: 'MaterialCommunityIcons' },
+    { id: 'recovery', label: 'Recovery', icon: 'heart-pulse', iconFamily: 'MaterialCommunityIcons' },
     { id: 'schedule', label: 'Schedule', icon: 'calendar-month', iconFamily: 'MaterialCommunityIcons' },
     { id: 'coach', label: 'Coach', icon: 'chatbubbles', iconFamily: 'Ionicons' },
   ];
@@ -23,7 +23,7 @@ export default function BottomNav({ activeTab, setActiveTab, onOpenCoach }) {
     <View style={styles.container}>
       <View style={styles.tabsRow}>
         {tabs.map((tab) => {
-          const isActive = activeTab === tab.id;
+          const isActive = activeTab === tab.id || (tab.id === 'recovery' && activeTab === 'longevity');
           return (
             <TouchableOpacity
               key={tab.id}

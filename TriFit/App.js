@@ -242,7 +242,7 @@ export default function App() {
             onOpenCoach={() => setCoachVisible(true)}
           />
         )}
-        {activeTab === 'longevity' && (
+        {(activeTab === 'recovery' || activeTab === 'longevity') && (
           <LongevityDashboardScreen
             currentUser={currentUser}
             userProfile={userProfile}
