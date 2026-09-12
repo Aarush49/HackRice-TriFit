@@ -10,7 +10,7 @@ import LoginScreen from './src/screens/LoginScreen';
 import SplashScreen from './src/screens/SplashScreen';
 import CoachMayaModal from './src/components/CoachMayaModal';
 import ActiveRunModal from './src/components/ActiveRunModal';
-import AthleteProfileModal from './src/components/AthleteProfileModal';
+import AuthModal from './src/components/AuthModal';
 import { COLORS } from './src/theme';
 
 export default function App() {
@@ -21,6 +21,9 @@ export default function App() {
   const [coachVisible, setCoachVisible] = useState(false);
   const [profileVisible, setProfileVisible] = useState(false);
   const [runVisible, setRunVisible] = useState(false);
+  const [authVisible, setAuthVisible] = useState(false);
+  const [currentUser, setCurrentUser] = useState(null);
+  const [token, setToken] = useState(null);
   const [xp, setXp] = useState(420);
   const [streakDays, setStreakDays] = useState(14);
   const [userProfile, setUserProfile] = useState({
@@ -53,64 +56,11 @@ export default function App() {
     setXp((prev) => prev + 120);
   };
 
-  // 1. Show Splash Screen first on launch
-  if (showSplash) {
-    return <SplashScreen onFinish={() => setShowSplash(false)} />;
-  }
+  const handleAuthSuccess = (user, authToken) => {
+    setCurrentUser(user);
+    setToken(authToken);
+  };
 
-  // 2. Show Login & Sign-up Screen if not logged in
-  if (!isLoggedIn) {
-    return (
-      <SafeAreaView style={styles.safeArea}>
-        <StatusBar barStyle="dark-content" backgroundColor="#FAF9F6" />
-        {Platform.OS === 'web' && (
-          <style>{`
-            input,
-            input:focus,
-            input:active,
-            input:hover,
-            input:-webkit-autofill,
-            input:-webkit-autofill:hover,
-            input:-webkit-autofill:focus,
-            input:-webkit-autofill:active,
-            textarea:focus,
-            select:focus,
-            button:focus,
-            *:focus {
-              outline: none !important;
-              outline-width: 0 !important;
-              outline-style: none !important;
-              outline-color: transparent !important;
-              box-shadow: none !important;
-              -webkit-tap-highlight-color: transparent !important;
-            }
-            input:-webkit-autofill,
-            input:-webkit-autofill:hover,
-            input:-webkit-autofill:focus,
-            input:-webkit-autofill:active {
-              -webkit-box-shadow: 0 0 0px 1000px #ffffff inset !important;
-              box-shadow: 0 0 0px 1000px #ffffff inset !important;
-              -webkit-text-fill-color: #0f172a !important;
-              transition: background-color 50000s ease-in-out 0s;
-            }
-          `}</style>
-        )}
-        <LoginScreen onLoginSuccess={handleLoginSuccess} />
-      </SafeAreaView>
-    );
-  }
-
-  // 3. Show Onboarding Questionnaire after login
-  if (needsOnboarding) {
-    return (
-      <SafeAreaView style={styles.safeArea}>
-        <StatusBar barStyle="dark-content" backgroundColor="#FAF9F6" />
-        <OnboardingQuestionnaireScreen onComplete={() => setNeedsOnboarding(false)} />
-      </SafeAreaView>
-    );
-  }
-
-  // 4. Main Application Dashboard
   return (
     <SafeAreaView style={styles.safeArea}>
       <StatusBar barStyle="dark-content" backgroundColor={COLORS.background} />
@@ -119,7 +69,8 @@ export default function App() {
       <Header
         onOpenProfile={() => setProfileVisible(true)}
         onOpenCoach={() => setCoachVisible(true)}
-        onLogout={handleLogout}
+        onOpenAuth={() => setAuthVisible(true)}
+        currentUser={currentUser}
         streakDays={streakDays}
         xpPoints={xp}
       />
@@ -153,16 +104,6 @@ export default function App() {
         onOpenCoach={() => setCoachVisible(true)}
       />
 
-      {/* Athlete Profile Page Modal */}
-      <AthleteProfileModal
-        visible={profileVisible}
-        onClose={() => setProfileVisible(false)}
-        onLogout={handleLogout}
-        userProfile={userProfile}
-        xp={xp}
-        streakDays={streakDays}
-      />
-
       {/* Coach Maya AI Assistant Sheet */}
       <CoachMayaModal
         visible={coachVisible}
@@ -175,6 +116,13 @@ export default function App() {
         visible={runVisible}
         onClose={() => setRunVisible(false)}
         onFinishRun={handleFinishRun}
+      />
+
+      {/* Login & Account Creation Modal */}
+      <AuthModal
+        visible={authVisible}
+        onClose={() => setAuthVisible(false)}
+        onAuthSuccess={handleAuthSuccess}
       />
     </SafeAreaView>
   );
