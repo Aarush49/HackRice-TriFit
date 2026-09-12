@@ -12,9 +12,10 @@ import {
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 
-export default function OnboardingQuestionnaireScreen({ onComplete }) {
+export default function OnboardingQuestionnaireScreen({ onComplete, onBackToLogin }) {
   const [currentStep, setCurrentStep] = useState(1);
   const totalSteps = 4;
+  const [validationError, setValidationError] = useState('');
 
   // Answers State
   const [raceType, setRaceType] = useState(null);
@@ -38,6 +39,7 @@ export default function OnboardingQuestionnaireScreen({ onComplete }) {
   const [baselineNotSure, setBaselineNotSure] = useState(false);
 
   const toggleEquipment = (item) => {
+    setValidationError('');
     if (equipment.includes(item)) {
       setEquipment(equipment.filter((e) => e !== item));
     } else {
@@ -48,7 +50,69 @@ export default function OnboardingQuestionnaireScreen({ onComplete }) {
   const isTriathlon = raceType && raceType.toLowerCase().includes('triathlon');
   const isHyrox = raceType === 'Hyrox';
 
+  const validateCurrentStep = () => {
+    if (currentStep === 1) {
+      if (!raceType) {
+        return 'Please select what event or race you are training for.';
+      }
+      if (!raceDate || !raceDate.trim()) {
+        return 'Please select or enter your target race date.';
+      }
+      if (!isFirstTime) {
+        return 'Please indicate if this is your first time doing this type of event.';
+      }
+      if (isFirstTime === 'No' && (!previousTime || !previousTime.trim())) {
+        return 'Please enter your previous best time.';
+      }
+    }
+
+    if (currentStep === 2) {
+      if (!fitnessLevel) {
+        return 'Please select your current fitness level.';
+      }
+      if (!equipment || equipment.length === 0) {
+        return 'Please select at least one equipment option (or "None of these regularly").';
+      }
+    }
+
+    if (currentStep === 3) {
+      if (!baselineNotSure) {
+        if (isTriathlon) {
+          if (!swimPace.trim() || !bikeFtp.trim() || !runPace.trim()) {
+            return 'Please fill in your swim, bike, and run metrics (or tap "Not sure").';
+          }
+        } else if (isHyrox) {
+          if (!runPace.trim() || !bikeFtp.trim()) {
+            return 'Please fill in your run time and strength baseline (or tap "Not sure").';
+          }
+        } else {
+          if (!runPace.trim()) {
+            return 'Please enter your baseline numbers (or tap "Not sure").';
+          }
+        }
+      }
+    }
+
+    if (currentStep === 4) {
+      if (!sleepHours) {
+        return 'Please select your average hours of sleep.';
+      }
+      if (!stressLevel) {
+        return 'Please select your overall life stress level.';
+      }
+    }
+
+    return null;
+  };
+
   const handleNext = () => {
+    const error = validateCurrentStep();
+    if (error) {
+      setValidationError(error);
+      return;
+    }
+
+    setValidationError('');
     if (currentStep < totalSteps) {
       setCurrentStep(currentStep + 1);
     } else {
@@ -58,8 +122,14 @@ export default function OnboardingQuestionnaireScreen({ onComplete }) {
   };
 
   const handleBack = () => {
+    setValidationError('');
     if (currentStep > 1) {
       setCurrentStep(currentStep - 1);
+    } else {
+      // Step 1: Back returns to login page
+      if (onBackToLogin) {
+        onBackToLogin();
+      }
     }
   };
 
@@ -85,7 +155,7 @@ export default function OnboardingQuestionnaireScreen({ onComplete }) {
     <View style={styles.stepContainer}>
       <Text style={styles.sectionTitle}>Section 1: Your Race</Text>
 
-      <Text style={styles.questionLabel}>What are you training for?</Text>
+      <Text style={styles.questionLabel}>What are you training for? *</Text>
       <View style={styles.optionsGrid}>
         {['Hyrox', 'Sprint/Olympic Triathlon', 'Half-distance Triathlon', 'Full-distance Triathlon', 'Other'].map(
           (type) => (
@@ -95,7 +165,10 @@ export default function OnboardingQuestionnaireScreen({ onComplete }) {
                 styles.optionCard,
                 raceType === type && styles.optionCardSelected,
               ]}
-              onPress={() => setRaceType(type)}
+              onPress={() => {
+                setValidationError('');
+                setRaceType(type);
+              }}
             >
               <Text
                 style={[
@@ -110,7 +183,7 @@ export default function OnboardingQuestionnaireScreen({ onComplete }) {
         )}
       </View>
 
-      <Text style={styles.questionLabel}>When is race day?</Text>
+      <Text style={styles.questionLabel}>When is race day? *</Text>
       <View style={styles.inputWrapper}>
         <Ionicons name="calendar-outline" size={18} color="#94a3b8" style={styles.inputIcon} />
         {Platform.OS === 'web' ? (
@@ -125,7 +198,10 @@ export default function OnboardingQuestionnaireScreen({ onComplete }) {
               backgroundColor: 'transparent',
             }}
             value={raceDate}
-            onChange={(e) => setRaceDate(e.target.value)}
+            onChange={(e) => {
+              setValidationError('');
+              setRaceDate(e.target.value);
+            }}
           />
         ) : (
           <TextInput
@@ -133,12 +209,15 @@ export default function OnboardingQuestionnaireScreen({ onComplete }) {
             placeholder="YYYY-MM-DD"
             placeholderTextColor="#94a3b8"
             value={raceDate}
-            onChangeText={setRaceDate}
+            onChangeText={(val) => {
+              setValidationError('');
+              setRaceDate(val);
+            }}
           />
         )}
       </View>
 
-      <Text style={styles.questionLabel}>Is this your first time doing this type of event?</Text>
+      <Text style={styles.questionLabel}>Is this your first time doing this type of event? *</Text>
       <View style={styles.optionsRow}>
         {['Yes', 'No'].map((ans) => (
           <TouchableOpacity
@@ -147,7 +226,10 @@ export default function OnboardingQuestionnaireScreen({ onComplete }) {
               styles.optionChip,
               isFirstTime === ans && styles.optionChipSelected,
             ]}
-            onPress={() => setIsFirstTime(ans)}
+            onPress={() => {
+              setValidationError('');
+              setIsFirstTime(ans);
+            }}
           >
             <Text
               style={[
@@ -163,7 +245,7 @@ export default function OnboardingQuestionnaireScreen({ onComplete }) {
 
       {isFirstTime === 'No' && (
         <>
-          <Text style={styles.questionLabel}>What was your best previous time?</Text>
+          <Text style={styles.questionLabel}>What was your best previous time? *</Text>
           <View style={styles.inputWrapper}>
             <Ionicons name="timer-outline" size={18} color="#94a3b8" style={styles.inputIcon} />
             <TextInput
@@ -171,7 +253,10 @@ export default function OnboardingQuestionnaireScreen({ onComplete }) {
               placeholder="e.g. 2:30:00"
               placeholderTextColor="#94a3b8"
               value={previousTime}
-              onChangeText={setPreviousTime}
+              onChangeText={(val) => {
+                setValidationError('');
+                setPreviousTime(val);
+              }}
             />
           </View>
         </>
@@ -189,7 +274,7 @@ export default function OnboardingQuestionnaireScreen({ onComplete }) {
       <View style={styles.stepContainer}>
         <Text style={styles.sectionTitle}>Section 2: Starting Point</Text>
 
-        <Text style={styles.questionLabel}>How would you describe your current fitness level?</Text>
+        <Text style={styles.questionLabel}>How would you describe your current fitness level? *</Text>
         {[
           'New to structured training',
           'Train occasionally',
@@ -202,7 +287,10 @@ export default function OnboardingQuestionnaireScreen({ onComplete }) {
               styles.optionCardRow,
               fitnessLevel === level && styles.optionCardSelected,
             ]}
-            onPress={() => setFitnessLevel(level)}
+            onPress={() => {
+              setValidationError('');
+              setFitnessLevel(level);
+            }}
           >
             <Text
               style={[
@@ -215,7 +303,7 @@ export default function OnboardingQuestionnaireScreen({ onComplete }) {
           </TouchableOpacity>
         ))}
 
-        <Text style={styles.questionLabel}>How many days a week can you realistically train? ({trainingDays} days)</Text>
+        <Text style={styles.questionLabel}>How many days a week can you realistically train? ({trainingDays} days) *</Text>
         <View style={styles.daysRow}>
           {[2, 3, 4, 5, 6, 7].map((num) => (
             <TouchableOpacity
@@ -224,7 +312,10 @@ export default function OnboardingQuestionnaireScreen({ onComplete }) {
                 styles.dayCircle,
                 trainingDays === num && styles.dayCircleSelected,
               ]}
-              onPress={() => setTrainingDays(num)}
+              onPress={() => {
+                setValidationError('');
+                setTrainingDays(num);
+              }}
             >
               <Text
                 style={[
@@ -238,7 +329,7 @@ export default function OnboardingQuestionnaireScreen({ onComplete }) {
           ))}
         </View>
 
-        <Text style={styles.questionLabel}>Do you have access to: (Select all that apply)</Text>
+        <Text style={styles.questionLabel}>Do you have access to: (Select all that apply) *</Text>
         {equipOptions.map((item) => (
           <TouchableOpacity
             key={item}
@@ -276,7 +367,10 @@ export default function OnboardingQuestionnaireScreen({ onComplete }) {
       {/* Not sure toggle */}
       <TouchableOpacity
         style={[styles.notSureBtn, baselineNotSure && styles.notSureBtnActive]}
-        onPress={() => setBaselineNotSure(!baselineNotSure)}
+        onPress={() => {
+          setValidationError('');
+          setBaselineNotSure(!baselineNotSure);
+        }}
       >
         <Ionicons
           name={baselineNotSure ? 'checkmark-circle' : 'help-circle-outline'}
@@ -298,7 +392,7 @@ export default function OnboardingQuestionnaireScreen({ onComplete }) {
         </View>
       ) : isTriathlon ? (
         <>
-          <Text style={styles.questionLabel}>Current 400m Swim Time (estimated)</Text>
+          <Text style={styles.questionLabel}>Current 400m Swim Time (estimated) *</Text>
           <View style={styles.inputWrapper}>
             <MaterialCommunityIcons name="swim" size={18} color="#94a3b8" style={styles.inputIcon} />
             <TextInput
@@ -306,10 +400,13 @@ export default function OnboardingQuestionnaireScreen({ onComplete }) {
               placeholder="e.g. 7:30"
               placeholderTextColor="#94a3b8"
               value={swimPace}
-              onChangeText={setSwimPace}
+              onChangeText={(val) => {
+                setValidationError('');
+                setSwimPace(val);
+              }}
             />
           </View>
-          <Text style={styles.questionLabel}>Current Cycling FTP or 20min Power (watts)</Text>
+          <Text style={styles.questionLabel}>Current Cycling FTP or 20min Power (watts) *</Text>
           <View style={styles.inputWrapper}>
             <Ionicons name="bicycle" size={18} color="#94a3b8" style={styles.inputIcon} />
             <TextInput
@@ -318,10 +415,13 @@ export default function OnboardingQuestionnaireScreen({ onComplete }) {
               placeholderTextColor="#94a3b8"
               keyboardType="numeric"
               value={bikeFtp}
-              onChangeText={setBikeFtp}
+              onChangeText={(val) => {
+                setValidationError('');
+                setBikeFtp(val);
+              }}
             />
           </View>
-          <Text style={styles.questionLabel}>Current 5k or 10k Run Pace</Text>
+          <Text style={styles.questionLabel}>Current 5k or 10k Run Pace *</Text>
           <View style={styles.inputWrapper}>
             <Ionicons name="walk" size={18} color="#94a3b8" style={styles.inputIcon} />
             <TextInput
@@ -329,13 +429,16 @@ export default function OnboardingQuestionnaireScreen({ onComplete }) {
               placeholder="e.g. 5:00 /km"
               placeholderTextColor="#94a3b8"
               value={runPace}
-              onChangeText={setRunPace}
+              onChangeText={(val) => {
+                setValidationError('');
+                setRunPace(val);
+              }}
             />
           </View>
         </>
       ) : isHyrox ? (
         <>
-          <Text style={styles.questionLabel}>Current 5k Run Time</Text>
+          <Text style={styles.questionLabel}>Current 5k Run Time *</Text>
           <View style={styles.inputWrapper}>
             <Ionicons name="walk" size={18} color="#94a3b8" style={styles.inputIcon} />
             <TextInput
@@ -343,10 +446,13 @@ export default function OnboardingQuestionnaireScreen({ onComplete }) {
               placeholder="e.g. 24:00"
               placeholderTextColor="#94a3b8"
               value={runPace}
-              onChangeText={setRunPace}
+              onChangeText={(val) => {
+                setValidationError('');
+                setRunPace(val);
+              }}
             />
           </View>
-          <Text style={styles.questionLabel}>Strength Baseline: Wall Balls / Sled Push (describe briefly)</Text>
+          <Text style={styles.questionLabel}>Strength Baseline: Wall Balls / Sled Push (describe briefly) *</Text>
           <View style={[styles.inputWrapper, { height: 80, alignItems: 'flex-start', paddingTop: 10 }]}>
             <TextInput
               style={[styles.inputField, { textAlignVertical: 'top' }]}
@@ -354,13 +460,16 @@ export default function OnboardingQuestionnaireScreen({ onComplete }) {
               placeholderTextColor="#94a3b8"
               multiline
               value={bikeFtp}
-              onChangeText={setBikeFtp}
+              onChangeText={(val) => {
+                setValidationError('');
+                setBikeFtp(val);
+              }}
             />
           </View>
         </>
       ) : (
         <>
-          <Text style={styles.questionLabel}>Any baseline metrics you want to track? (Pace, weight, etc.)</Text>
+          <Text style={styles.questionLabel}>Any baseline metrics you want to track? (Pace, weight, etc.) *</Text>
           <View style={[styles.inputWrapper, { height: 80, alignItems: 'flex-start', paddingTop: 10 }]}>
             <TextInput
               style={[styles.inputField, { textAlignVertical: 'top' }]}
@@ -368,7 +477,10 @@ export default function OnboardingQuestionnaireScreen({ onComplete }) {
               placeholderTextColor="#94a3b8"
               multiline
               value={runPace}
-              onChangeText={setRunPace}
+              onChangeText={(val) => {
+                setValidationError('');
+                setRunPace(val);
+              }}
             />
           </View>
         </>
@@ -380,7 +492,7 @@ export default function OnboardingQuestionnaireScreen({ onComplete }) {
     <View style={styles.stepContainer}>
       <Text style={styles.sectionTitle}>Section 4: Recovery & Lifestyle</Text>
 
-      <Text style={styles.questionLabel}>Average hours of sleep per night</Text>
+      <Text style={styles.questionLabel}>Average hours of sleep per night *</Text>
       <View style={styles.optionsRow}>
         {['< 6', '6-7', '7-8', '8+'].map((hrs) => (
           <TouchableOpacity
@@ -389,7 +501,10 @@ export default function OnboardingQuestionnaireScreen({ onComplete }) {
               styles.optionChip,
               sleepHours === hrs && styles.optionChipSelected,
             ]}
-            onPress={() => setSleepHours(hrs)}
+            onPress={() => {
+              setValidationError('');
+              setSleepHours(hrs);
+            }}
           >
             <Text
               style={[
@@ -403,7 +518,7 @@ export default function OnboardingQuestionnaireScreen({ onComplete }) {
         ))}
       </View>
 
-      <Text style={styles.questionLabel}>Overall life stress level</Text>
+      <Text style={styles.questionLabel}>Overall life stress level *</Text>
       {[
         'Low - Lots of time to recover',
         'Moderate - Standard work/life balance',
@@ -415,7 +530,10 @@ export default function OnboardingQuestionnaireScreen({ onComplete }) {
             styles.optionCardRow,
             stressLevel === lvl && styles.optionCardSelected,
           ]}
-          onPress={() => setStressLevel(lvl)}
+          onPress={() => {
+            setValidationError('');
+            setStressLevel(lvl);
+          }}
         >
           <Text
             style={[
@@ -428,11 +546,11 @@ export default function OnboardingQuestionnaireScreen({ onComplete }) {
         </TouchableOpacity>
       ))}
 
-      <Text style={styles.questionLabel}>Any ongoing injuries or niggles?</Text>
+      <Text style={styles.questionLabel}>Any ongoing injuries or niggles? (Optional)</Text>
       <View style={[styles.inputWrapper, { height: 80, alignItems: 'flex-start', paddingTop: 10 }]}>
         <TextInput
           style={[styles.inputField, { textAlignVertical: 'top' }]}
-          placeholder="e.g. tight right calf, previous knee surgery"
+          placeholder="e.g. tight right calf, previous knee surgery, or none"
           placeholderTextColor="#94a3b8"
           multiline
           value={injuries}
@@ -441,7 +559,6 @@ export default function OnboardingQuestionnaireScreen({ onComplete }) {
       </View>
     </View>
   );
-
 
   return (
     <View style={styles.container}>
@@ -464,15 +581,24 @@ export default function OnboardingQuestionnaireScreen({ onComplete }) {
           {currentStep === 4 && renderStep4()}
         </ScrollView>
 
+        {validationError ? (
+          <View style={styles.validationErrorBanner}>
+            <Ionicons name="alert-circle" size={18} color="#dc2626" />
+            <Text style={styles.validationErrorText}>{validationError}</Text>
+          </View>
+        ) : null}
+
         <View style={styles.footer}>
           <TouchableOpacity
-            style={[styles.navBtn, currentStep === 1 && styles.navBtnDisabled]}
+            style={styles.navBtn}
             onPress={handleBack}
-            disabled={currentStep === 1}
+            activeOpacity={0.7}
           >
-            <Text style={[styles.navBtnText, currentStep === 1 && { color: '#cbd5e1' }]}>Back</Text>
+            <Text style={styles.navBtnText}>
+              {currentStep === 1 ? '← Back to Login' : '← Back'}
+            </Text>
           </TouchableOpacity>
-          <TouchableOpacity style={styles.nextBtn} onPress={handleNext} activeOpacity={0.8}>
+          <TouchableOpacity style={styles.nextBtn} onPress={handleNext} activeOpacity={0.85}>
             <LinearGradient
               colors={['#0d9488', '#0f766e']}
               start={{ x: 0, y: 0 }}
@@ -787,5 +913,22 @@ const styles = StyleSheet.create({
     color: '#ffffff',
     fontSize: 16,
     fontWeight: '800',
+  },
+  validationErrorBanner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#fef2f2',
+    borderTopWidth: 1,
+    borderBottomWidth: 1,
+    borderColor: '#fca5a5',
+    paddingHorizontal: 20,
+    paddingVertical: 10,
+    gap: 8,
+  },
+  validationErrorText: {
+    color: '#dc2626',
+    fontSize: 13,
+    fontWeight: '700',
+    flex: 1,
   },
 });

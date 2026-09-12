@@ -85,6 +85,7 @@ export default function LoginScreen({ onLoginSuccess }) {
         name: data.user?.username || name.trim() || 'Athlete',
         token: data.access_token,
         user: data.user,
+        isSignup: authMode === 'signup',
         method,
       });
     } catch (err) {

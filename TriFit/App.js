@@ -17,7 +17,7 @@ import { COLORS } from './src/theme';
 export default function App() {
   const [showSplash, setShowSplash] = useState(true);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const [needsOnboarding, setNeedsOnboarding] = useState(true);
+  const [needsOnboarding, setNeedsOnboarding] = useState(false);
   const [activeTab, setActiveTab] = useState('today');
   const [coachVisible, setCoachVisible] = useState(false);
   const [profileVisible, setProfileVisible] = useState(false);
@@ -39,7 +39,13 @@ export default function App() {
     });
     setCurrentUser(userData || { name: 'Alex Rivers' });
     setIsLoggedIn(true);
-    // When login is successful, they go to the questionnaire if they need it.
+
+    // Only show onboarding when creating a new account (signup)
+    if (userData?.isSignup) {
+      setNeedsOnboarding(true);
+    } else {
+      setNeedsOnboarding(false);
+    }
     setActiveTab('today');
   };
 
@@ -48,8 +54,7 @@ export default function App() {
     setCoachVisible(false);
     setIsLoggedIn(false);
     setCurrentUser(null);
-    // Optional: reset onboarding so they see it again if they sign up again.
-    setNeedsOnboarding(true);
+    setNeedsOnboarding(false);
   };
 
   const handleFinishRun = () => {
@@ -108,12 +113,15 @@ export default function App() {
     );
   }
 
-  // 3. Show Onboarding Questionnaire after login
+  // 3. Show Onboarding Questionnaire after signup
   if (needsOnboarding) {
     return (
       <SafeAreaView style={styles.safeArea}>
         <StatusBar barStyle="dark-content" backgroundColor="#FAF9F6" />
-        <OnboardingQuestionnaireScreen onComplete={() => setNeedsOnboarding(false)} />
+        <OnboardingQuestionnaireScreen
+          onComplete={() => setNeedsOnboarding(false)}
+          onBackToLogin={handleLogout}
+        />
       </SafeAreaView>
     );
   }
