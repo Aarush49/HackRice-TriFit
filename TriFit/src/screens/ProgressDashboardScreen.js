@@ -6,6 +6,8 @@ import {
   ScrollView,
   TouchableOpacity,
   Platform,
+  Modal,
+  SafeAreaView,
 } from 'react-native';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { COLORS } from '../theme';
@@ -61,14 +63,29 @@ const PERSONAL_BESTS = [
   },
 ];
 
-const MILESTONES = [
-  { emoji: '\uD83C\uDFC6', title: 'Century Club', subtitle: '100km run logged' },
-  { emoji: '\u26A1', title: 'Cold Grit', subtitle: '14 cold showers' },
-  { emoji: '\uD83D\uDEE1\uFE0F', title: 'Iron Tendons', subtitle: '0 missed recovery' },
-  { emoji: '\uD83C\uDFAF', title: 'Sub-75 Hyrox', subtitle: 'Pacing locked' },
+const ALL_MILESTONES = [
+  { id: 1, emoji: '🏆', title: 'Century Club', subtitle: '100km run logged', req: '0 / 100 km' },
+  { id: 2, emoji: '⚡', title: 'Cold Grit', subtitle: '14 cold showers', req: '0 / 14 sessions' },
+  { id: 3, emoji: '🛡️', title: 'Iron Tendons', subtitle: '0 missed recovery', req: '0 / 10 days' },
+  { id: 4, emoji: '🎯', title: 'Sub-75 Hyrox', subtitle: 'Pacing locked', req: '0 / 75 min target' },
+  { id: 5, emoji: '🫀', title: 'VO₂ Pioneer', subtitle: 'Hit 55+ VO₂ Max', req: '0 / 55 ml/kg/min' },
+  { id: 6, emoji: '🏋️‍♂️', title: 'Sled Destroyer', subtitle: 'Push 150kg sled 50m', req: '0 / 150 kg' },
+  { id: 7, emoji: '🚴‍♂️', title: 'Iron Lung', subtitle: '2h Zone 2 ride', req: '0 / 120 min' },
+  { id: 8, emoji: '💧', title: 'Hydration Master', subtitle: '3L water for 7 days', req: '0 / 7 days' },
+  { id: 9, emoji: '🌅', title: 'Early Riser', subtitle: '5 AM workout sessions', req: '0 / 5 sessions' },
+  { id: 10, emoji: '🏊‍♂️', title: 'Triathlon Titan', subtitle: 'Swim, Bike & Run in 1 week', req: '0 / 3 sports' },
+  { id: 11, emoji: '⏱️', title: 'Fast Finisher', subtitle: 'Negative split 10k', req: '0 / 1 run' },
+  { id: 12, emoji: '🔥', title: 'Streak Savage', subtitle: '30-day workout streak', req: '0 / 30 days' },
+  { id: 13, emoji: '⚡', title: 'Metabolic Machine', subtitle: 'Burn 15,000 active kcal', req: '0 / 15,000 kcal' },
+  { id: 14, emoji: '🧠', title: 'Coach Maya Pupil', subtitle: '20 AI check-ins', req: '0 / 20 check-ins' },
+  { id: 15, emoji: '📈', title: 'Lactate Master', subtitle: '40m threshold run', req: '0 / 40 min' },
+  { id: 16, emoji: '🧘', title: 'Mobility Guru', subtitle: '10 mobility routines', req: '0 / 10 sessions' },
+  { id: 17, emoji: '🎯', title: 'Pacing Pro', subtitle: 'Finish within 2% target pace', req: '0 / 1 race' },
+  { id: 18, emoji: '👑', title: 'TriFit Legend', subtitle: 'Reach Level 10 Rank', req: '0 / Level 10' },
 ];
 
 export default function ProgressDashboardScreen({ currentUser, userProfile, xp = 420, streakDays = 14 }) {
+  const [isMilestoneModalOpen, setIsMilestoneModalOpen] = useState(false);
   const tierXpCap = 1000;
   const tierXp = Math.min(xp, tierXpCap);
   const tierProgress = tierXp / tierXpCap;
@@ -245,29 +262,111 @@ export default function ProgressDashboardScreen({ currentUser, userProfile, xp =
       <View style={styles.milestonesCard}>
         <View style={styles.sectionHeader}>
           <View style={styles.sectionTitleRow}>
-            <MaterialCommunityIcons name="star-circle" size={20} color="#ea580c" />
+            <MaterialCommunityIcons name="star-circle-outline" size={18} color="#64748b" />
             <Text style={styles.sectionTitle}>Unlocked Milestones</Text>
+            <View style={styles.zeroEarnedBadge}>
+              <Text style={styles.zeroEarnedBadgeText}>0/18</Text>
+            </View>
           </View>
-          <Text style={[styles.sectionSubtitle, { color: COLORS.primary, fontWeight: '700' }]}>
-            4 / 18 Earned
-          </Text>
+          <TouchableOpacity
+            style={styles.seeAllMilestonesLink}
+            onPress={() => setIsMilestoneModalOpen(true)}
+            activeOpacity={0.7}
+          >
+            <Text style={styles.seeAllMilestonesLinkText}>See all ›</Text>
+          </TouchableOpacity>
         </View>
+
         <ScrollView
           horizontal
           showsHorizontalScrollIndicator={false}
           contentContainerStyle={styles.milestonePillsRow}
         >
-          {MILESTONES.map((m, idx) => (
-            <View key={idx} style={styles.milestonePill}>
-              <Text style={styles.milestoneEmoji}>{m.emoji}</Text>
+          {ALL_MILESTONES.slice(0, 4).map((m) => (
+            <View key={m.id} style={styles.lockedMilestonePill}>
+              <View style={styles.lockedEmojiWrapper}>
+                <Text style={styles.lockedMilestoneEmoji}>{m.emoji}</Text>
+                <View style={styles.padlockBadge}>
+                  <Ionicons name="lock-closed" size={9} color="#ffffff" />
+                </View>
+              </View>
               <View>
-                <Text style={styles.milestoneTitle}>{m.title}</Text>
-                <Text style={styles.milestoneSubtitle}>{m.subtitle}</Text>
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+                  <Text style={styles.lockedMilestoneTitle}>{m.title}</Text>
+                  <Text style={styles.lockedTag}>Locked</Text>
+                </View>
+                <Text style={styles.lockedMilestoneSubtitle}>{m.subtitle}</Text>
               </View>
             </View>
           ))}
         </ScrollView>
       </View>
+
+      {/* Unclaimed Milestones Modal */}
+      <Modal
+        visible={isMilestoneModalOpen}
+        animationType="slide"
+        transparent={true}
+        onRequestClose={() => setIsMilestoneModalOpen(false)}
+      >
+        <TouchableOpacity
+          style={styles.modalOverlay}
+          activeOpacity={1}
+          onPress={() => setIsMilestoneModalOpen(false)}
+        >
+          <View style={styles.milestonesModalCard} onStartShouldSetResponder={() => true}>
+            <View style={styles.modalHeader}>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                <MaterialCommunityIcons name="trophy-outline" size={22} color="#64748b" />
+                <View>
+                  <Text style={styles.modalHeaderTitle}>All Milestones (0/18 Earned)</Text>
+                  <Text style={styles.modalHeaderSub}>All 18 trophies currently unclaimed</Text>
+                </View>
+              </View>
+              <TouchableOpacity
+                style={styles.modalCloseBtn}
+                onPress={() => setIsMilestoneModalOpen(false)}
+              >
+                <Ionicons name="close" size={20} color="#64748b" />
+              </TouchableOpacity>
+            </View>
+
+            <ScrollView style={{ maxHeight: 460 }} showsVerticalScrollIndicator={false}>
+              <View style={styles.milestonesModalList}>
+                {ALL_MILESTONES.map((m) => (
+                  <View key={m.id} style={styles.modalMilestoneCard}>
+                    <View style={styles.modalMilestoneLeft}>
+                      <View style={styles.modalMilestoneEmojiWrap}>
+                        <Text style={styles.modalMilestoneEmoji}>{m.emoji}</Text>
+                        <View style={styles.modalLockBadge}>
+                          <Ionicons name="lock-closed" size={9} color="#ffffff" />
+                        </View>
+                      </View>
+                      <View style={{ flex: 1 }}>
+                        <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+                          <Text style={styles.modalMilestoneTitle}>{m.title}</Text>
+                          <View style={styles.modalUnclaimedBadge}>
+                            <Text style={styles.modalUnclaimedText}>{m.req}</Text>
+                          </View>
+                        </View>
+                        <Text style={styles.modalMilestoneSub}>{m.subtitle}</Text>
+                      </View>
+                    </View>
+                  </View>
+                ))}
+              </View>
+            </ScrollView>
+
+            <TouchableOpacity
+              style={styles.closeMilestonesBtn}
+              onPress={() => setIsMilestoneModalOpen(false)}
+              activeOpacity={0.85}
+            >
+              <Text style={styles.closeMilestonesBtnText}>Close Milestones</Text>
+            </TouchableOpacity>
+          </View>
+        </TouchableOpacity>
+      </Modal>
 
       {/* Mindset Quote */}
       <View style={styles.quoteCard}>
@@ -712,5 +811,192 @@ const styles = StyleSheet.create({
     fontStyle: 'italic',
     textAlign: 'center',
     lineHeight: 20,
+  },
+  zeroEarnedBadge: {
+    backgroundColor: '#f1f5f9',
+    paddingHorizontal: 6,
+    paddingVertical: 1,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#e2e8f0',
+    marginLeft: 4,
+  },
+  zeroEarnedBadgeText: {
+    fontSize: 10,
+    fontWeight: '700',
+    color: '#64748b',
+  },
+  seeAllMilestonesLink: {
+    paddingVertical: 2,
+    paddingHorizontal: 4,
+  },
+  seeAllMilestonesLinkText: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: '#00685f',
+  },
+  lockedMilestonePill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    backgroundColor: '#f8fafc',
+    borderRadius: 16,
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    borderWidth: 1,
+    borderColor: '#e2e8f0',
+    flexShrink: 0,
+  },
+  lockedEmojiWrapper: {
+    position: 'relative',
+  },
+  lockedMilestoneEmoji: {
+    fontSize: 18,
+    opacity: 0.45,
+  },
+  padlockBadge: {
+    position: 'absolute',
+    bottom: -2,
+    right: -4,
+    backgroundColor: '#64748b',
+    borderRadius: 6,
+    padding: 2,
+  },
+  lockedMilestoneTitle: {
+    fontSize: 11,
+    fontWeight: '800',
+    color: '#475569',
+  },
+  lockedTag: {
+    fontSize: 9,
+    fontWeight: '700',
+    color: '#94a3b8',
+    backgroundColor: '#e2e8f0',
+    paddingHorizontal: 4,
+    paddingVertical: 1,
+    borderRadius: 4,
+  },
+  lockedMilestoneSubtitle: {
+    fontSize: 10,
+    color: '#64748b',
+    fontWeight: '500',
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(15, 23, 42, 0.6)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 16,
+  },
+  milestonesModalCard: {
+    width: '100%',
+    maxWidth: 440,
+    backgroundColor: '#ffffff',
+    borderRadius: 20,
+    padding: 20,
+    gap: 16,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.2,
+    shadowRadius: 16,
+    elevation: 8,
+  },
+  modalHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingBottom: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: '#f1f5f9',
+  },
+  modalHeaderTitle: {
+    fontSize: 15,
+    fontWeight: '900',
+    color: '#0f172a',
+  },
+  modalHeaderSub: {
+    fontSize: 11,
+    fontWeight: '600',
+    color: '#64748b',
+  },
+  modalCloseBtn: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: '#f1f5f9',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  milestonesModalList: {
+    gap: 10,
+  },
+  modalMilestoneCard: {
+    backgroundColor: '#f8fafc',
+    borderRadius: 14,
+    padding: 12,
+    borderWidth: 1,
+    borderColor: '#e2e8f0',
+  },
+  modalMilestoneLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+  },
+  modalMilestoneEmojiWrap: {
+    width: 40,
+    height: 40,
+    borderRadius: 12,
+    backgroundColor: '#f1f5f9',
+    alignItems: 'center',
+    justifyContent: 'center',
+    position: 'relative',
+    borderWidth: 1,
+    borderColor: '#cbd5e1',
+  },
+  modalMilestoneEmoji: {
+    fontSize: 20,
+    opacity: 0.45,
+  },
+  modalLockBadge: {
+    position: 'absolute',
+    bottom: -2,
+    right: -2,
+    backgroundColor: '#475569',
+    borderRadius: 6,
+    padding: 2,
+  },
+  modalMilestoneTitle: {
+    fontSize: 13,
+    fontWeight: '800',
+    color: '#334155',
+  },
+  modalMilestoneSub: {
+    fontSize: 11,
+    color: '#64748b',
+    marginTop: 2,
+  },
+  modalUnclaimedBadge: {
+    backgroundColor: '#e2e8f0',
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: 10,
+  },
+  modalUnclaimedText: {
+    fontSize: 10,
+    fontWeight: '800',
+    color: '#64748b',
+  },
+  closeMilestonesBtn: {
+    backgroundColor: '#00685f',
+    paddingVertical: 12,
+    borderRadius: 14,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: 4,
+  },
+  closeMilestonesBtnText: {
+    fontSize: 14,
+    fontWeight: '800',
+    color: '#ffffff',
   },
 });
