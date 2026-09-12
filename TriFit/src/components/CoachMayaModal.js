@@ -13,6 +13,7 @@ import {
 } from 'react-native';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
+import { createAudioPlayer } from 'expo-audio';
 import { COLORS } from '../theme';
 import API_BASE_URL from '../config';
 
@@ -30,6 +31,7 @@ export default function CoachMayaModal({ visible, onClose, onLogout, currentUser
   const [isTyping, setIsTyping] = useState(false);
 
   const [playingId, setPlayingId] = useState(null);
+  const currentAudioPlayerRef = React.useRef(null);
 
   React.useEffect(() => {
     if (!visible) {
@@ -39,18 +41,13 @@ export default function CoachMayaModal({ visible, onClose, onLogout, currentUser
       stopCurrentAudio();
     };
   }, [visible]);
-  const [audioObj, setAudioObj] = useState(null);
 
   const stopCurrentAudio = () => {
-    if (audioObj) {
+    if (currentAudioPlayerRef.current) {
       try {
-        audioObj.pause();
-        audioObj.currentTime = 0;
+        currentAudioPlayerRef.current.stop();
       } catch (e) {}
-      setAudioObj(null);
-    }
-    if (typeof window !== 'undefined' && window.speechSynthesis) {
-      window.speechSynthesis.cancel();
+      currentAudioPlayerRef.current = null;
     }
     setPlayingId(null);
   };
@@ -63,6 +60,15 @@ export default function CoachMayaModal({ visible, onClose, onLogout, currentUser
           .replace(/\s+/g, ' ')
           .trim()
       : '';
+  };
+
+  const blobToBase64 = (blob) => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onloadend = () => resolve(reader.result);
+      reader.onerror = reject;
+      reader.readAsDataURL(blob);
+    });
   };
 
   const handlePlayAudio = async (msgId, text) => {
@@ -80,49 +86,63 @@ export default function CoachMayaModal({ visible, onClose, onLogout, currentUser
       return;
     }
 
-    // Try ElevenLabs backend TTS first
     try {
+      // Send text to backend TTS endpoint (ElevenLabs API stream)
       const response = await fetch(`${API_BASE_URL}/api/tts`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ text: speechText }),
       });
 
-      if (response.ok) {
-        const blob = await response.blob();
-        const audioUrl = URL.createObjectURL(blob);
-        const newAudio = new Audio(audioUrl);
-        
-        newAudio.onended = () => {
+      if (!response.ok) {
+        throw new Error(`Backend TTS failed with status ${response.status}`);
+      }
+
+      const blob = await response.blob();
+      const dataUri = await blobToBase64(blob);
+
+      if (Platform.OS === 'web') {
+        const audio = new Audio(dataUri);
+        audio.onended = () => {
           setPlayingId(null);
-          setAudioObj(null);
+          currentAudioPlayerRef.current = null;
         };
-        newAudio.onerror = () => {
-          fallbackWebSpeech(speechText, msgId);
+        audio.onerror = (e) => {
+          console.error('Audio playback error:', e);
+          setPlayingId(null);
+        };
+        currentAudioPlayerRef.current = {
+          stop: () => {
+            try {
+              audio.pause();
+              audio.currentTime = 0;
+            } catch (e) {}
+          },
+        };
+        await audio.play();
+      } else {
+        // Mobile (Expo Go on iOS/Android) using expo-audio player
+        const player = createAudioPlayer(dataUri);
+        currentAudioPlayerRef.current = {
+          stop: () => {
+            try {
+              player.pause();
+              player.remove();
+            } catch (e) {}
+          },
         };
 
-        setAudioObj(newAudio);
-        await newAudio.play();
-        return;
+        if (player.addListener) {
+          player.addListener('playbackStatusUpdate', (status) => {
+            if (status?.didJustFinish || status?.isEnded || status?.status === 'ended') {
+              setPlayingId(null);
+            }
+          });
+        }
+        player.play();
       }
     } catch (err) {
-      console.log('ElevenLabs backend TTS error, using fallback Speech Synthesis:', err);
-    }
-
-    // Fallback using Browser Speech Synthesis API
-    fallbackWebSpeech(speechText, msgId);
-  };
-
-  const fallbackWebSpeech = (text, msgId) => {
-    if (typeof window !== 'undefined' && window.speechSynthesis) {
-      window.speechSynthesis.cancel();
-      const utterance = new SpeechSynthesisUtterance(text);
-      utterance.rate = 1.0;
-      utterance.pitch = 1.0;
-      utterance.onend = () => setPlayingId(null);
-      utterance.onerror = () => setPlayingId(null);
-      window.speechSynthesis.speak(utterance);
-    } else {
+      console.error('Error fetching or playing backend TTS audio:', err);
       setPlayingId(null);
     }
   };
