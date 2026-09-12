@@ -79,9 +79,23 @@ def init_db():
                     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
                 );
+
+                CREATE TABLE IF NOT EXISTS wearable_metrics (
+                    id SERIAL PRIMARY KEY,
+                    username VARCHAR(100) NOT NULL,
+                    provider VARCHAR(50) DEFAULT 'open_wearables',
+                    readiness_score INT DEFAULT 88,
+                    hrv_ms INT DEFAULT 64,
+                    sleep_hours NUMERIC(4,1) DEFAULT 8.2,
+                    resting_hr INT DEFAULT 52,
+                    steps INT DEFAULT 6400,
+                    active_calories INT DEFAULT 480,
+                    zone2_minutes INT DEFAULT 45,
+                    synced_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                );
             """)
             conn.commit()
-            print("[DB] Users, Athlete Profiles, and Training Plans tables initialized successfully.")
+            print("[DB] Users, Athlete Profiles, Training Plans, and Wearable Metrics tables initialized successfully.")
     except Exception as e:
         conn.rollback()
         print(f"[DB ERROR] {e}")
