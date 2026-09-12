@@ -345,7 +345,7 @@ if __name__ == "__main__":
 def generate_gemini_response(
     prompt: str,
     system_instruction: Optional[str] = None,
-    model: str = "gemini-2.5-flash"
+    model: str = "gemini-flash-latest"
 ) -> str:
     """
     Generates text using Google Gemini API given a prompt and optional system instruction.
@@ -355,23 +355,25 @@ def generate_gemini_response(
     
     config = types.GenerateContentConfig(system_instruction=system_instruction) if (types and system_instruction) else None
 
-    try:
-        response = gemini_client.models.generate_content(
-            model=model,
-            contents=prompt,
-            config=config
-        )
-        return response.text
-    except Exception as e:
+    models_to_try = [model, "gemini-flash-latest", "gemini-2.5-flash-lite", "gemini-2.5-pro"]
+    # De-duplicate while preserving order
+    models_to_try = list(dict.fromkeys(models_to_try))
+
+    last_err = None
+    for m in models_to_try:
         try:
             response = gemini_client.models.generate_content(
-                model="gemini-2.0-flash",
+                model=m,
                 contents=prompt,
                 config=config
             )
-            return response.text
-        except Exception:
-            raise HTTPException(status_code=500, detail=f"Gemini API error: {str(e)}")
+            if response and response.text:
+                return response.text
+        except Exception as e:
+            last_err = e
+            continue
+
+    raise HTTPException(status_code=500, detail=f"Gemini API error: {str(last_err)}")
 
 def clean_markdown_for_speech(text: str) -> str:
     # Remove markdown formatting characters (*, _, ~, `, #)
