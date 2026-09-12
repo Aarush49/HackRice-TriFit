@@ -380,6 +380,8 @@ def clean_markdown_for_speech(text: str) -> str:
     text = re.sub(r'[*_~`#]', '', text)
     # Remove bullet markers at line starts
     text = re.sub(r'^\s*[-+*]\s+', '', text, flags=re.MULTILINE)
+    # Remove emojis and special unicode symbols
+    text = re.sub(r'[\U00010000-\U0010ffff\u2600-\u27ff\u2300-\u23ff\u2000-\u206f\u2b00-\u2bff]', '', text)
     # Normalize space & newline sequences
     text = re.sub(r'\s+', ' ', text)
     return text.strip()
@@ -480,6 +482,40 @@ Instructions:
                 "Content-Disposition": "inline; filename=training_plan.mp3",
                 "X-Training-Plan-Text": clean_text
             }
+        )
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"ElevenLabs TTS generation failed: {str(e)}")
+
+class TTSRequest(BaseModel):
+    text: str
+    voice_id: Optional[str] = None
+
+@app.post("/api/tts")
+@app.post("/tts")
+def text_to_speech(data: TTSRequest):
+    """
+    Converts given text to speech using ElevenLabs API and streams the MP3 audio back.
+    """
+    if not eleven_client:
+        raise HTTPException(status_code=500, detail="ElevenLabs API key is missing or client is not initialized.")
+    
+    clean_text = clean_markdown_for_speech(data.text)
+    if not clean_text:
+        raise HTTPException(status_code=400, detail="Text is empty")
+
+    voice_id = data.voice_id or os.getenv("ELEVENLABS_VOICE_ID", "21m00Tcm4TlvDq8ikWAM")  # Default Rachel voice
+
+    try:
+        audio_stream = eleven_client.text_to_speech.convert(
+            voice_id=voice_id,
+            text=clean_text,
+            model_id="eleven_multilingual_v2",
+            output_format="mp3_44100_128"
+        )
+        return StreamingResponse(
+            audio_stream,
+            media_type="audio/mpeg",
+            headers={"Content-Disposition": "inline; filename=speech.mp3"}
         )
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"ElevenLabs TTS generation failed: {str(e)}")
@@ -644,3 +680,100 @@ Output the updated plan in the exact same JSON format as the original. Ensure it
     finally:
         conn.close()
 
+
+
+# ==========================================
+# OPEN WEARABLES API INTEGRATION ENDPOINTS
+# ==========================================
+
+class WearableIngressRequest(BaseModel):
+    username: str
+    provider: Optional[str] = "open_wearables"
+    readiness_score: Optional[int] = 88
+    hrv_ms: Optional[int] = 64
+    sleep_hours: Optional[float] = 8.2
+    resting_hr: Optional[int] = 52
+    steps: Optional[int] = 6400
+    active_calories: Optional[int] = 480
+    zone2_minutes: Optional[int] = 45
+
+@app.post("/api/wearables/ingress")
+def ingest_wearable_data(data: WearableIngressRequest):
+    conn = get_db()
+    try:
+        with conn.cursor(cursor_factory=RealDictCursor) as cur:
+            cur.execute(
+                """
+                INSERT INTO wearable_metrics 
+                (username, provider, readiness_score, hrv_ms, sleep_hours, resting_hr, steps, active_calories, zone2_minutes, synced_at)
+                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, CURRENT_TIMESTAMP)
+                RETURNING *;
+                """,
+                (
+                    data.username, data.provider, data.readiness_score, data.hrv_ms,
+                    data.sleep_hours, data.resting_hr, data.steps, data.active_calories,
+                    data.zone2_minutes
+                )
+            )
+            inserted = cur.fetchone()
+            conn.commit()
+            return {"success": True, "wearable": inserted}
+    except Exception as e:
+        conn.rollback()
+        raise HTTPException(status_code=500, detail=f"Database error: {e}")
+    finally:
+        conn.close()
+
+@app.get("/api/wearables/current")
+def get_current_wearable_data(username: str = "testuser2"):
+    conn = get_db()
+    try:
+        with conn.cursor(cursor_factory=RealDictCursor) as cur:
+            cur.execute(
+                "SELECT * FROM wearable_metrics WHERE username = %s ORDER BY synced_at DESC LIMIT 1;",
+                (username,)
+            )
+            metrics = cur.fetchone()
+            if not metrics:
+                cur.execute(
+                    """
+                    INSERT INTO wearable_metrics (username, readiness_score, hrv_ms, sleep_hours, resting_hr, steps, active_calories, zone2_minutes)
+                    VALUES (%s, 88, 64, 8.2, 52, 6400, 480, 45)
+                    RETURNING *;
+                    """,
+                    (username,)
+                )
+                metrics = cur.fetchone()
+                conn.commit()
+            return {"success": True, "metrics": metrics}
+    finally:
+        conn.close()
+
+@app.post("/api/wearables/sync-simulated")
+def sync_simulated_wearable_data(username: str = "testuser2"):
+    import random
+    readiness = random.randint(75, 96)
+    hrv = random.randint(55, 78)
+    sleep = round(random.uniform(7.0, 8.8), 1)
+    resting_hr = random.randint(48, 58)
+    steps = random.randint(6000, 11000)
+    calories = random.randint(400, 750)
+    zone2 = random.randint(30, 60)
+    
+    conn = get_db()
+    try:
+        with conn.cursor(cursor_factory=RealDictCursor) as cur:
+            cur.execute(
+                """
+                INSERT INTO wearable_metrics 
+                (username, provider, readiness_score, hrv_ms, sleep_hours, resting_hr, steps, active_calories, zone2_minutes, synced_at)
+                VALUES (%s, 'open_wearables_live', %s, %s, %s, %s, %s, %s, %s, CURRENT_TIMESTAMP)
+                RETURNING *;
+                """,
+                (username, readiness, hrv, sleep, resting_hr, steps, calories, zone2)
+            )
+            inserted = cur.fetchone()
+            conn.commit()
+            return {"success": True, "wearable": inserted}
+    finally:
+        conn.close()

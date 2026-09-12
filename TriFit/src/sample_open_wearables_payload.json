@@ -1,0 +1,21 @@
+{
+  "username": "testuser2",
+  "provider": "open_wearables",
+  "device": "Apple Watch Series 9 / Oura Ring Gen 3",
+  "timestamp": "2026-09-12T09:00:00Z",
+  "readiness_score": 88,
+  "biometrics": {
+    "hrv_ms": 64,
+    "resting_hr": 52,
+    "sleep_hours": 8.2,
+    "sleep_score": 91,
+    "deep_sleep_hours": 2.1,
+    "rem_sleep_hours": 1.8
+  },
+  "activity": {
+    "steps": 6400,
+    "active_calories": 480,
+    "zone2_minutes": 45,
+    "vo2_max": 48.5
+  }
+}

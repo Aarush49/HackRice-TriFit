@@ -29,6 +29,157 @@ export default function DailyMissionsScreen({
   // Track completed side habits
   const [completedHabits, setCompletedHabits] = useState({});
   const [activeScale] = useState(new Animated.Value(1));
+  const [aiPlan, setAiPlan] = useState(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [wearableData, setWearableData] = useState({
+    readiness_score: 88,
+    hrv_ms: 64,
+    sleep_hours: 8.2,
+    steps: 6400,
+    active_calories: 480,
+    zone2_minutes: 45
+  });
+  const [isSyncing, setIsSyncing] = useState(false);
+
+  const fetchWearableData = async () => {
+    const username = currentUser?.username || 'testuser2';
+    try {
+      const res = await fetch(`http://localhost:8000/api/wearables/current?username=${username}`);
+      const data = await res.json();
+      if (data.success && data.metrics) {
+        setWearableData(data.metrics);
+      }
+    } catch (e) {
+      console.error('Failed to fetch wearable metrics:', e);
+    }
+  };
+
+  const handleSyncWearables = async () => {
+    setIsSyncing(true);
+    const username = currentUser?.username || 'testuser2';
+    try {
+      const res = await fetch(`http://localhost:8000/api/wearables/sync-simulated?username=${username}`, { method: 'POST' });
+      const data = await res.json();
+      if (data.success && data.wearable) {
+        setWearableData(data.wearable);
+      }
+    } catch (e) {
+      console.error('Failed to sync wearables:', e);
+    } finally {
+      setIsSyncing(false);
+    }
+  };
+
+  React.useEffect(() => {
+    const fetchOrGeneratePlan = async () => {
+      setIsLoading(true);
+      const username = currentUser?.username || 'testuser2';
+      try {
+        let res = await fetch(`http://localhost:8000/api/plan/current?username=${username}`);
+        let data = await res.json();
+        if (!data.success) {
+          res = await fetch(`http://localhost:8000/api/plan/generate?username=${username}`, { method: 'POST' });
+          data = await res.json();
+        }
+        if (data.success && data.plan && data.plan.plan_data) setAiPlan(data.plan.plan_data);
+      } catch (e) {
+        console.error('Failed to fetch plan:', e);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    fetchOrGeneratePlan();
+    fetchWearableData();
+  }, [currentUser]);
+
+  const rawTodayWorkout = aiPlan?.weeks?.[0]?.days?.[2] || {
+    workout_type: 'Hyrox Sled & Grip Prep',
+    description: 'Power Endurance • Low Joint Strain'
+  };
+
+  const isRest = (rawTodayWorkout.workout_type || '').toLowerCase().includes('rest') || 
+                 (rawTodayWorkout.workout_type || '').toLowerCase().includes('recovery');
+
+  const todayWorkout = {
+    ...rawTodayWorkout,
+    description: isRest 
+      ? 'Day of light stretching and recovery for tomorrow' 
+      : rawTodayWorkout.description
+  };
+
+  const getWorkoutTheme = (workout_type) => {
+    const wtype = (workout_type || '').toLowerCase();
+    
+    if (wtype.includes('rest') || wtype.includes('recovery')) {
+      return {
+        isRest: true,
+        icon: 'bed',
+        iconColors: ['#64748b', '#475569'],
+        cardColors: ['#ffffff', '#f8fafc'],
+        borderColor: '#cbd5e1',
+        pillBg: '#f1f5f9',
+        pillText: '#475569',
+        duration: 'Rest Day',
+      };
+    } else if (wtype.includes('swim')) {
+      return {
+        isRest: false,
+        icon: 'swim',
+        iconColors: ['#0284c7', '#0369a1'],
+        cardColors: ['#ffffff', '#f0f9ff'],
+        borderColor: '#38bdf8',
+        pillBg: '#e0f2fe',
+        pillText: '#0369a1',
+        duration: '45 min',
+      };
+    } else if (wtype.includes('bike') || wtype.includes('cycle')) {
+      return {
+        isRest: false,
+        icon: 'bike',
+        iconColors: ['#ea580c', '#c2410c'],
+        cardColors: ['#ffffff', '#fff7ed'],
+        borderColor: '#fb923c',
+        pillBg: '#ffedd5',
+        pillText: '#c2410c',
+        duration: '45 min',
+      };
+    } else if (wtype.includes('strength') || wtype.includes('gym') || wtype.includes('hyrox')) {
+      return {
+        isRest: false,
+        icon: 'dumbbell',
+        iconColors: ['#7c3aed', '#6d28d9'],
+        cardColors: ['#ffffff', '#faf5ff'],
+        borderColor: '#a855f7',
+        pillBg: '#f3e8ff',
+        pillText: '#6d28d9',
+        duration: '45 min',
+      };
+    } else if (wtype.includes('interval') || wtype.includes('tempo') || wtype.includes('speed')) {
+      return {
+        isRest: false,
+        icon: 'lightning-bolt',
+        iconColors: ['#d97706', '#b45309'],
+        cardColors: ['#ffffff', '#fffbeb'],
+        borderColor: '#f59e0b',
+        pillBg: '#fef3c7',
+        pillText: '#b45309',
+        duration: '40 min',
+      };
+    } else {
+      return {
+        isRest: false,
+        icon: 'run',
+        iconColors: ['#008378', '#10b981'],
+        cardColors: ['#ffffff', '#f0fdfa'],
+        borderColor: '#14b8a6',
+        pillBg: '#ccfbf1',
+        pillText: '#0f766e',
+        duration: '45 min',
+      };
+    }
+  };
+
+  const workoutTheme = getWorkoutTheme(todayWorkout.workout_type);
 
   const toggleHabit = (id, habitXp) => {
     setCompletedHabits((prev) => {
@@ -71,7 +222,7 @@ export default function DailyMissionsScreen({
             </View>
             <Text style={styles.categorySub}>Zone 2 &amp; Power</Text>
           </View>
-          <Text style={styles.headingTitle}>Today’s Mission</Text>
+          <Text style={styles.headingTitle}>Today's Mission</Text>
         </View>
 
         <View style={styles.dayBadge}>
@@ -109,35 +260,41 @@ export default function DailyMissionsScreen({
                 />
               </Svg>
               <View style={styles.gaugeInnerLabel}>
-                <Text style={styles.gaugePercent}>88%</Text>
-                <Text style={styles.gaugeStatus}>READY</Text>
+                <Text style={styles.gaugePercent}>{wearableData.readiness_score}%</Text>
+                <Text style={styles.gaugeStatus}>{wearableData.readiness_score >= 80 ? 'READY' : 'RECOVER'}</Text>
               </View>
             </View>
 
             <View style={styles.readinessInfo}>
-              <View style={styles.stateTitleRow}>
-                <Text style={styles.stateTitle}>Optimum State</Text>
-                <MaterialCommunityIcons name="check-decagram" size={16} color="#10b981" />
-              </View>
+              <TouchableOpacity style={styles.stateTitleRow} onPress={handleSyncWearables} activeOpacity={0.8}>
+                <Text style={styles.stateTitle}>{wearableData.readiness_score >= 80 ? 'Optimum State' : 'Recovery Focus'}</Text>
+                <MaterialCommunityIcons name="sync" size={16} color="#008378" />
+              </TouchableOpacity>
               <View style={styles.metricPillsRow}>
                 <View style={styles.metricPillGreen}>
                   <Ionicons name="heart" size={11} color="#15803d" />
-                  <Text style={styles.metricPillGreenText}>HRV +4ms</Text>
+                  <Text style={styles.metricPillGreenText}>HRV {wearableData.hrv_ms}ms</Text>
                 </View>
                 <View style={styles.metricPillTeal}>
                   <Ionicons name="moon" size={11} color="#0f766e" />
-                  <Text style={styles.metricPillTealText}>8.2h Sleep</Text>
+                  <Text style={styles.metricPillTealText}>{wearableData.sleep_hours}h Sleep</Text>
                 </View>
               </View>
             </View>
           </View>
 
-          {/* Right Quests Progress Indicator */}
+          {/* Right Quests Progress Indicator & Sync Button */}
           <View style={styles.questsSummary}>
-            <View style={styles.questsBadge}>
-              <Text style={styles.questsBadgeText}>{completedCount} / 3 Quests</Text>
-            </View>
-            <Text style={styles.xpGainedSub}>+120 XP today</Text>
+            <TouchableOpacity 
+              style={styles.syncBtnPill} 
+              onPress={handleSyncWearables} 
+              activeOpacity={0.8}
+              disabled={isSyncing}
+            >
+              <MaterialCommunityIcons name="sync" size={13} color="#0f766e" />
+              <Text style={styles.syncBtnText}>{isSyncing ? 'Syncing...' : 'Sync Wearables'}</Text>
+            </TouchableOpacity>
+            <Text style={styles.xpGainedSub}>Open Wearables API</Text>
           </View>
         </View>
 
@@ -190,30 +347,32 @@ export default function DailyMissionsScreen({
 
       {/* Main Active Mission Card (Priority Workout) */}
       <LinearGradient
-        colors={['#ffffff', '#f0fdfa']}
+        colors={workoutTheme.cardColors}
         start={{ x: 0, y: 0 }}
         end={{ x: 0, y: 1 }}
-        style={styles.workoutCard}
+        style={[styles.workoutCard, { borderColor: workoutTheme.borderColor }]}
       >
         <View style={styles.workoutCardHeader}>
           <View style={styles.workoutInfoLeft}>
             <LinearGradient
-              colors={['#008378', '#10b981']}
+              colors={workoutTheme.iconColors}
               start={{ x: 0, y: 0 }}
               end={{ x: 1, y: 1 }}
               style={styles.workoutIconBox}
             >
-              <MaterialCommunityIcons name="dumbbell" size={20} color="#ffffff" />
+              <MaterialCommunityIcons name={workoutTheme.icon} size={20} color="#ffffff" />
             </LinearGradient>
             <View style={styles.workoutTitles}>
               <View style={styles.workoutBadgeRow}>
-                <View style={styles.priorityPill}>
-                  <Text style={styles.priorityPillText}>PRIORITY WORKOUT</Text>
+                <View style={[styles.priorityPill, { backgroundColor: workoutTheme.pillBg }]}>
+                  <Text style={[styles.priorityPillText, { color: workoutTheme.pillText }]}>
+                    {workoutTheme.isRest ? 'REST DAY' : 'PRIORITY WORKOUT'}
+                  </Text>
                 </View>
-                <Text style={styles.durationBullet}>• 35 min</Text>
+                <Text style={styles.durationBullet}>• {workoutTheme.duration}</Text>
               </View>
               <Text style={styles.workoutName} numberOfLines={1}>
-                Hyrox Sled &amp; Grip Prep
+                {todayWorkout.workout_type}
               </Text>
             </View>
           </View>
@@ -227,36 +386,30 @@ export default function DailyMissionsScreen({
         {/* Workout Highlights Strip */}
         <View style={styles.highlightsRow}>
           <View style={styles.highlightPill}>
-            <Text style={styles.highlightText}>Power Endurance</Text>
-          </View>
-          <View style={styles.highlightPill}>
-            <Text style={styles.highlightText}>Low Joint Strain</Text>
-          </View>
-          <View style={[styles.highlightPill, styles.highlightPillTeal]}>
-            <Text style={[styles.highlightText, { color: '#0d9488', fontWeight: '700' }]}>
-              Maya Audio Cues
-            </Text>
+            <Text style={styles.highlightText}>{todayWorkout.description}</Text>
           </View>
         </View>
 
-        {/* Chunky Vibrant CTA */}
-        <Animated.View style={{ transform: [{ scale: activeScale }] }}>
-          <TouchableOpacity
-            onPress={handleStartWorkout}
-            activeOpacity={0.9}
-            style={styles.startWorkoutTouch}
-          >
-            <LinearGradient
-              colors={['#008378', '#059669', '#10b981']}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 0 }}
-              style={styles.startWorkoutGradient}
+        {/* Chunky Vibrant CTA (Hidden on Rest Days) */}
+        {!workoutTheme.isRest && (
+          <Animated.View style={{ transform: [{ scale: activeScale }] }}>
+            <TouchableOpacity
+              onPress={handleStartWorkout}
+              activeOpacity={0.9}
+              style={styles.startWorkoutTouch}
             >
-              <Ionicons name="play" size={18} color="#ffffff" style={{ marginRight: 4 }} />
-              <Text style={styles.startWorkoutText}>Start Workout</Text>
-            </LinearGradient>
-          </TouchableOpacity>
-        </Animated.View>
+              <LinearGradient
+                colors={workoutTheme.iconColors}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 0 }}
+                style={styles.startWorkoutGradient}
+              >
+                <Ionicons name="play" size={18} color="#ffffff" style={{ marginRight: 4 }} />
+                <Text style={styles.startWorkoutText}>Start Workout</Text>
+              </LinearGradient>
+            </TouchableOpacity>
+          </Animated.View>
+        )}
       </LinearGradient>
 
       {/* 5. Compact 2-Column Daily Habits / Recovery Quests Grid */}
@@ -322,10 +475,10 @@ export default function DailyMissionsScreen({
               <Text style={styles.habitCardTitle}>Target 8k Steps</Text>
               <View style={styles.stepsStatsRow}>
                 <Text style={styles.stepsCount}>
-                  {completedHabits['habit_2'] ? '8.0k / 8.0k' : '6.4k / 8.0k'}
+                  {completedHabits['habit_2'] ? '8.0k / 8.0k' : `${(wearableData.steps / 1000).toFixed(1)}k / 8.0k`}
                 </Text>
                 <Text style={styles.stepsPercent}>
-                  {completedHabits['habit_2'] ? '100%' : '80%'}
+                  {completedHabits['habit_2'] ? '100%' : `${Math.min(100, Math.round((wearableData.steps / 8000) * 100))}%`}
                 </Text>
               </View>
             </View>
@@ -545,6 +698,22 @@ const styles = StyleSheet.create({
     fontSize: 11,
     fontWeight: '800',
     color: '#ea580c',
+  },
+  syncBtnPill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    backgroundColor: '#ccfbf1',
+    paddingHorizontal: 9,
+    paddingVertical: 5,
+    borderRadius: 999,
+    borderWidth: 1,
+    borderColor: '#99f6e4',
+  },
+  syncBtnText: {
+    fontSize: 10.5,
+    fontWeight: '800',
+    color: '#0f766e',
   },
   xpGainedSub: {
     fontSize: 10,
@@ -949,3 +1118,4 @@ const styles = StyleSheet.create({
     color: '#0f766e',
   },
 });
+

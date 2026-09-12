@@ -8,6 +8,7 @@ import {
   Image,
   Animated,
   ActivityIndicator,
+  Modal,
 } from 'react-native';
 import { MaterialCommunityIcons, Ionicons, Feather, FontAwesome5 } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -19,6 +20,15 @@ export default function TrainingScheduleScreen({ currentUser, userProfile, onSta
   const [adaptedPlan, setAdaptedPlan] = useState(null);
   const [targetRace, setTargetRace] = useState(userProfile?.race_type || 'Hyrox Open / Pro');
   const [targetDate, setTargetDate] = useState(userProfile?.race_date || 'November 15, 2025');
+  const [isEventModalVisible, setIsEventModalVisible] = useState(false);
+
+  const EVENT_OPTIONS = [
+    { title: 'Hyrox Open / Pro', date: 'November 15, 2025', weeks: '18 Weeks Away', icon: 'dumbbell' },
+    { title: 'Marathon Prep', date: 'December 10, 2025', weeks: '22 Weeks Away', icon: 'running' },
+    { title: 'Triathlon 70.3', date: 'October 20, 2025', weeks: '14 Weeks Away', icon: 'swimmer' },
+    { title: '5K / 10K Speed Base', date: 'January 18, 2026', weeks: '27 Weeks Away', icon: 'stopwatch' },
+    { title: 'Hyrox Pro', date: 'February 22, 2026', weeks: '32 Weeks Away', icon: 'trophy' },
+  ];
 
   const [aiPlan, setAiPlan] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -117,40 +127,84 @@ export default function TrainingScheduleScreen({ currentUser, userProfile, onSta
     { date: 6, isOtherMonth: true },
   ];
 
-  const monthWeeks = [];
-  for (let i = 0; i < monthDays.length; i += 7) {
-    monthWeeks.push(monthDays.slice(i, i + 7));
-  }
+  const getIconData = (workout_type) => {
+    let icon = 'run';
+    let iconColor = COLORS.primary;
+    let iconBg = '#ffffff';
+    const wtype = (workout_type || '').toLowerCase();
+    
+    if (wtype.includes('rest') || wtype.includes('recovery')) {
+      icon = 'bed'; iconColor = '#64748b'; iconBg = '#e2e8f0';
+    } else if (wtype.includes('swim')) {
+      icon = 'swim'; iconColor = '#0284c7'; iconBg = '#bae6fd';
+    } else if (wtype.includes('bike') || wtype.includes('cycle')) {
+      icon = 'bike'; iconColor = '#ea580c'; iconBg = '#ffdbca';
+    } else if (wtype.includes('strength') || wtype.includes('gym') || wtype.includes('hyrox')) {
+      icon = 'dumbbell'; iconColor = '#7c3aed'; iconBg = '#ede9fe';
+    } else if (wtype.includes('interval') || wtype.includes('speed') || wtype.includes('tempo')) {
+      icon = 'lightning-bolt'; iconColor = '#d97706'; iconBg = '#fef3c7';
+    } else if (wtype.includes('long') || wtype.includes('heart')) {
+      icon = 'heart'; iconColor = '#e11d48'; iconBg = '#fce7f3';
+    } else {
+      icon = 'run'; iconColor = '#00685f'; iconBg = '#89f5e7';
+    }
+    
+    return { icon, iconColor, iconBg, iconType: 'mc' };
+  };
 
   const dynamicDays = days.map((d, idx) => {
     if (aiPlan && aiPlan.weeks && aiPlan.weeks.length > 0) {
       const aiDay = aiPlan.weeks[0].days[idx];
       if (aiDay) {
-        let icon = 'run';
-        let iconColor = COLORS.primary;
-        let iconBg = '#ffffff';
-        const wtype = (aiDay.workout_type || '').toLowerCase();
-        
-        if (wtype.includes('rest')) { icon = 'bed'; iconColor = '#64748b'; iconBg = '#e2e8f0'; }
-        else if (wtype.includes('run')) { icon = 'run'; iconColor = COLORS.primary; iconBg = '#89f5e7'; }
-        else if (wtype.includes('swim')) { icon = 'swim'; iconColor = '#0284c7'; iconBg = '#bae6fd'; }
-        else if (wtype.includes('bike') || wtype.includes('cycle')) { icon = 'bike'; iconColor = '#ea580c'; iconBg = '#ffdbca'; }
-        
+        const { icon, iconColor, iconBg, iconType } = getIconData(aiDay.workout_type);
         return {
           ...d,
           aiWorkoutType: aiDay.workout_type,
           aiDescription: aiDay.description,
-          icon,
-          iconColor,
-          iconBg,
-          iconType: 'mc'
+          icon, iconColor, iconBg, iconType
         };
       }
     }
     return d;
   });
 
-  const selectedDayData = dynamicDays.find(d => d.date === selectedDay) || dynamicDays[2];
+  const dynamicMonthDays = monthDays.map((d, idx) => {
+    if (d.isOtherMonth) return d;
+    
+    const activeIndex = monthDays.slice(0, idx).filter(x => !x.isOtherMonth).length;
+    if (aiPlan && aiPlan.weeks && activeIndex < 28) {
+      const weekIdx = Math.floor(activeIndex / 7);
+      const dayIdx = activeIndex % 7;
+      if (aiPlan.weeks[weekIdx] && aiPlan.weeks[weekIdx].days[dayIdx]) {
+        const aiDay = aiPlan.weeks[weekIdx].days[dayIdx];
+        const { icon, iconColor, iconBg, iconType } = getIconData(aiDay.workout_type);
+        return {
+          ...d,
+          aiWorkoutType: aiDay.workout_type,
+          aiDescription: aiDay.description,
+          icon, iconColor, iconBg, iconType
+        };
+      }
+    }
+    return d;
+  });
+
+  const monthWeeks = [];
+  for (let i = 0; i < dynamicMonthDays.length; i += 7) {
+    monthWeeks.push(dynamicMonthDays.slice(i, i + 7));
+  }
+
+  let selectedDayData = null;
+  if (viewMode === 'week') {
+    selectedDayData = dynamicDays.find(d => d.date === selectedDay) || dynamicDays[2];
+  } else {
+    selectedDayData = dynamicMonthDays.find(d => !d.isOtherMonth && d.date === selectedDay) || dynamicMonthDays.find(d => !d.isOtherMonth && d.date === 12);
+  }
+
+  const isRestDay = (selectedDayData?.aiWorkoutType || '').toLowerCase().includes('rest') || 
+                    selectedDayData?.icon === 'bed' || 
+                    selectedDayData?.icon === 'spa' || 
+                    adaptedPlan === 'rest';
 
   const handleAdapt = async (type, label) => {
     if (adaptedPlan === type) {
@@ -201,11 +255,7 @@ export default function TrainingScheduleScreen({ currentUser, userProfile, onSta
           </View>
           <TouchableOpacity
             style={styles.adjustBtn}
-            onPress={() =>
-              setTargetDate((prev) =>
-                prev.includes('November') ? 'December 10, 2025' : 'November 15, 2025'
-              )
-            }
+            onPress={() => setIsEventModalVisible(true)}
             activeOpacity={0.8}
           >
             <Text style={styles.adjustBtnText}>Adjust</Text>
@@ -286,16 +336,16 @@ export default function TrainingScheduleScreen({ currentUser, userProfile, onSta
                   key={d.date}
                   style={[
                     styles.dayCard,
-                    isToday && styles.dayCardToday,
-                    isSelected && !isToday && styles.dayCardSelected,
+                    isSelected && styles.dayCardToday,
+                    isToday && !isSelected && styles.dayCardSelected,
                   ]}
                   onPress={() => setSelectedDay(d.date)}
                   activeOpacity={0.8}
                 >
-                  <Text style={[styles.dayLabel, isToday && styles.dayLabelToday]}>
+                  <Text style={[styles.dayLabel, isSelected && styles.dayLabelToday]}>
                     {d.day}
                   </Text>
-                  <Text style={[styles.dayNumber, isToday && styles.dayNumberToday]}>
+                  <Text style={[styles.dayNumber, isSelected && styles.dayNumberToday]}>
                     {d.date}
                   </Text>
 
@@ -360,8 +410,8 @@ export default function TrainingScheduleScreen({ currentUser, userProfile, onSta
                       key={dIdx}
                       style={[
                         styles.monthDayCell,
-                        isToday && styles.monthDayCellToday,
-                        isSelected && !isToday && styles.monthDayCellSelected,
+                        isSelected && styles.monthDayCellToday,
+                        isToday && !isSelected && styles.monthDayCellSelected,
                       ]}
                       onPress={() => setSelectedDay(item.date)}
                       activeOpacity={0.8}
@@ -369,8 +419,8 @@ export default function TrainingScheduleScreen({ currentUser, userProfile, onSta
                       <Text
                         style={[
                           styles.monthDayNum,
-                          isToday && styles.monthDayNumToday,
-                          isSelected && !isToday && styles.monthDayNumSelected,
+                          isSelected && styles.monthDayNumToday,
+                          isToday && !isSelected && styles.monthDayNumSelected,
                         ]}
                       >
                         {item.date}
@@ -420,7 +470,7 @@ export default function TrainingScheduleScreen({ currentUser, userProfile, onSta
             <Text style={{ marginTop: 10, color: '#6d7a77' }}>Generating AI Training Plan...</Text>
           </View>
         ) : (
-        <View style={styles.workoutCardWrapper}>
+          <View style={styles.workoutCardWrapper}>
           <LinearGradient
             colors={['#89f5e7', '#6bd8cb', '#46cdbe']}
             start={{ x: 0, y: 0 }}
@@ -493,14 +543,21 @@ export default function TrainingScheduleScreen({ currentUser, userProfile, onSta
             </View>
 
             {/* Action Button inside Card */}
-            <TouchableOpacity
-              style={styles.startWorkoutBtn}
-              onPress={onStartWorkout}
-              activeOpacity={0.88}
-            >
-              <Ionicons name="play" size={20} color="#ffffff" />
-              <Text style={styles.startWorkoutBtnText}>Start Today's Workout</Text>
-            </TouchableOpacity>
+            {!isRestDay ? (
+              <TouchableOpacity
+                style={styles.startWorkoutBtn}
+                onPress={onStartWorkout}
+                activeOpacity={0.88}
+              >
+                <Ionicons name="play" size={20} color="#ffffff" />
+                <Text style={styles.startWorkoutBtnText}>Start Today's Workout</Text>
+              </TouchableOpacity>
+            ) : (
+              <View style={[styles.startWorkoutBtn, { backgroundColor: 'rgba(255, 255, 255, 0.4)', borderWidth: 1, borderColor: '#99f6e4' }]}>
+                <Ionicons name="bed" size={20} color="#0f766e" />
+                <Text style={[styles.startWorkoutBtnText, { color: '#0f766e' }]}>Rest & Recovery Day</Text>
+              </View>
+            )}
           </LinearGradient>
         </View>
         )}
@@ -517,7 +574,7 @@ export default function TrainingScheduleScreen({ currentUser, userProfile, onSta
             <View style={styles.adaptHeaderTextWrap}>
               <Text style={styles.adaptTitle}>Not Feeling 100%?</Text>
               <Text style={styles.adaptSubtitle}>
-                Tired, sore, or short on time? Adapt in 1-tap.
+                {isRestDay ? 'Plan adaptations disabled on rest days' : 'Tired, sore, or short on time? Adapt in 1-tap.'}
               </Text>
             </View>
           </View>
@@ -526,9 +583,11 @@ export default function TrainingScheduleScreen({ currentUser, userProfile, onSta
           <View style={styles.adaptButtonsGrid}>
             {/* Active Walk */}
             <TouchableOpacity
+              disabled={isRestDay}
               style={[
                 styles.adaptOptionBtn,
                 adaptedPlan === 'walk' && styles.adaptOptionBtnActive,
+                isRestDay && { opacity: 0.5 },
               ]}
               onPress={() => handleAdapt('walk', 'Active Walk')}
               activeOpacity={0.8}
@@ -542,9 +601,11 @@ export default function TrainingScheduleScreen({ currentUser, userProfile, onSta
 
             {/* Ease Effort */}
             <TouchableOpacity
+              disabled={isRestDay}
               style={[
                 styles.adaptOptionBtn,
                 adaptedPlan === 'ease' && styles.adaptOptionBtnActive,
+                isRestDay && { opacity: 0.5 },
               ]}
               onPress={() => handleAdapt('ease', 'Ease Effort')}
               activeOpacity={0.8}
@@ -558,9 +619,11 @@ export default function TrainingScheduleScreen({ currentUser, userProfile, onSta
 
             {/* Take Rest Day */}
             <TouchableOpacity
+              disabled={isRestDay}
               style={[
                 styles.adaptOptionBtn,
                 adaptedPlan === 'rest' && styles.adaptOptionBtnActive,
+                isRestDay && { opacity: 0.5 },
               ]}
               onPress={() => handleAdapt('rest', 'Take Rest Day')}
               activeOpacity={0.8}
@@ -574,9 +637,11 @@ export default function TrainingScheduleScreen({ currentUser, userProfile, onSta
 
             {/* Custom Edit */}
             <TouchableOpacity
+              disabled={isRestDay}
               style={[
                 styles.adaptOptionBtn,
                 adaptedPlan === 'custom' && styles.adaptOptionBtnActive,
+                isRestDay && { opacity: 0.5 },
               ]}
               onPress={() => handleAdapt('custom', 'Custom Edit')}
               activeOpacity={0.8}
@@ -598,6 +663,62 @@ export default function TrainingScheduleScreen({ currentUser, userProfile, onSta
           </View>
         </View>
       </View>
+
+      {/* Target Event Selection Modal */}
+      <Modal
+        visible={isEventModalVisible}
+        transparent={true}
+        animationType="fade"
+        onRequestClose={() => setIsEventModalVisible(false)}
+      >
+        <TouchableOpacity
+          style={styles.modalOverlay}
+          activeOpacity={1}
+          onPress={() => setIsEventModalVisible(false)}
+        >
+          <View style={styles.modalContent} onStartShouldSetResponder={() => true}>
+            <View style={styles.modalHeader}>
+              <Text style={styles.modalTitle}>Select Target Event</Text>
+              <TouchableOpacity onPress={() => setIsEventModalVisible(false)}>
+                <Ionicons name="close-circle" size={24} color="#64748b" />
+              </TouchableOpacity>
+            </View>
+            <Text style={styles.modalSub}>
+              Choose your target race type to recalculate periodization & training focus.
+            </Text>
+            <View style={styles.eventOptionsList}>
+              {EVENT_OPTIONS.map((opt, idx) => (
+                <TouchableOpacity
+                  key={idx}
+                  style={[
+                    styles.eventOptionCard,
+                    targetRace === opt.title && styles.eventOptionCardSelected,
+                  ]}
+                  onPress={() => {
+                    setTargetRace(opt.title);
+                    setTargetDate(opt.date);
+                    setIsEventModalVisible(false);
+                    handleAdapt('event_change', `Changed target event to ${opt.title}`);
+                  }}
+                >
+                  <View style={styles.eventOptionLeft}>
+                    <View style={styles.eventOptionIconBox}>
+                      <FontAwesome5 name={opt.icon} size={16} color={COLORS.primary} />
+                    </View>
+                    <View>
+                      <Text style={styles.eventOptionTitle}>{opt.title}</Text>
+                      <Text style={styles.eventOptionDate}>{opt.date} • {opt.weeks}</Text>
+                    </View>
+                  </View>
+                  {targetRace === opt.title && (
+                    <Ionicons name="checkmark-circle" size={22} color={COLORS.primary} />
+                  )}
+                </TouchableOpacity>
+              ))}
+            </View>
+          </View>
+        </TouchableOpacity>
+      </Modal>
     </ScrollView>
   );
 }
@@ -1311,5 +1432,82 @@ const styles = StyleSheet.create({
     color: '#3d4947',
     flex: 1,
     lineHeight: 16,
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(15, 23, 42, 0.6)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 20,
+  },
+  modalContent: {
+    width: '100%',
+    maxWidth: 420,
+    backgroundColor: '#ffffff',
+    borderRadius: 24,
+    padding: 20,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 10 },
+    shadowOpacity: 0.25,
+    shadowRadius: 20,
+    elevation: 5,
+  },
+  modalHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 4,
+  },
+  modalTitle: {
+    fontSize: 18,
+    fontWeight: '900',
+    color: '#131b2e',
+  },
+  modalSub: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: '#64748b',
+    marginBottom: 16,
+  },
+  eventOptionsList: {
+    gap: 10,
+  },
+  eventOptionCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    padding: 12,
+    borderRadius: 16,
+    backgroundColor: '#f8fafc',
+    borderWidth: 1.5,
+    borderColor: '#e2e8f0',
+  },
+  eventOptionCardSelected: {
+    borderColor: COLORS.primary,
+    backgroundColor: '#f0fdfa',
+  },
+  eventOptionLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+  },
+  eventOptionIconBox: {
+    width: 36,
+    height: 36,
+    borderRadius: 12,
+    backgroundColor: '#ccfbf1',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  eventOptionTitle: {
+    fontSize: 14,
+    fontWeight: '800',
+    color: '#131b2e',
+  },
+  eventOptionDate: {
+    fontSize: 11,
+    fontWeight: '600',
+    color: '#64748b',
+    marginTop: 2,
   },
 });
