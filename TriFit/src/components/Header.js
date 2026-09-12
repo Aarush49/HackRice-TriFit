@@ -17,7 +17,9 @@ export default function Header({ onOpenProfile, onOpenCoach, onOpenAuth, current
           style={styles.logoImage}
           resizeMode="contain"
         />
-        <Text style={styles.brandText}>TriFit</Text>
+        <Text style={styles.brandText}>
+          Tri<Text style={styles.brandTextFit}>Fit</Text>
+        </Text>
       </View>
 
       {/* Right Stats & Profile */}
@@ -80,8 +82,11 @@ const styles = StyleSheet.create({
   brandText: {
     fontSize: 22,
     fontWeight: '900',
-    color: COLORS.primary,
+    color: '#000000',
     letterSpacing: -0.5,
+  },
+  brandTextFit: {
+    color: COLORS.primary,
   },
   rightStats: {
     flexDirection: 'row',

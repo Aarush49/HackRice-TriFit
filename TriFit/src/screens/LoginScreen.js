@@ -411,7 +411,7 @@ const styles = StyleSheet.create({
   brandTitle: {
     fontSize: 24,
     fontWeight: '900',
-    color: '#0f172a',
+    color: '#000000',
     letterSpacing: -0.5,
   },
   brandTitleTeal: {
