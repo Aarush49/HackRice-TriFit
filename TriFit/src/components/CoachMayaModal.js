@@ -152,7 +152,7 @@ export default function CoachMayaModal({ visible, onClose, onLogout, currentUser
     'How is my Fitness Age?',
   ];
 
-  const handleSend = (textToSend) => {
+  const handleSend = async (textToSend) => {
     const query = textToSend || inputText;
     if (!query.trim()) return;
 
@@ -163,23 +163,55 @@ export default function CoachMayaModal({ visible, onClose, onLogout, currentUser
       time: 'Now',
     };
 
-    setMessages((prev) => [...prev, userMsg]);
+    const updatedHistory = [...messages, userMsg];
+    setMessages(updatedHistory);
     setInputText('');
     setIsTyping(true);
 
-    setTimeout(() => {
-      let reply = "I'm monitoring your heart rate drift & tendon load. Keep it steady!";
+    try {
+      const username = currentUser?.username || currentUser?.name || 'DemoAccount';
+      const res = await fetch(`${API_BASE_URL}/api/coach/chat`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          username,
+          message: query,
+          history: updatedHistory.slice(-8).map((m) => ({
+            sender: m.sender === 'user' ? 'user' : 'maya',
+            text: m.text,
+          })),
+        }),
+      });
+
+      const data = await res.json();
+      if (data.success && data.reply) {
+        setMessages((prev) => [
+          ...prev,
+          {
+            id: (Date.now() + 1).toString(),
+            sender: 'maya',
+            text: data.reply,
+            time: 'Just now',
+          },
+        ]);
+      } else {
+        throw new Error(data.detail || 'Failed to get coaching response');
+      }
+    } catch (err) {
+      console.log('Coach Maya chat fallback:', err?.message || err);
+      // Smart localized fallback if network is unreachable
+      let fallbackReply = "I'm monitoring your heart rate drift & tendon load. Keep it steady!";
       if (query.toLowerCase().includes('zone 2') || query.toLowerCase().includes('why')) {
-        reply =
+        fallbackReply =
           "Zone 2 builds capillary density & mitochondrial efficiency without burning neural reserves. It keeps your tendons happy for race day! 🫀⚡";
       } else if (query.toLowerCase().includes('hyrox') || query.toLowerCase().includes('pacing')) {
-        reply =
+        fallbackReply =
           'For Hyrox, maintain 80% effort on the run segments so you have explosive power left for the Sled Push & Wall Balls! 🏋️‍♂️💨';
       } else if (query.toLowerCase().includes('legs') || query.toLowerCase().includes('great')) {
-        reply =
-          "Awesome! Enjoy today's 35-min aero run. I've enabled real-time audio cues for your 128-142 BPM zone!";
-      } else if (query.toLowerCase().includes('fitness age')) {
-        reply =
+        fallbackReply =
+          "Awesome! Enjoy today's aero session. I've enabled real-time coaching cues for your aerobic heart rate zone! 🏃‍♀️✨";
+      } else if (query.toLowerCase().includes('fitness age') || query.toLowerCase().includes('age')) {
+        fallbackReply =
           "Your current Fitness Age is 27 (7 years younger than your 34 chronological age)! Keep banking easy aerobic miles to stay in the top 8%! 🧬✨";
       }
 
@@ -188,12 +220,13 @@ export default function CoachMayaModal({ visible, onClose, onLogout, currentUser
         {
           id: (Date.now() + 1).toString(),
           sender: 'maya',
-          text: reply,
+          text: fallbackReply,
           time: 'Just now',
         },
       ]);
+    } finally {
       setIsTyping(false);
-    }, 1200);
+    }
   };
 
   return (

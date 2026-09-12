@@ -81,3 +81,16 @@ class WearableIngressRequest(BaseModel):
 class TTSRequest(BaseModel):
     text: str
     voice_id: Optional[str] = None
+
+# --- Coach Maya Chat Schemas ---
+class ChatMessage(BaseModel):
+    sender: Optional[str] = "user"
+    text: str
+    time: Optional[str] = None
+
+class CoachChatRequest(BaseModel):
+    username: Optional[str] = "DemoAccount"
+    message: str
+    history: Optional[List[ChatMessage]] = []
+    user_context: Optional[dict] = {}
+

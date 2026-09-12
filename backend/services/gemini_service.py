@@ -20,7 +20,7 @@ def clean_markdown_for_speech(text: str) -> str:
 def generate_gemini_response(
     prompt: str,
     system_instruction: Optional[str] = None,
-    model: str = "gemini-flash-latest"
+    model: str = "gemini-3.6-flash"
 ) -> str:
     """
     Generates text using Google Gemini API given a prompt and optional system instruction.
@@ -30,7 +30,7 @@ def generate_gemini_response(
     
     config = types.GenerateContentConfig(system_instruction=system_instruction) if (types and system_instruction) else None
 
-    models_to_try = [model, "gemini-3.5-flash", "gemini-3.1-flash-lite", "gemini-3.1-pro-preview", "gemini-flash-latest"]
+    models_to_try = [model, "gemini-3.6-flash", "gemini-3.6-pro", "gemini-3.7-flash", "gemini-3.5-flash"]
     # De-duplicate while preserving order
     models_to_try = list(dict.fromkeys(models_to_try))
 
@@ -49,3 +49,39 @@ def generate_gemini_response(
             continue
 
     raise HTTPException(status_code=500, detail=f"Gemini API error: {str(last_err)}")
+
+def generate_gemini_chat_response(
+    messages: list,
+    system_instruction: Optional[str] = None,
+    model: str = "gemini-3.6-flash"
+) -> str:
+    """
+    Generates dynamic multi-turn chat response using Google Gemini API.
+    """
+    if not gemini_client:
+        raise HTTPException(status_code=500, detail="GEMINI_API_KEY is not configured.")
+    
+    config = types.GenerateContentConfig(
+        system_instruction=system_instruction,
+        temperature=0.7,
+    ) if (types and system_instruction) else None
+
+    models_to_try = [model, "gemini-3.6-flash", "gemini-3.6-pro", "gemini-3.7-flash", "gemini-3.5-flash"]
+    models_to_try = list(dict.fromkeys(models_to_try))
+
+    last_err = None
+    for m in models_to_try:
+        try:
+            response = gemini_client.models.generate_content(
+                model=m,
+                contents=messages,
+                config=config
+            )
+            if response and response.text:
+                return response.text
+        except Exception as e:
+            last_err = e
+            continue
+
+    raise HTTPException(status_code=500, detail=f"Gemini Chat API error: {str(last_err)}")
+

@@ -2,7 +2,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from database import init_db
-from routers import auth, onboarding, plans, events, wearables, tts
+from routers import auth, onboarding, plans, events, wearables, tts, chat
 
 app = FastAPI(title="TriFit API")
 
@@ -26,6 +26,7 @@ app.include_router(plans.router)
 app.include_router(events.router)
 app.include_router(wearables.router)
 app.include_router(tts.router)
+app.include_router(chat.router)
 
 if __name__ == "__main__":
     import uvicorn
