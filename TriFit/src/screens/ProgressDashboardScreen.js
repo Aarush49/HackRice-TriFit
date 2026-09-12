@@ -179,7 +179,7 @@ export default function ProgressDashboardScreen({ currentUser, userProfile, xp =
               <MaterialCommunityIcons name="fire" size={13} color="#ea580c" />
               <Text style={styles.microStatLabelText}>Streak PR</Text>
             </View>
-            <Text style={styles.microStatValue}>{Math.max(streakDays, 21)} Days</Text>
+            <Text style={styles.microStatValue}>{streakDays} Days</Text>
             <Text style={[styles.microStatSub, { color: '#ea580c' }]}>All-time best</Text>
           </View>
           <View style={[styles.microStatItem, styles.microStatCenter]}>
@@ -187,8 +187,8 @@ export default function ProgressDashboardScreen({ currentUser, userProfile, xp =
               <MaterialCommunityIcons name="heart-pulse" size={13} color={COLORS.primary} />
               <Text style={styles.microStatLabelText}>Bio-Age</Text>
             </View>
-            <Text style={[styles.microStatValue, { color: COLORS.primary }]}>-3.4 Yrs</Text>
-            <Text style={[styles.microStatSub, { color: COLORS.primary }]}>vs Baseline</Text>
+            <Text style={[styles.microStatValue, { color: COLORS.primary }]}>3.4 Yrs</Text>
+            <Text style={[styles.microStatSub, { color: COLORS.primary }]}>Younger</Text>
           </View>
           <View style={styles.microStatItem}>
             <View style={styles.microStatLabel}>
