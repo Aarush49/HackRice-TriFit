@@ -247,6 +247,90 @@ export default function TrainingScheduleScreen({ currentUser, userProfile, onSta
     selectedDayData = dynamicMonthDays.find(d => !d.isOtherMonth && d.date === selectedDay) || dynamicMonthDays.find(d => !d.isOtherMonth && d.date === 12);
   }
 
+  const getScheduleTags = (workout_type) => {
+    const wtype = (workout_type || '').toLowerCase();
+    if (wtype.includes('rest') || wtype.includes('recovery')) {
+      return [
+        { icon: 'bed', text: 'Hydration & Sleep Focus' },
+        { icon: 'spa', text: 'Light Mobility & Stretch' }
+      ];
+    } else if (wtype.includes('swim')) {
+      return [
+        { icon: 'swim', text: 'Goggles & Lap Pool' },
+        { icon: 'heart-pulse', text: 'Stroke Rate Sensor' }
+      ];
+    } else if (wtype.includes('bike') || wtype.includes('cycle')) {
+      return [
+        { icon: 'bike', text: 'Road Bike or Trainer' },
+        { icon: 'lightning-bolt', text: 'FTP Cadence Meter' }
+      ];
+    } else if (wtype.includes('strength') || wtype.includes('gym') || wtype.includes('hyrox') || wtype.includes('sled')) {
+      return [
+        { icon: 'dumbbell', text: 'Kettlebells & Sled' },
+        { icon: 'arm-flex', text: 'Grip & Core Straps' }
+      ];
+    } else if (wtype.includes('tempo') || wtype.includes('interval') || wtype.includes('speed')) {
+      return [
+        { icon: 'watch', text: 'GPS Pacing Watch' },
+        { icon: 'fire', text: 'Lactate Threshold Focus' }
+      ];
+    } else {
+      return [
+        { icon: 'watch', text: 'GPS Watch or HR Sensor' },
+        { icon: 'run', text: 'Road or Trail Running' }
+      ];
+    }
+  };
+  const getScheduleCardTheme = (workout_type, icon) => {
+    const wtype = (workout_type || '').toLowerCase();
+    const ic = (icon || '').toLowerCase();
+
+    if (wtype.includes('rest') || wtype.includes('recovery') || ic === 'bed' || ic === 'spa') {
+      return {
+        colors: ['#f1f5f9', '#e2e8f0', '#cbd5e1'],
+        iconColor: '#475569',
+        btnBg: '#475569',
+        btnBorder: '#334155'
+      };
+    } else if (wtype.includes('swim') || ic === 'swim') {
+      return {
+        colors: ['#e0f2fe', '#bae6fd', '#7dd3fc'],
+        iconColor: '#0284c7',
+        btnBg: '#0284c7',
+        btnBorder: '#0369a1'
+      };
+    } else if (wtype.includes('bike') || wtype.includes('cycle') || ic === 'bike') {
+      return {
+        colors: ['#fff7ed', '#ffedd5', '#fed7aa'],
+        iconColor: '#ea580c',
+        btnBg: '#ea580c',
+        btnBorder: '#c2410c'
+      };
+    } else if (wtype.includes('strength') || wtype.includes('gym') || wtype.includes('hyrox') || wtype.includes('sled') || ic === 'dumbbell') {
+      return {
+        colors: ['#faf5ff', '#f3e8ff', '#e9d5ff'],
+        iconColor: '#7c3aed',
+        btnBg: '#7c3aed',
+        btnBorder: '#6d28d9'
+      };
+    } else if (wtype.includes('tempo') || wtype.includes('interval') || wtype.includes('speed') || ic === 'lightning-bolt') {
+      return {
+        colors: ['#fffbeb', '#fef3c7', '#fde68a'],
+        iconColor: '#d97706',
+        btnBg: '#d97706',
+        btnBorder: '#b45309'
+      };
+    } else {
+      return {
+        colors: ['#89f5e7', '#6bd8cb', '#46cdbe'],
+        iconColor: COLORS.primary,
+        btnBg: '#00685f',
+        btnBorder: '#004c44'
+      };
+    }
+  };
+  const cardTheme = getScheduleCardTheme(selectedDayData?.aiWorkoutType || selectedDayData?.status || '', selectedDayData?.icon);
+
   const isRestDay = (selectedDayData?.aiWorkoutType || '').toLowerCase().includes('rest') || 
                     selectedDayData?.icon === 'bed' || 
                     selectedDayData?.icon === 'spa' || 
@@ -517,7 +601,7 @@ export default function TrainingScheduleScreen({ currentUser, userProfile, onSta
         ) : (
           <View style={styles.workoutCardWrapper}>
           <LinearGradient
-            colors={['#89f5e7', '#6bd8cb', '#46cdbe']}
+            colors={cardTheme.colors}
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 1 }}
             style={styles.workoutCard}
@@ -526,9 +610,9 @@ export default function TrainingScheduleScreen({ currentUser, userProfile, onSta
             <View style={styles.workoutMainRow}>
               <View style={styles.workoutIconBox}>
                 {selectedDayData.iconType === 'ion' ? (
-                  <Ionicons name={selectedDayData.icon} size={28} color={COLORS.primary} />
+                  <Ionicons name={selectedDayData.icon} size={28} color={cardTheme.iconColor} />
                 ) : (
-                  <MaterialCommunityIcons name={selectedDayData.icon} size={28} color={COLORS.primary} />
+                  <MaterialCommunityIcons name={selectedDayData.icon} size={28} color={cardTheme.iconColor} />
                 )}
               </View>
               <View style={styles.workoutTextWrap}>
@@ -575,22 +659,20 @@ export default function TrainingScheduleScreen({ currentUser, userProfile, onSta
               </View>
             </View>
 
-            {/* Equipment & Sensor Badges */}
+            {/* Dynamic Equipment & Sensor Badges */}
             <View style={styles.equipmentBadgesRow}>
-              <View style={styles.gearPill}>
-                <MaterialCommunityIcons name="watch" size={14} color={COLORS.primary} />
-                <Text style={styles.gearPillText}>GPS Watch or HR Sensor</Text>
-              </View>
-              <View style={styles.gearPill}>
-                <MaterialCommunityIcons name="ruler" size={14} color={COLORS.primary} />
-                <Text style={styles.gearPillText}>Road or Treadmill</Text>
-              </View>
+              {getScheduleTags(selectedDayData?.aiWorkoutType || selectedDayData?.status || '').map((tag, tIdx) => (
+                <View key={tIdx} style={styles.gearPill}>
+                  <MaterialCommunityIcons name={tag.icon} size={14} color={cardTheme.iconColor} />
+                  <Text style={styles.gearPillText}>{tag.text}</Text>
+                </View>
+              ))}
             </View>
 
             {/* Action Button inside Card */}
             {!isRestDay ? (
               <TouchableOpacity
-                style={styles.startWorkoutBtn}
+                style={[styles.startWorkoutBtn, { backgroundColor: cardTheme.btnBg, borderBottomColor: cardTheme.btnBorder }]}
                 onPress={onStartWorkout}
                 activeOpacity={0.88}
               >

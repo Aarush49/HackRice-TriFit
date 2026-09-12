@@ -230,6 +230,7 @@ export default function App() {
             userProfile={userProfile}
             onStartRun={() => setRunVisible(true)}
             onOpenCoach={() => setCoachVisible(true)}
+            onNavigateToSchedule={() => setActiveTab('schedule')}
             xp={xp}
             setXp={setXp}
             streakDays={streakDays}

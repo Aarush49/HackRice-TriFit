@@ -13,12 +13,56 @@ import Svg, { Circle } from 'react-native-svg';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { COLORS } from '../theme';
+const getWorkoutTags = (workout_type) => {
+  const wtype = (workout_type || '').toLowerCase();
+  if (wtype.includes('rest') || wtype.includes('recovery')) {
+    return [
+      { text: 'Cellular Repair', bg: '#f1f5f9', color: '#475569' },
+      { text: 'Hydration & Sleep', bg: '#f1f5f9', color: '#475569' }
+    ];
+  } else if (wtype.includes('tempo') || wtype.includes('threshold')) {
+    return [
+      { text: 'Lactate Threshold', bg: '#fff7ed', color: '#c2410c' },
+      { text: 'Zone 3/4 Sustained', bg: '#ffedd5', color: '#ea580c' },
+      { text: 'Maya Cues', bg: '#f0fdfa', color: '#0d9488' }
+    ];
+  } else if (wtype.includes('run') || wtype.includes('jog')) {
+    return [
+      { text: 'Zone 2 Aerobic Base', bg: '#f0fdfa', color: '#0f766e' },
+      { text: 'Tendon Adaptations', bg: '#ccfbf1', color: '#0d9488' },
+      { text: 'Maya Cues', bg: '#f0fdfa', color: '#0d9488' }
+    ];
+  } else if (wtype.includes('swim')) {
+    return [
+      { text: 'VO2 & Stroke Efficiency', bg: '#e0f2fe', color: '#0284c7' },
+      { text: 'Zero Impact Cardio', bg: '#f0f9ff', color: '#0369a1' }
+    ];
+  } else if (wtype.includes('bike') || wtype.includes('cycle')) {
+    return [
+      { text: 'Power Threshold (FTP)', bg: '#fff7ed', color: '#ea580c' },
+      { text: 'RPM Cadence', bg: '#ffdbca', color: '#9a3412' }
+    ];
+  } else if (wtype.includes('strength') || wtype.includes('gym') || wtype.includes('hyrox') || wtype.includes('sled')) {
+    return [
+      { text: 'Power Endurance', bg: '#f3e8ff', color: '#7e22ce' },
+      { text: 'Grip & Core Strength', bg: '#ede9fe', color: '#6b21a8' },
+      { text: 'Maya Cues', bg: '#f0fdfa', color: '#0d9488' }
+    ];
+  } else {
+    return [
+      { text: 'Aerobic Base', bg: '#f0fdfa', color: '#0f766e' },
+      { text: 'Form & Recovery', bg: '#e0f2fe', color: '#0369a1' }
+    ];
+  }
+};
+
 
 export default function DailyMissionsScreen({
   currentUser,
   userProfile,
   onStartRun,
   onOpenCoach,
+  onNavigateToSchedule,
   xp = 420,
   setXp,
   streakDays = 14,
@@ -106,6 +150,9 @@ export default function DailyMissionsScreen({
       ? 'Day of light stretching and recovery for tomorrow' 
       : rawTodayWorkout.description
   };
+
+  const rawDesc = todayWorkout?.description || '';
+  const cleanDesc = (rawDesc.includes(':') ? rawDesc.split(':')[1].trim() : rawDesc) || 'Zone 2 Aerobic & Form Drills';
 
   const getWorkoutTheme = (workout_type) => {
     const wtype = (workout_type || '').toLowerCase();
@@ -266,10 +313,9 @@ export default function DailyMissionsScreen({
             </View>
 
             <View style={styles.readinessInfo}>
-              <TouchableOpacity style={styles.stateTitleRow} onPress={handleSyncWearables} activeOpacity={0.8}>
+              <View style={styles.stateTitleRow}>
                 <Text style={styles.stateTitle}>{wearableData.readiness_score >= 80 ? 'Optimum State' : 'Recovery Focus'}</Text>
-                <MaterialCommunityIcons name="sync" size={16} color="#008378" />
-              </TouchableOpacity>
+              </View>
               <View style={styles.metricPillsRow}>
                 <View style={styles.metricPillGreen}>
                   <Ionicons name="heart" size={11} color="#15803d" />
@@ -383,12 +429,19 @@ export default function DailyMissionsScreen({
           </View>
         </View>
 
-        {/* Workout Highlights Strip */}
-        <View style={styles.highlightsRow}>
-          <View style={styles.highlightPill}>
-            <Text style={styles.highlightText}>{todayWorkout.description}</Text>
+        {/* Workout Highlights Strip (Clickable Button -> Schedule) */}
+        <TouchableOpacity
+          style={styles.clickableDescriptionBox}
+          onPress={onNavigateToSchedule}
+          activeOpacity={0.85}
+        >
+          <View style={styles.descTextRow}>
+            <Text style={styles.highlightText} numberOfLines={2} ellipsizeMode="tail">
+              {cleanDesc}
+            </Text>
+            <Ionicons name="chevron-forward" size={16} color="#0f766e" style={{ marginLeft: 4 }} />
           </View>
-        </View>
+        </TouchableOpacity>
 
         {/* Chunky Vibrant CTA (Hidden on Rest Days) */}
         {!workoutTheme.isRest && (
@@ -484,20 +537,18 @@ export default function DailyMissionsScreen({
             </View>
 
             <TouchableOpacity
-              onPress={() => toggleHabit('habit_2', 30)}
+              onPress={handleSyncWearables}
               activeOpacity={0.8}
-              style={[
-                styles.habitActionBtn,
-                completedHabits['habit_2'] && styles.habitActionBtnActiveOrange,
-              ]}
+              disabled={isSyncing}
+              style={styles.habitActionBtn}
             >
               <MaterialCommunityIcons
-                name={completedHabits['habit_2'] ? 'check-circle' : 'sync'}
+                name="sync"
                 size={13}
                 color="#c2410c"
               />
               <Text style={[styles.habitActionText, { color: '#c2410c' }]}>
-                {completedHabits['habit_2'] ? 'Logged' : 'Log'}
+                {isSyncing ? 'Syncing...' : 'Sync'}
               </Text>
             </TouchableOpacity>
           </View>
@@ -959,12 +1010,16 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     flexWrap: 'wrap',
     gap: 6,
+    width: '100%',
   },
   highlightPill: {
+    flex: 1,
+    flexShrink: 1,
+    overflow: 'hidden',
     backgroundColor: '#f2f3ff',
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-    borderRadius: 6,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 8,
     borderWidth: 1,
     borderColor: '#eaedff',
   },
@@ -973,10 +1028,25 @@ const styles = StyleSheet.create({
     backgroundColor: '#f0fdfa',
   },
   highlightText: {
-    fontSize: 11,
+    fontSize: 11.5,
     fontWeight: '600',
     color: '#3d4947',
+    lineHeight: 16,
   },
+  clickableDescriptionBox: {
+    backgroundColor: '#f2f3ff',
+    padding: 10,
+    borderRadius: 12,
+    borderWidth: 1.5,
+    borderColor: '#eaedff',
+    gap: 8,
+  },
+  descTextRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+
   startWorkoutTouch: {
     width: '100%',
     borderRadius: 12,
