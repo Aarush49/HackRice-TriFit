@@ -15,12 +15,16 @@ import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { COLORS } from '../theme';
 
 const RECIPES_DATA = [
+  // --- 6 VEGETARIAN RECIPES ---
   {
     id: 'glycogen',
     title: 'Glycogen Loading Bowl',
     shortTitle: 'Glycogen Bowl',
     tag: 'Pre-Run',
     tagColor: '#fd761a',
+    isVeg: true,
+    diet: 'veg',
+    dietLabel: 'Veg',
     prepTime: '15m',
     difficulty: 'Easy',
     calories: 520,
@@ -46,41 +50,14 @@ const RECIPES_DATA = [
     ],
   },
   {
-    id: 'salmon',
-    title: 'Pan-Seared Salmon & Tart Cherry',
-    shortTitle: 'Salmon & Cherry',
-    tag: 'Recovery',
-    tagColor: '#00685f',
-    prepTime: '20m',
-    difficulty: 'Medium',
-    calories: 610,
-    carbs: 18,
-    protein: 42,
-    fats: 22,
-    image: 'https://lh3.googleusercontent.com/aida-public/AB6AXuCBV5x0AkDGXi5kbUCDQ8HtHxM-7JzIfX7l0SGZwURqR0xrAKEGIZ9AoBFziN4axT0RADqpZ_CDUCbEPjdF-WyHxs13nIROyrYZh2j7ZK-jVEFEVQk0I_Iur1ZmhkfW2_cNCU3wIK99EHjeIX41mBJPe08-GohVlnPVbTzOTkWdnGmhHHIwsWxlRJDBn426I7dB-y8SFrg7BJVw7OejXbTYzBqLELaGn8Q88wgWNsMXoLuWXYRAwSce',
-    summary: 'Anti-inflammatory powerhouse loaded with Omega-3 fatty acids and anthocyanins from tart cherries to drastically cut muscle soreness.',
-    proTip: 'Tart cherry juice has been clinically proven to reduce DOMS and lower systemic inflammation post-exercise.',
-    ingredients: [
-      '6 oz wild Atlantic salmon fillet',
-      '2 tbsp pure tart cherry concentrate (or dried tart cherries)',
-      '1 cup cooked tricolor quinoa or jasmine rice',
-      '1 bunch roasted asparagus spears with lemon',
-      '1 tbsp extra virgin olive oil',
-      'Coarse sea salt & cracked black pepper to taste',
-    ],
-    steps: [
-      'Pat salmon fillet dry and season both sides generously with sea salt and cracked black pepper.',
-      'Heat olive oil in a skillet over medium-high heat. Sear salmon skin-side down for 4 minutes, flip and cook for 3 minutes.',
-      'In a small saucepot, warm the tart cherry concentrate with a splash of balsamic vinegar until it thickens into a glaze.',
-      'Plate the salmon alongside fluffy quinoa and asparagus, then drizzle the tart cherry reduction over the top.',
-    ],
-  },
-  {
     id: 'quinoa',
     title: 'Citrus Quinoa & Feta Electrolyte Salad',
     shortTitle: 'Citrus Quinoa',
     tag: 'Hydration',
     tagColor: '#00628d',
+    isVeg: true,
+    diet: 'veg',
+    dietLabel: 'Veg',
     prepTime: '12m',
     difficulty: 'Easy',
     calories: 410,
@@ -111,6 +88,9 @@ const RECIPES_DATA = [
     shortTitle: 'Beet & Berry',
     tag: 'Pre-Race',
     tagColor: '#c026d3',
+    isVeg: true,
+    diet: 'veg',
+    dietLabel: 'Veg',
     prepTime: '5m',
     difficulty: 'Easy',
     calories: 340,
@@ -123,7 +103,7 @@ const RECIPES_DATA = [
     ingredients: [
       '1/2 cup roasted beetroot chunks (or 1 scoop beet root powder)',
       '1 cup frozen organic raspberries & strawberries',
-      '1 scoop vanilla whey or plant protein isolate',
+      '1 scoop vanilla plant or whey protein isolate',
       '1.5 cups pure coconut water',
       '1/2 squeeze fresh lemon juice',
     ],
@@ -135,11 +115,146 @@ const RECIPES_DATA = [
     ],
   },
   {
+    id: 'turmeric',
+    title: 'Golden Turmeric Sleep Chia Pudding',
+    shortTitle: 'Golden Chia',
+    tag: 'Night Sleep',
+    tagColor: '#d97706',
+    isVeg: true,
+    diet: 'veg',
+    dietLabel: 'Veg',
+    prepTime: '10m',
+    difficulty: 'Easy',
+    calories: 290,
+    carbs: 38,
+    protein: 12,
+    fats: 14,
+    image: 'https://images.unsplash.com/photo-1488477181946-6428a0291777?w=400&auto=format&fit=crop&q=80',
+    summary: 'Curcumin-infused nighttime treat that suppresses systemic inflammation, settles digestion, and promotes deep slow-wave restorative sleep.',
+    proTip: 'Piperine (black pepper) boosts curcumin absorption by 2000%, maximizing cellular recovery while you sleep.',
+    ingredients: [
+      '3 tbsp organic chia seeds',
+      '1 cup warm unsweetened cashew or almond milk',
+      '1/2 tsp ground turmeric & pinch of black pepper',
+      '1/4 tsp ground ginger & cinnamon',
+      '1 tbsp pure amber maple syrup',
+      '1 tbsp toasted coconut flakes',
+    ],
+    steps: [
+      'In a mason jar, whisk together chia seeds, warm milk, turmeric, cinnamon, ginger, black pepper, and maple syrup.',
+      'Let sit for 10 minutes, stir once more to prevent clumping, then chill in fridge for at least 2 hours.',
+      'Top with toasted coconut flakes before enjoying 60 minutes prior to bedtime.',
+    ],
+  },
+  {
+    id: 'tofu_soba',
+    title: 'Crispy Sesame Tofu & Edamame Soba Bowl',
+    shortTitle: 'Tofu Soba Bowl',
+    tag: 'Plant Power',
+    tagColor: '#059669',
+    isVeg: true,
+    diet: 'veg',
+    dietLabel: 'Veg',
+    prepTime: '18m',
+    difficulty: 'Medium',
+    calories: 530,
+    carbs: 72,
+    protein: 32,
+    fats: 12,
+    image: 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=400&auto=format&fit=crop&q=80',
+    summary: 'Fast-absorbing plant amino acid profile with 100% buckwheat slow carbs and anti-inflammatory ginger tamari glaze.',
+    proTip: 'Soba noodles have a low glycemic index and provide rutin to protect capillaries during high-volume endurance weeks.',
+    ingredients: [
+      '1 bundle (80g) 100% Japanese buckwheat soba noodles',
+      '6 oz organic extra-firm tofu, cubed & pan-crisped',
+      '1/2 cup shelled organic edamame',
+      '1 cup shredded purple cabbage & grated carrot',
+      '1 tbsp toasted sesame oil & low-sodium tamari',
+      '1 tsp freshly grated ginger & toasted white sesame seeds',
+    ],
+    steps: [
+      'Boil soba noodles for 4 minutes, drain and rinse thoroughly in cold water to stop cooking.',
+      'Pan-sear cubed tofu in sesame oil over medium-high heat until golden and crispy on all sides (6-7 mins).',
+      'Toss noodles with tamari, ginger, and sesame oil.',
+      'Assemble bowl with cold soba, crispy tofu, edamame, and crunchy shredded cabbage. Garnish with sesame seeds.',
+    ],
+  },
+  {
+    id: 'lentil_dahl',
+    title: 'Golden Sweet Potato & Red Lentil Dahl',
+    shortTitle: 'Lentil Dahl Bowl',
+    tag: 'Deep Fuel',
+    tagColor: '#b45309',
+    isVeg: true,
+    diet: 'veg',
+    dietLabel: 'Veg',
+    prepTime: '22m',
+    difficulty: 'Easy',
+    calories: 510,
+    carbs: 84,
+    protein: 24,
+    fats: 9,
+    image: 'https://images.unsplash.com/photo-1585937421612-70a008356fbe?w=400&auto=format&fit=crop&q=80',
+    summary: 'Rich in plant iron, bioavailable folate, and sustained complex starches for overnight glycogen replenishment.',
+    proTip: 'Red split lentils cook quickly and provide sustained BCAAs without gastric heaviness before long-distance runs.',
+    ingredients: [
+      '3/4 cup red split lentils (rinsed)',
+      '1 medium roasted sweet potato, diced',
+      '1/2 cup light coconut milk & 1.5 cups vegetable broth',
+      '1 cup fresh baby spinach leaves',
+      '1 tsp cumin, coriander, ground turmeric & mustard seeds',
+      '3/4 cup steamed brown basmati rice',
+    ],
+    steps: [
+      'Simmer red lentils and diced sweet potato in broth and coconut milk with spices for 15 minutes until creamy.',
+      'Fold in fresh baby spinach during the last 2 minutes until wilted.',
+      'Serve warm over a bed of steamed brown basmati rice with a squeeze of fresh lime juice.',
+    ],
+  },
+
+  // --- 6 NON-VEGETARIAN RECIPES ---
+  {
+    id: 'salmon',
+    title: 'Pan-Seared Salmon & Tart Cherry',
+    shortTitle: 'Salmon & Cherry',
+    tag: 'Recovery',
+    tagColor: '#00685f',
+    isVeg: false,
+    diet: 'non_veg',
+    dietLabel: 'Non-Veg',
+    prepTime: '20m',
+    difficulty: 'Medium',
+    calories: 610,
+    carbs: 18,
+    protein: 42,
+    fats: 22,
+    image: 'https://lh3.googleusercontent.com/aida-public/AB6AXuCBV5x0AkDGXi5kbUCDQ8HtHxM-7JzIfX7l0SGZwURqR0xrAKEGIZ9AoBFziN4axT0RADqpZ_CDUCbEPjdF-WyHxs13nIROyrYZh2j7ZK-jVEFEVQk0I_Iur1ZmhkfW2_cNCU3wIK99EHjeIX41mBJPe08-GohVlnPVbTzOTkWdnGmhHHIwsWxlRJDBn426I7dB-y8SFrg7BJVw7OejXbTYzBqLELaGn8Q88wgWNsMXoLuWXYRAwSce',
+    summary: 'Anti-inflammatory powerhouse loaded with Omega-3 fatty acids and anthocyanins from tart cherries to drastically cut muscle soreness.',
+    proTip: 'Tart cherry juice has been clinically proven to reduce DOMS and lower systemic inflammation post-exercise.',
+    ingredients: [
+      '6 oz wild Atlantic salmon fillet',
+      '2 tbsp pure tart cherry concentrate (or dried tart cherries)',
+      '1 cup cooked tricolor quinoa or jasmine rice',
+      '1 bunch roasted asparagus spears with lemon',
+      '1 tbsp extra virgin olive oil',
+      'Coarse sea salt & cracked black pepper to taste',
+    ],
+    steps: [
+      'Pat salmon fillet dry and season both sides generously with sea salt and cracked black pepper.',
+      'Heat olive oil in a skillet over medium-high heat. Sear salmon skin-side down for 4 minutes, flip and cook for 3 minutes.',
+      'In a small saucepot, warm the tart cherry concentrate with a splash of balsamic vinegar until it thickens into a glaze.',
+      'Plate the salmon alongside fluffy quinoa and asparagus, then drizzle the tart cherry reduction over the top.',
+    ],
+  },
+  {
     id: 'steak',
     title: 'Grass-Fed Sirloin & Sweet Potato Mash',
     shortTitle: 'Sirloin & Mash',
     tag: 'Deep Repair',
     tagColor: '#ea580c',
+    isVeg: false,
+    diet: 'non_veg',
+    dietLabel: 'Non-Veg',
     prepTime: '25m',
     difficulty: 'Medium',
     calories: 680,
@@ -164,32 +279,135 @@ const RECIPES_DATA = [
     ],
   },
   {
-    id: 'turmeric',
-    title: 'Golden Turmeric Sleep Chia Pudding',
-    shortTitle: 'Golden Chia',
-    tag: 'Night Sleep',
-    tagColor: '#d97706',
-    prepTime: '10m',
+    id: 'chicken_couscous',
+    title: 'Lemon Herb Grilled Chicken & Pearl Couscous',
+    shortTitle: 'Chicken Couscous',
+    tag: 'Lean Muscle',
+    tagColor: '#0284c7',
+    isVeg: false,
+    diet: 'non_veg',
+    dietLabel: 'Non-Veg',
+    prepTime: '20m',
     difficulty: 'Easy',
-    calories: 290,
-    carbs: 38,
-    protein: 12,
-    fats: 14,
-    image: 'https://images.unsplash.com/photo-1488477181946-6428a0291777?w=400&auto=format&fit=crop&q=80',
-    summary: 'Curcumin-infused nighttime treat that suppresses systemic inflammation, settles digestion, and promotes deep slow-wave restorative sleep.',
-    proTip: 'Piperine (black pepper) boosts curcumin absorption by 2000%, maximizing cellular recovery while you sleep.',
+    calories: 540,
+    carbs: 64,
+    protein: 46,
+    fats: 11,
+    image: 'https://images.unsplash.com/photo-1532550907401-a500c9a57435?w=400&auto=format&fit=crop&q=80',
+    summary: 'Ultra-lean high biological value protein combined with light complex grains for rapid midday muscle synthesis.',
+    proTip: 'High leucine content in chicken triggers mTOR pathway activation within 45 minutes of post-training consumption.',
     ingredients: [
-      '3 tbsp organic chia seeds',
-      '1 cup warm unsweetened cashew or almond milk',
-      '1/2 tsp ground turmeric & pinch of black pepper',
-      '1/4 tsp ground ginger & cinnamon',
-      '1 tbsp pure amber maple syrup',
-      '1 tbsp toasted coconut flakes',
+      '6 oz organic grilled chicken breast (sliced)',
+      '1 cup cooked Israeli pearl couscous',
+      '1/2 cup halved sweet cherry tomatoes & English cucumber',
+      '2 tbsp pitted Kalamata olives',
+      '1 tbsp extra virgin olive oil & lemon juice dressing',
+      'Fresh oregano, parsley & cracked black pepper',
     ],
     steps: [
-      'In a mason jar, whisk together chia seeds, warm milk, turmeric, cinnamon, ginger, black pepper, and maple syrup.',
-      'Let sit for 10 minutes, stir once more to prevent clumping, then chill in fridge for at least 2 hours.',
-      'Top with toasted coconut flakes before enjoying 60 minutes prior to bedtime.',
+      'Season chicken breast with lemon zest, dried oregano, salt, and olive oil. Grill for 6 minutes per side until 165°F.',
+      'Cook pearl couscous in vegetable broth for 10 minutes until tender.',
+      'Fold diced tomatoes, cucumber, olives, and herbs into the warm couscous.',
+      'Top with sliced grilled chicken breast and a drizzle of lemon-herb dressing.',
+    ],
+  },
+  {
+    id: 'turkey_boat',
+    title: 'Smoked Turkey & Avocado Sweet Potato Boat',
+    shortTitle: 'Turkey Sweet Potato',
+    tag: 'Post-Workout',
+    tagColor: '#d97706',
+    isVeg: false,
+    diet: 'non_veg',
+    dietLabel: 'Non-Veg',
+    prepTime: '15m',
+    difficulty: 'Easy',
+    calories: 490,
+    carbs: 52,
+    protein: 38,
+    fats: 15,
+    image: 'https://images.unsplash.com/photo-1589302168068-964664d93dc0?w=400&auto=format&fit=crop&q=80',
+    summary: 'Tryptophan-rich turkey combined with potassium-dense avocado and sweet potato to prevent post-workout cramping.',
+    proTip: 'Potassium from sweet potato and monounsaturated fats stabilize cellular electrolyte balances faster than sports drinks alone.',
+    ingredients: [
+      '5 oz lean smoked or roasted turkey breast, diced',
+      '1 large roasted baked sweet potato (split open)',
+      '1/2 ripe Hass avocado, sliced',
+      '1/4 cup diced sweet red bell pepper & sweet corn',
+      '1 tbsp Greek yogurt lime-cilantro crema',
+      'Smoked paprika & pink sea salt',
+    ],
+    steps: [
+      'Roast whole sweet potato at 400°F (200°C) until caramelized and fork tender; slice lengthwise down the center.',
+      'Lightly warm the diced turkey breast with a pinch of smoked paprika and cumin.',
+      'Stuff the sweet potato boat with warm turkey, sweet peppers, and corn.',
+      'Top with sliced avocado and drizzle with lime-cilantro yogurt crema.',
+    ],
+  },
+  {
+    id: 'tuna_bowl',
+    title: 'Seared Yellowfin Ahi Tuna & Mango Rice Bowl',
+    shortTitle: 'Seared Ahi Tuna',
+    tag: 'Peak Fuel',
+    tagColor: '#dc2626',
+    isVeg: false,
+    diet: 'non_veg',
+    dietLabel: 'Non-Veg',
+    prepTime: '15m',
+    difficulty: 'Medium',
+    calories: 520,
+    carbs: 68,
+    protein: 44,
+    fats: 8,
+    image: 'https://images.unsplash.com/photo-1512058564366-18510be2db19?w=400&auto=format&fit=crop&q=80',
+    summary: 'Lean oceanic protein loaded with selenium and magnesium paired with fast glycogen-replenishing mango fructose.',
+    proTip: 'Fructose from mango bypasses standard SGLT1 gut transporters for accelerated hepatic glycogen restoration.',
+    ingredients: [
+      '6 oz sushi-grade Yellowfin Ahi tuna steak',
+      '1 cup steamed jasmine rice or coconut rice',
+      '1/2 cup fresh diced ripe mango',
+      '1/3 cup steamed edamame & pickled ginger',
+      '1 tbsp low-sodium tamari soy & ponzu sauce',
+      '1 tsp black and white sesame seeds for crusting',
+    ],
+    steps: [
+      'Coat tuna steak in sesame seeds, sea salt, and black pepper.',
+      'Sear in a smoking hot skillet with 1 tsp sesame oil for exactly 60 seconds per side (rare center).',
+      'Slice tuna into clean 1/4-inch sashimi strips.',
+      'Arrange over warm jasmine rice alongside diced mango, edamame, and pickled ginger; drizzle with ponzu.',
+    ],
+  },
+  {
+    id: 'eggs_sourdough',
+    title: 'Poached Organic Eggs & Wild Smoked Salmon Toast',
+    shortTitle: 'Salmon & Eggs Toast',
+    tag: 'Morning Power',
+    tagColor: '#4f46e5',
+    isVeg: false,
+    diet: 'non_veg',
+    dietLabel: 'Non-Veg',
+    prepTime: '12m',
+    difficulty: 'Easy',
+    calories: 470,
+    carbs: 42,
+    protein: 34,
+    fats: 19,
+    image: 'https://images.unsplash.com/photo-1525351484163-7529414344d8?w=400&auto=format&fit=crop&q=80',
+    summary: 'Choline-rich egg yolks support acetylcholine neurotransmission and neuromuscular firing efficiency during tough endurance intervals.',
+    proTip: 'Choline from whole organic eggs accelerates cognitive motor-unit recruitment for precision pacing.',
+    ingredients: [
+      '2 pasture-raised organic poached eggs',
+      '3 oz wild cold-smoked Atlantic salmon',
+      '2 thick slices artisan fermented sourdough bread (toasted)',
+      '1/2 mashed Haas avocado with lemon',
+      '1 tbsp capers & fresh microgreens',
+      'Cracked black pepper & sea salt flakes',
+    ],
+    steps: [
+      'Toast thick slices of sourdough bread until golden and crisp.',
+      'Spread mashed avocado with a squeeze of fresh lemon juice across both slices.',
+      'Layer wild smoked salmon ribbons over the avocado spread.',
+      'Gently top with soft poached eggs, capers, microgreens, and a sprinkle of coarse sea salt flakes.',
     ],
   },
 ];
@@ -203,7 +421,7 @@ export default function LongevityDashboardScreen({ currentUser, userProfile, onO
   const [protein, setProtein] = useState(110);
   const [fats, setFats] = useState(42);
 
-  const [showAllRecipes, setShowAllRecipes] = useState(false);
+  const [dietFilter, setDietFilter] = useState('ALL'); // 'ALL' | 'VEG' | 'NON_VEG'
   const [selectedRecipe, setSelectedRecipe] = useState(null);
 
   const handleAddWater = () => {
@@ -217,7 +435,14 @@ export default function LongevityDashboardScreen({ currentUser, userProfile, onO
   const calPercent = Math.min(Math.round((calories / calorieTarget) * 100), 100);
   const calLeft = Math.max(calorieTarget - calories, 0);
 
-  const displayedRecipes = showAllRecipes ? RECIPES_DATA : RECIPES_DATA.slice(0, 2);
+  const vegCount = RECIPES_DATA.filter((r) => r.isVeg).length;
+  const nonVegCount = RECIPES_DATA.filter((r) => !r.isVeg).length;
+
+  const displayedRecipes = RECIPES_DATA.filter((item) => {
+    if (dietFilter === 'VEG') return item.isVeg;
+    if (dietFilter === 'NON_VEG') return !item.isVeg;
+    return true;
+  });
 
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
@@ -397,17 +622,64 @@ export default function LongevityDashboardScreen({ currentUser, userProfile, onO
           <View style={styles.sectionHeadingRow}>
             <Text style={styles.sectionHeading}>Performance Recipes</Text>
             <View style={styles.recipeCountBadge}>
-              <Text style={styles.recipeCountText}>{RECIPES_DATA.length} Total</Text>
+              <Text style={styles.recipeCountText}>{displayedRecipes.length} shown</Text>
             </View>
           </View>
+        </View>
+
+        {/* Veg / Non-Veg Diet Filter Bar */}
+        <View style={styles.dietFilterRow}>
+          <TouchableOpacity
+            activeOpacity={0.75}
+            onPress={() => setDietFilter('ALL')}
+            style={[
+              styles.dietFilterBtn,
+              dietFilter === 'ALL' && styles.dietFilterBtnActiveAll,
+            ]}
+          >
+            <Text
+              style={[
+                styles.dietFilterText,
+                dietFilter === 'ALL' && styles.dietFilterTextActive,
+              ]}
+            >
+              All ({RECIPES_DATA.length})
+            </Text>
+          </TouchableOpacity>
 
           <TouchableOpacity
-            activeOpacity={0.7}
-            onPress={() => setShowAllRecipes(!showAllRecipes)}
-            style={styles.seeAllBtn}
+            activeOpacity={0.75}
+            onPress={() => setDietFilter('VEG')}
+            style={[
+              styles.dietFilterBtn,
+              dietFilter === 'VEG' && styles.dietFilterBtnActiveVeg,
+            ]}
           >
-            <Text style={styles.seeAllLink}>
-              {showAllRecipes ? 'Show Less ↑' : 'See All (6) →'}
+            <Text
+              style={[
+                styles.dietFilterText,
+                dietFilter === 'VEG' && styles.dietFilterTextActive,
+              ]}
+            >
+              🌱 Veg ({vegCount})
+            </Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            activeOpacity={0.75}
+            onPress={() => setDietFilter('NON_VEG')}
+            style={[
+              styles.dietFilterBtn,
+              dietFilter === 'NON_VEG' && styles.dietFilterBtnActiveNonVeg,
+            ]}
+          >
+            <Text
+              style={[
+                styles.dietFilterText,
+                dietFilter === 'NON_VEG' && styles.dietFilterTextActive,
+              ]}
+            >
+              🍗 Non-Veg ({nonVegCount})
             </Text>
           </TouchableOpacity>
         </View>
@@ -429,6 +701,11 @@ export default function LongevityDashboardScreen({ currentUser, userProfile, onO
                 />
                 <View style={[styles.recipeTagBadge, { backgroundColor: item.tagColor }]}>
                   <Text style={styles.tagText}>{item.tag}</Text>
+                </View>
+                <View style={[styles.dietBadge, item.isVeg ? styles.vegBadgeBg : styles.nonVegBadgeBg]}>
+                  <Text style={styles.dietBadgeText}>
+                    {item.isVeg ? '🌱 Veg' : '🍗 Non-Veg'}
+                  </Text>
                 </View>
                 <View style={styles.timeTag}>
                   <Text style={styles.timeTagText}>{item.prepTime}</Text>
@@ -485,6 +762,11 @@ export default function LongevityDashboardScreen({ currentUser, userProfile, onO
                 />
                 <View style={[styles.modalTagBadge, { backgroundColor: selectedRecipe.tagColor }]}>
                   <Text style={styles.modalTagText}>{selectedRecipe.tag}</Text>
+                </View>
+                <View style={[styles.modalDietBadge, selectedRecipe.isVeg ? styles.vegBadgeBg : styles.nonVegBadgeBg]}>
+                  <Text style={styles.modalDietText}>
+                    {selectedRecipe.isVeg ? '🌱 Vegetarian' : '🍗 Non-Vegetarian'}
+                  </Text>
                 </View>
               </View>
 
@@ -811,6 +1093,40 @@ const styles = StyleSheet.create({
     fontWeight: '800',
     color: '#00685f',
   },
+  dietFilterRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    marginVertical: 2,
+  },
+  dietFilterBtn: {
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 20,
+    backgroundColor: '#f1f5f9',
+    borderWidth: 1,
+    borderColor: '#e2e8f0',
+  },
+  dietFilterBtnActiveAll: {
+    backgroundColor: '#131b2e',
+    borderColor: '#131b2e',
+  },
+  dietFilterBtnActiveVeg: {
+    backgroundColor: '#00685f',
+    borderColor: '#00685f',
+  },
+  dietFilterBtnActiveNonVeg: {
+    backgroundColor: '#ea580c',
+    borderColor: '#ea580c',
+  },
+  dietFilterText: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: '#64748b',
+  },
+  dietFilterTextActive: {
+    color: '#ffffff',
+  },
   seeAllBtn: {
     paddingVertical: 4,
     paddingHorizontal: 6,
@@ -863,6 +1179,25 @@ const styles = StyleSheet.create({
     paddingHorizontal: 7,
     paddingVertical: 2,
     borderRadius: 8,
+  },
+  dietBadge: {
+    position: 'absolute',
+    bottom: 6,
+    left: 6,
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 6,
+  },
+  vegBadgeBg: {
+    backgroundColor: '#00685f',
+  },
+  nonVegBadgeBg: {
+    backgroundColor: '#ea580c',
+  },
+  dietBadgeText: {
+    fontSize: 9,
+    fontWeight: '800',
+    color: '#ffffff',
   },
   tagText: {
     fontSize: 9,
@@ -973,7 +1308,20 @@ const styles = StyleSheet.create({
     paddingVertical: 4,
     borderRadius: 12,
   },
+  modalDietBadge: {
+    position: 'absolute',
+    bottom: 12,
+    left: 110,
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 12,
+  },
   modalTagText: {
+    color: '#ffffff',
+    fontSize: 11,
+    fontWeight: '900',
+  },
+  modalDietText: {
     color: '#ffffff',
     fontSize: 11,
     fontWeight: '900',
