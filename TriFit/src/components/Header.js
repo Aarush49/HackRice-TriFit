@@ -3,7 +3,7 @@ import { View, Text, StyleSheet, Image, TouchableOpacity } from 'react-native';
 import { MaterialCommunityIcons, Ionicons } from '@expo/vector-icons';
 import { COLORS } from '../theme';
 
-export default function Header({ onOpenCoach, onOpenAuth, currentUser, streakDays = 14, xpPoints = 420 }) {
+export default function Header({ onOpenProfile, onOpenCoach, onOpenAuth, currentUser, streakDays = 14, xpPoints = 420 }) {
   return (
     <View style={styles.container}>
       {/* Brand Title */}
@@ -31,7 +31,7 @@ export default function Header({ onOpenCoach, onOpenAuth, currentUser, streakDay
         {/* Profile Avatar / Auth Button */}
         <TouchableOpacity
           style={styles.profileBtn}
-          onPress={currentUser ? onOpenCoach : onOpenAuth}
+          onPress={currentUser ? onOpenProfile : onOpenAuth}
           activeOpacity={0.8}
         >
           <Image
