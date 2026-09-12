@@ -8,6 +8,9 @@ import {
   Image,
   Animated,
   ActivityIndicator,
+  Modal,
+  TextInput,
+  Platform,
 } from 'react-native';
 import { MaterialCommunityIcons, Ionicons, Feather, FontAwesome5 } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -17,8 +20,57 @@ export default function TrainingScheduleScreen({ currentUser, userProfile, onSta
   const [viewMode, setViewMode] = useState('week'); // 'week' | 'month'
   const [selectedDay, setSelectedDay] = useState(12); // Wed 12 is today
   const [adaptedPlan, setAdaptedPlan] = useState(null);
-  const [targetRace, setTargetRace] = useState(userProfile?.race_type || 'Hyrox Open / Pro');
-  const [targetDate, setTargetDate] = useState(userProfile?.race_date || 'November 15, 2025');
+
+  const [isAdjustModalOpen, setIsAdjustModalOpen] = useState(false);
+  const [editEventText, setEditEventText] = useState('');
+  const [editDateText, setEditDateText] = useState('');
+
+  const formatDateString = (dateStr) => {
+    if (!dateStr) return 'November 15, 2026';
+    if (dateStr.includes(',')) return dateStr;
+    const parts = dateStr.split('-');
+    if (parts.length === 3) {
+      const year = parts[0];
+      const monthIdx = parseInt(parts[1], 10) - 1;
+      const day = parseInt(parts[2], 10);
+      const monthNames = [
+        'January', 'February', 'March', 'April', 'May', 'June',
+        'July', 'August', 'September', 'October', 'November', 'December'
+      ];
+      if (monthNames[monthIdx]) {
+        return `${monthNames[monthIdx]} ${day}, ${year}`;
+      }
+    }
+    return dateStr;
+  };
+
+  const [targetRace, setTargetRace] = useState(userProfile?.race_type || userProfile?.target_event || 'Hyrox Open / Pro');
+  const [targetDate, setTargetDate] = useState(formatDateString(userProfile?.race_date || userProfile?.target_date));
+
+  const handleOpenAdjustModal = () => {
+    setEditEventText(targetRace);
+    setEditDateText(targetDate);
+    setIsAdjustModalOpen(true);
+  };
+
+  const handleSaveAdjust = () => {
+    if (editEventText.trim()) {
+      setTargetRace(editEventText.trim());
+    }
+    if (editDateText.trim()) {
+      setTargetDate(formatDateString(editDateText.trim()));
+    }
+    setIsAdjustModalOpen(false);
+  };
+
+  React.useEffect(() => {
+    if (userProfile?.race_type || userProfile?.target_event) {
+      setTargetRace(userProfile.race_type || userProfile.target_event);
+    }
+    if (userProfile?.race_date || userProfile?.target_date) {
+      setTargetDate(formatDateString(userProfile.race_date || userProfile.target_date));
+    }
+  }, [userProfile]);
 
   const [aiPlan, setAiPlan] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -52,8 +104,6 @@ export default function TrainingScheduleScreen({ currentUser, userProfile, onSta
   }, [currentUser]);
 
   const days = [
-    { day: 'M', date: 10, status: 'completed', icon: 'check', iconType: 'ion', bg: '#f1f5f9', iconColor: '#ffffff', iconBg: COLORS.primary },
-    { day: 'T', date: 11, status: 'completed', icon: 'check', iconType: 'ion', bg: '#f1f5f9', iconColor: '#ffffff', iconBg: COLORS.primary },
     { day: 'W', date: 12, status: 'today', icon: 'run', iconType: 'mc', bg: COLORS.primary, iconColor: COLORS.primary, iconBg: '#ffffff', isToday: true },
     { day: 'T', date: 13, status: 'planned', icon: 'lightning-bolt', iconType: 'mc', bg: '#ffffff', iconColor: '#ea580c', iconBg: '#ffdbca' },
     { day: 'F', date: 14, status: 'rest', icon: 'spa', iconType: 'mc', bg: '#ffffff', iconColor: '#64748b', iconBg: '#e2e8f0' },
@@ -201,11 +251,7 @@ export default function TrainingScheduleScreen({ currentUser, userProfile, onSta
           </View>
           <TouchableOpacity
             style={styles.adjustBtn}
-            onPress={() =>
-              setTargetDate((prev) =>
-                prev.includes('November') ? 'December 10, 2025' : 'November 15, 2025'
-              )
-            }
+            onPress={handleOpenAdjustModal}
             activeOpacity={0.8}
           >
             <Text style={styles.adjustBtnText}>Adjust</Text>
@@ -219,7 +265,7 @@ export default function TrainingScheduleScreen({ currentUser, userProfile, onSta
           </View>
           <View style={styles.rampTextWrap}>
             <View style={styles.rampHeaderRow}>
-              <Text style={styles.rampWeeks}>18 Weeks Away</Text>
+              <Text style={styles.rampWeeks}>{targetDate}</Text>
               <View style={styles.dotSeparator} />
               <Text style={styles.rampLabel}>Optimal Ramp</Text>
             </View>
@@ -235,7 +281,7 @@ export default function TrainingScheduleScreen({ currentUser, userProfile, onSta
         <View>
           <View style={styles.monthBadgeRow}>
             <Ionicons name="calendar-outline" size={13} color={COLORS.primary} />
-            <Text style={styles.monthBadgeText}>NOVEMBER 2025</Text>
+            <Text style={styles.monthBadgeText}>NOVEMBER 2026</Text>
           </View>
           <Text style={styles.screenTitle}>Training Schedule</Text>
         </View>
@@ -270,7 +316,7 @@ export default function TrainingScheduleScreen({ currentUser, userProfile, onSta
           <View style={styles.calendarCardHeader}>
             <View style={styles.weekThemeRow}>
               <MaterialCommunityIcons name="dumbbell" size={18} color={COLORS.primary} />
-              <Text style={styles.weekThemeText}>Week 8 of 18 • Aerobic Base</Text>
+              <Text style={styles.weekThemeText}>Week 1 • Aerobic Base</Text>
             </View>
             <Text style={styles.weekDateRange}>Nov 10 – Nov 16</Text>
           </View>
@@ -321,7 +367,7 @@ export default function TrainingScheduleScreen({ currentUser, userProfile, onSta
         <View style={styles.monthCalendarCard}>
           <View style={styles.monthCalendarHeader}>
             <View style={styles.monthHeaderTitleWrap}>
-              <Text style={styles.monthNameTitle}>November 2025</Text>
+              <Text style={styles.monthNameTitle}>November 2026</Text>
               <Text style={styles.monthSubTitle}>18-Week Periodized Plan</Text>
             </View>
             <View style={styles.monthStatBadge}>
@@ -598,11 +644,155 @@ export default function TrainingScheduleScreen({ currentUser, userProfile, onSta
           </View>
         </View>
       </View>
+
+      {/* Adjust Target Event & Date Modal */}
+      <Modal visible={isAdjustModalOpen} transparent animationType="fade" onRequestClose={() => setIsAdjustModalOpen(false)}>
+        <View style={styles.modalOverlay}>
+          <View style={styles.adjustModalCard}>
+            <View style={styles.modalHeader}>
+              <Text style={styles.modalTitle}>Adjust Target Event</Text>
+              <TouchableOpacity onPress={() => setIsAdjustModalOpen(false)}>
+                <Ionicons name="close" size={24} color="#64748b" />
+              </TouchableOpacity>
+            </View>
+
+            <Text style={styles.modalInputLabel}>Target Event Name</Text>
+            <TextInput
+              style={styles.modalInput}
+              value={editEventText}
+              onChangeText={setEditEventText}
+              placeholder="e.g. Hyrox Open, Sprint Triathlon"
+              placeholderTextColor="#94a3b8"
+            />
+
+            <Text style={styles.modalInputLabel}>Target Race Date</Text>
+            {Platform.OS === 'web' ? (
+              <input
+                type="date"
+                style={{
+                  width: '100%',
+                  height: 44,
+                  padding: '0 12px',
+                  borderRadius: 12,
+                  border: '1px solid #cbd5e1',
+                  backgroundColor: '#f8fafc',
+                  fontSize: 15,
+                  color: '#0f172a',
+                  marginBottom: 20,
+                  outline: 'none',
+                  boxSizing: 'border-box'
+                }}
+                value={editDateText.includes('-') ? editDateText : ''}
+                onChange={(e) => setEditDateText(e.target.value)}
+              />
+            ) : (
+              <TextInput
+                style={styles.modalInput}
+                value={editDateText}
+                onChangeText={setEditDateText}
+                placeholder="e.g. 2026-11-15 or Nov 15, 2026"
+                placeholderTextColor="#94a3b8"
+              />
+            )}
+
+            <View style={styles.modalBtnRow}>
+              <TouchableOpacity
+                style={styles.modalCancelBtn}
+                onPress={() => setIsAdjustModalOpen(false)}
+              >
+                <Text style={styles.modalCancelBtnText}>Cancel</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.modalSaveBtn}
+                onPress={handleSaveAdjust}
+              >
+                <Text style={styles.modalSaveBtnText}>Save Event</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
     </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 20,
+  },
+  adjustModalCard: {
+    width: '100%',
+    maxWidth: 400,
+    backgroundColor: '#ffffff',
+    borderRadius: 20,
+    padding: 20,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.15,
+    shadowRadius: 12,
+    elevation: 5,
+  },
+  modalHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 16,
+  },
+  modalTitle: {
+    fontSize: 18,
+    fontWeight: '800',
+    color: '#0f172a',
+  },
+  modalInputLabel: {
+    fontSize: 13,
+    fontWeight: '700',
+    color: '#475569',
+    marginBottom: 6,
+    marginTop: 10,
+  },
+  modalInput: {
+    height: 44,
+    backgroundColor: '#f8fafc',
+    borderWidth: 1,
+    borderColor: '#cbd5e1',
+    borderRadius: 12,
+    paddingHorizontal: 12,
+    fontSize: 15,
+    color: '#0f172a',
+    marginBottom: 16,
+  },
+  modalBtnRow: {
+    flexDirection: 'row',
+    justifyContent: 'flex-end',
+    gap: 10,
+    marginTop: 20,
+  },
+  modalCancelBtn: {
+    paddingVertical: 10,
+    paddingHorizontal: 16,
+    borderRadius: 12,
+    backgroundColor: '#f1f5f9',
+  },
+  modalCancelBtnText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#64748b',
+  },
+  modalSaveBtn: {
+    paddingVertical: 10,
+    paddingHorizontal: 18,
+    borderRadius: 12,
+    backgroundColor: COLORS.primary,
+  },
+  modalSaveBtnText: {
+    fontSize: 14,
+    fontWeight: '700',
+    color: '#ffffff',
+  },
   container: {
     flex: 1,
     backgroundColor: '#faf8ff',

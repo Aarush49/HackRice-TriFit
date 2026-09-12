@@ -9,6 +9,7 @@ import {
   Modal,
   SafeAreaView,
   Platform,
+  TextInput,
 } from 'react-native';
 import Svg, { Circle } from 'react-native-svg';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
@@ -414,12 +415,69 @@ const RECIPES_DATA = [
 
 export default function LongevityDashboardScreen({ currentUser, userProfile, onOpenCoach, xp, setXp }) {
   // Dynamic Interactive States
-  const [waterAmount, setWaterAmount] = useState(2.4);
+  const [waterAmount, setWaterAmount] = useState(0);
   const [waterLogged, setWaterLogged] = useState(false);
-  const [calories, setCalories] = useState(1840);
-  const [carbs, setCarbs] = useState(232);
-  const [protein, setProtein] = useState(110);
-  const [fats, setFats] = useState(42);
+  const [calories, setCalories] = useState(0);
+  const [carbs, setCarbs] = useState(0);
+  const [protein, setProtein] = useState(0);
+  const [fats, setFats] = useState(0);
+  const [loggedMeals, setLoggedMeals] = useState([]);
+
+  const [isAddMealModalOpen, setIsAddMealModalOpen] = useState(false);
+  const [isCustomMealModalOpen, setIsCustomMealModalOpen] = useState(false);
+  const [addMealTab, setAddMealTab] = useState('app'); // 'app' | 'custom'
+  const [customName, setCustomName] = useState('');
+  const [customCals, setCustomCals] = useState('');
+  const [customCarbs, setCustomCarbs] = useState('');
+  const [customProtein, setCustomProtein] = useState('');
+  const [customFats, setCustomFats] = useState('');
+  const [customNotes, setCustomNotes] = useState('');
+  const [customDiet, setCustomDiet] = useState('veg'); // 'veg' | 'non_veg'
+
+  const handleLogMeal = (name, calNum, carbNum, protNum, fatNum) => {
+    const calsInt = parseInt(calNum, 10) || 0;
+    const carbsInt = parseInt(carbNum, 10) || 0;
+    const protInt = parseInt(protNum, 10) || 0;
+    const fatsInt = parseInt(fatNum, 10) || 0;
+
+    setCalories((prev) => prev + calsInt);
+    setCarbs((prev) => prev + carbsInt);
+    setProtein((prev) => prev + protInt);
+    setFats((prev) => prev + fatsInt);
+    setXp?.((prev) => prev + 25);
+
+    setLoggedMeals((prev) => [
+      {
+        id: Date.now().toString(),
+        name: name || 'Custom Meal',
+        calories: calsInt,
+        carbs: carbsInt,
+        protein: protInt,
+        fats: fatsInt,
+        time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+      },
+      ...prev,
+    ]);
+  };
+
+  const handleLogCustomMealSubmit = () => {
+    if (!customName.trim() && !customCals) return;
+    handleLogMeal(
+      customName.trim() || 'Custom Meal',
+      customCals,
+      customCarbs,
+      customProtein,
+      customFats
+    );
+    setCustomName('');
+    setCustomCals('');
+    setCustomCarbs('');
+    setCustomProtein('');
+    setCustomFats('');
+    setCustomNotes('');
+    setIsCustomMealModalOpen(false);
+    setIsAddMealModalOpen(false);
+  };
 
   const [dietFilter, setDietFilter] = useState('ALL'); // 'ALL' | 'VEG' | 'NON_VEG'
   const [selectedRecipe, setSelectedRecipe] = useState(null);
@@ -614,7 +672,44 @@ export default function LongevityDashboardScreen({ currentUser, userProfile, onO
             </View>
           </View>
         </View>
+
+        {/* Add Meal Action Button */}
+        <TouchableOpacity
+          style={styles.addMealActionBtn}
+          onPress={() => setIsAddMealModalOpen(true)}
+          activeOpacity={0.85}
+        >
+          <Ionicons name="add-circle" size={18} color="#ffffff" />
+          <Text style={styles.addMealActionBtnText}>+ Log Meal / Food</Text>
+        </TouchableOpacity>
       </View>
+
+      {/* Logged Meals List Card */}
+      {loggedMeals.length > 0 && (
+        <View style={styles.loggedMealsCard}>
+          <View style={styles.loggedMealsHeader}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+              <MaterialCommunityIcons name="silverware-fork-knife" size={18} color="#00685f" />
+              <Text style={styles.loggedMealsTitle}>Today's Logged Meals ({loggedMeals.length})</Text>
+            </View>
+          </View>
+          <View style={styles.loggedMealsList}>
+            {loggedMeals.map((meal) => (
+              <View key={meal.id} style={styles.loggedMealRow}>
+                <View style={styles.loggedMealLeft}>
+                  <Text style={styles.loggedMealName}>{meal.name}</Text>
+                  <Text style={styles.loggedMealSub}>
+                    {meal.time} • {meal.carbs}g C / {meal.protein}g P / {meal.fats}g F
+                  </Text>
+                </View>
+                <View style={styles.loggedMealCalBadge}>
+                  <Text style={styles.loggedMealCalText}>+{meal.calories} kcal</Text>
+                </View>
+              </View>
+            ))}
+          </View>
+        </View>
+      )}
 
       {/* 3. Performance Recipes Section */}
       <View style={styles.sectionWrap}>
@@ -687,6 +782,34 @@ export default function LongevityDashboardScreen({ currentUser, userProfile, onO
         <Text style={styles.tapTipText}>Tap any recipe card to view ingredients & cooking steps 📖</Text>
 
         <View style={styles.recipesGrid}>
+          {/* Custom Meal Recipe Card */}
+          <TouchableOpacity
+            style={styles.customRecipeCard}
+            onPress={() => setIsCustomMealModalOpen(true)}
+            activeOpacity={0.88}
+          >
+            <View style={styles.customRecipeImageWrap}>
+              <MaterialCommunityIcons name="plus-circle-outline" size={38} color="#00685f" />
+              <View style={[styles.recipeTagBadge, { backgroundColor: '#00685f' }]}>
+                <Text style={styles.tagText}>+ Custom</Text>
+              </View>
+              <View style={[styles.dietBadge, { backgroundColor: '#0284c7' }]}>
+                <Text style={styles.dietBadgeText}>✨ Any Macros</Text>
+              </View>
+            </View>
+
+            <Text style={styles.recipeTitle} numberOfLines={1}>
+              + Add Custom Meal
+            </Text>
+
+            <View style={styles.recipeMetaRow}>
+              <View style={styles.macroBadgeTeal}>
+                <Text style={styles.macroBadgeTealText}>Custom Fuel</Text>
+              </View>
+              <Text style={styles.recipeCalories}>Log Cals ✍️</Text>
+            </View>
+          </TouchableOpacity>
+
           {displayedRecipes.map((item) => (
             <TouchableOpacity
               key={item.id}
@@ -840,16 +963,530 @@ export default function LongevityDashboardScreen({ currentUser, userProfile, onO
                     ))}
                   </View>
                 </View>
+
+                {/* Log Recipe Button */}
+                <TouchableOpacity
+                  style={styles.logRecipeDetailBtn}
+                  onPress={() => {
+                    handleLogMeal(
+                      selectedRecipe.title,
+                      selectedRecipe.calories,
+                      selectedRecipe.carbs,
+                      selectedRecipe.protein,
+                      selectedRecipe.fats
+                    );
+                    setSelectedRecipe(null);
+                  }}
+                  activeOpacity={0.85}
+                >
+                  <Ionicons name="add-circle" size={20} color="#ffffff" />
+                  <Text style={styles.logRecipeDetailBtnText}>
+                    Log Recipe (+{selectedRecipe.calories} kcal)
+                  </Text>
+                </TouchableOpacity>
               </View>
             </ScrollView>
           </SafeAreaView>
         )}
+      </Modal>
+
+      {/* Full Recipe-Style Custom Meal Detail Modal */}
+      <Modal
+        visible={isCustomMealModalOpen}
+        animationType="slide"
+        transparent={false}
+        onRequestClose={() => setIsCustomMealModalOpen(false)}
+      >
+        <SafeAreaView style={styles.modalSafeArea}>
+          <View style={styles.modalHeader}>
+            <TouchableOpacity
+              style={styles.modalCloseBtn}
+              onPress={() => setIsCustomMealModalOpen(false)}
+              activeOpacity={0.7}
+            >
+              <Ionicons name="close" size={24} color="#131b2e" />
+            </TouchableOpacity>
+            <Text style={styles.modalHeaderTitle} numberOfLines={1}>
+              Custom Meal & Macro Log
+            </Text>
+            <View style={{ width: 40 }} />
+          </View>
+
+          <ScrollView contentContainerStyle={styles.modalScrollContent} showsVerticalScrollIndicator={false}>
+            {/* Hero Cover Container */}
+            <View style={styles.modalImageContainer}>
+              <Image
+                source={{ uri: 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=800&auto=format&fit=crop&q=80' }}
+                style={styles.modalHeroImage}
+              />
+              <View style={[styles.modalTagBadge, { backgroundColor: '#00685f' }]}>
+                <Text style={styles.modalTagText}>+ Custom Fuel Entry</Text>
+              </View>
+              <View style={[styles.modalDietBadge, customDiet === 'veg' ? styles.vegBadgeBg : styles.nonVegBadgeBg]}>
+                <TouchableOpacity
+                  onPress={() => setCustomDiet(customDiet === 'veg' ? 'non_veg' : 'veg')}
+                  activeOpacity={0.8}
+                >
+                  <Text style={styles.modalDietText}>
+                    {customDiet === 'veg' ? '🌱 Veg (Tap to toggle)' : '🍗 Non-Veg (Tap to toggle)'}
+                  </Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+
+            {/* Title & Timing Strip */}
+            <View style={styles.modalBodyGroup}>
+              <Text style={styles.customFieldHeading}>MEAL / DISH NAME</Text>
+              <TextInput
+                style={styles.customTitleInput}
+                placeholder="e.g. Avocado Toast & Poached Eggs..."
+                placeholderTextColor="#94a3b8"
+                value={customName}
+                onChangeText={setCustomName}
+              />
+              <Text style={styles.modalSummary}>
+                Enter your custom nutrition macros below. Coach Maya will track these towards your daily endurance targets.
+              </Text>
+
+              {/* Macro Nutrition Summary & Input Cards */}
+              <Text style={styles.customFieldHeading}>MACROS & CALORIES</Text>
+              <View style={styles.modalMacroRow}>
+                <View style={styles.modalMacroColInput}>
+                  <Text style={styles.modalMacroLabel}>KCAL</Text>
+                  <TextInput
+                    style={styles.macroInputField}
+                    placeholder="450"
+                    placeholderTextColor="#cbd5e1"
+                    keyboardType="numeric"
+                    value={customCals}
+                    onChangeText={setCustomCals}
+                  />
+                </View>
+                <View style={styles.modalMacroDivider} />
+                <View style={styles.modalMacroColInput}>
+                  <Text style={[styles.modalMacroLabel, { color: '#9d4300' }]}>CARBS (g)</Text>
+                  <TextInput
+                    style={[styles.macroInputField, { color: '#9d4300' }]}
+                    placeholder="50"
+                    placeholderTextColor="#cbd5e1"
+                    keyboardType="numeric"
+                    value={customCarbs}
+                    onChangeText={setCustomCarbs}
+                  />
+                </View>
+                <View style={styles.modalMacroDivider} />
+                <View style={styles.modalMacroColInput}>
+                  <Text style={[styles.modalMacroLabel, { color: '#00685f' }]}>PROTEIN (g)</Text>
+                  <TextInput
+                    style={[styles.macroInputField, { color: '#00685f' }]}
+                    placeholder="30"
+                    placeholderTextColor="#cbd5e1"
+                    keyboardType="numeric"
+                    value={customProtein}
+                    onChangeText={setCustomProtein}
+                  />
+                </View>
+                <View style={styles.modalMacroDivider} />
+                <View style={styles.modalMacroColInput}>
+                  <Text style={[styles.modalMacroLabel, { color: '#00628d' }]}>FATS (g)</Text>
+                  <TextInput
+                    style={[styles.macroInputField, { color: '#00628d' }]}
+                    placeholder="15"
+                    placeholderTextColor="#cbd5e1"
+                    keyboardType="numeric"
+                    value={customFats}
+                    onChangeText={setCustomFats}
+                  />
+                </View>
+              </View>
+
+              {/* Pro Fuel Coaching Tip */}
+              <View style={styles.coachTipCard}>
+                <Ionicons name="bulb" size={20} color="#f59e0b" />
+                <View style={styles.coachTipTextWrap}>
+                  <Text style={styles.coachTipTitle}>Coach Maya Live Fuel Tip</Text>
+                  <Text style={styles.coachTipText}>
+                    {customProtein && parseInt(customProtein, 10) >= 25
+                      ? '⚡ High protein detected! Excellent for triggering post-workout muscle protein synthesis (mTOR activation).'
+                      : customCarbs && parseInt(customCarbs, 10) >= 60
+                      ? '🚴 High carb loading detected! Ideal for filling glycogen stores 2-3 hours prior to long aerobic efforts.'
+                      : 'Customize your calories and protein to match your target endurance goals for today!'}
+                  </Text>
+                </View>
+              </View>
+
+              {/* Ingredients / Notes Section */}
+              <View style={styles.detailSectionWrap}>
+                <View style={styles.sectionIconTitleRow}>
+                  <MaterialCommunityIcons name="basket-outline" size={20} color="#00685f" />
+                  <Text style={styles.detailSectionTitle}>Ingredients / Recipe Notes (Optional)</Text>
+                </View>
+                <TextInput
+                  style={styles.customNotesInput}
+                  placeholder="e.g. 2 sourdough slices, 2 poached eggs, half avocado..."
+                  placeholderTextColor="#94a3b8"
+                  multiline
+                  numberOfLines={3}
+                  value={customNotes}
+                  onChangeText={setCustomNotes}
+                />
+              </View>
+
+              {/* Log Custom Recipe Button */}
+              <TouchableOpacity
+                style={styles.logRecipeDetailBtn}
+                onPress={handleLogCustomMealSubmit}
+                activeOpacity={0.85}
+              >
+                <Ionicons name="add-circle" size={20} color="#ffffff" />
+                <Text style={styles.logRecipeDetailBtnText}>
+                  Log Custom Meal (+{customCals || '0'} kcal)
+                </Text>
+              </TouchableOpacity>
+            </View>
+          </ScrollView>
+        </SafeAreaView>
+      </Modal>
+
+      {/* Add Meal / Custom Food Modal */}
+      <Modal visible={isAddMealModalOpen} transparent animationType="slide" onRequestClose={() => setIsAddMealModalOpen(false)}>
+        <SafeAreaView style={styles.addMealModalOverlay}>
+          <View style={styles.addMealModalCard}>
+            <View style={styles.addMealModalHeader}>
+              <Text style={styles.addMealModalTitle}>Log Meal & Calories</Text>
+              <TouchableOpacity onPress={() => setIsAddMealModalOpen(false)}>
+                <Ionicons name="close" size={24} color="#64748b" />
+              </TouchableOpacity>
+            </View>
+
+            {/* Tab Switcher: App Recipes vs Custom Meal */}
+            <View style={styles.addMealTabGroup}>
+              <TouchableOpacity
+                style={[styles.addMealTabBtn, addMealTab === 'app' && styles.addMealTabBtnActive]}
+                onPress={() => setAddMealTab('app')}
+              >
+                <Text style={[styles.addMealTabText, addMealTab === 'app' && styles.addMealTabTextActive]}>
+                  App Recipes
+                </Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.addMealTabBtn, addMealTab === 'custom' && styles.addMealTabBtnActive]}
+                onPress={() => setAddMealTab('custom')}
+              >
+                <Text style={[styles.addMealTabText, addMealTab === 'custom' && styles.addMealTabTextActive]}>
+                  + Custom Meal
+                </Text>
+              </TouchableOpacity>
+            </View>
+
+            {addMealTab === 'app' ? (
+              <ScrollView style={{ maxHeight: 400 }} showsVerticalScrollIndicator={false}>
+                {RECIPES_DATA.map((recipe) => (
+                  <View key={recipe.id} style={styles.appRecipeRow}>
+                    <Image source={{ uri: recipe.image }} style={styles.appRecipeThumb} />
+                    <View style={{ flex: 1 }}>
+                      <Text style={styles.appRecipeTitle}>{recipe.title}</Text>
+                      <Text style={styles.appRecipeSub}>
+                        {recipe.calories} kcal • {recipe.carbs}g C / {recipe.protein}g P / {recipe.fats}g F
+                      </Text>
+                    </View>
+                    <TouchableOpacity
+                      style={styles.logAppRecipeChipBtn}
+                      onPress={() => {
+                        handleLogMeal(recipe.title, recipe.calories, recipe.carbs, recipe.protein, recipe.fats);
+                        setIsAddMealModalOpen(false);
+                      }}
+                    >
+                      <Text style={styles.logAppRecipeChipText}>+ Log</Text>
+                    </TouchableOpacity>
+                  </View>
+                ))}
+              </ScrollView>
+            ) : (
+              <ScrollView style={{ maxHeight: 400 }} showsVerticalScrollIndicator={false}>
+                <Text style={styles.inputLabel}>Meal Name</Text>
+                <TextInput
+                  style={styles.customInput}
+                  placeholder="e.g. Avocado Toast & Eggs"
+                  placeholderTextColor="#94a3b8"
+                  value={customName}
+                  onChangeText={setCustomName}
+                />
+
+                <Text style={styles.inputLabel}>Calories (kcal)</Text>
+                <TextInput
+                  style={styles.customInput}
+                  placeholder="e.g. 450"
+                  placeholderTextColor="#94a3b8"
+                  keyboardType="numeric"
+                  value={customCals}
+                  onChangeText={setCustomCals}
+                />
+
+                <View style={{ flexDirection: 'row', gap: 10 }}>
+                  <View style={{ flex: 1 }}>
+                    <Text style={styles.inputLabel}>Carbs (g)</Text>
+                    <TextInput
+                      style={styles.customInput}
+                      placeholder="e.g. 50"
+                      placeholderTextColor="#94a3b8"
+                      keyboardType="numeric"
+                      value={customCarbs}
+                      onChangeText={setCustomCarbs}
+                    />
+                  </View>
+                  <View style={{ flex: 1 }}>
+                    <Text style={styles.inputLabel}>Protein (g)</Text>
+                    <TextInput
+                      style={styles.customInput}
+                      placeholder="e.g. 30"
+                      placeholderTextColor="#94a3b8"
+                      keyboardType="numeric"
+                      value={customProtein}
+                      onChangeText={setCustomProtein}
+                    />
+                  </View>
+                  <View style={{ flex: 1 }}>
+                    <Text style={styles.inputLabel}>Fats (g)</Text>
+                    <TextInput
+                      style={styles.customInput}
+                      placeholder="e.g. 15"
+                      placeholderTextColor="#94a3b8"
+                      keyboardType="numeric"
+                      value={customFats}
+                      onChangeText={setCustomFats}
+                    />
+                  </View>
+                </View>
+
+                <TouchableOpacity
+                  style={styles.submitCustomBtn}
+                  onPress={handleLogCustomMealSubmit}
+                  activeOpacity={0.85}
+                >
+                  <Text style={styles.submitCustomBtnText}>Log Custom Meal</Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                  style={{ marginTop: 10, alignItems: 'center' }}
+                  onPress={() => {
+                    setIsAddMealModalOpen(false);
+                    setIsCustomMealModalOpen(true);
+                  }}
+                >
+                  <Text style={{ fontSize: 12, fontWeight: '700', color: '#00685f' }}>
+                    📖 Open Full Recipe-Style Meal Builder
+                  </Text>
+                </TouchableOpacity>
+              </ScrollView>
+            )}
+          </View>
+        </SafeAreaView>
       </Modal>
     </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
+  addMealActionBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+    backgroundColor: COLORS.primary,
+    paddingVertical: 12,
+    borderRadius: 14,
+    marginTop: 8,
+  },
+  addMealActionBtnText: {
+    color: '#ffffff',
+    fontSize: 14,
+    fontWeight: '800',
+  },
+  loggedMealsCard: {
+    backgroundColor: '#ffffff',
+    borderRadius: 20,
+    padding: 16,
+    borderWidth: 1,
+    borderColor: '#e2e8f0',
+    gap: 12,
+  },
+  loggedMealsHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  loggedMealsTitle: {
+    fontSize: 15,
+    fontWeight: '800',
+    color: '#0f172a',
+  },
+  loggedMealsList: {
+    gap: 8,
+  },
+  loggedMealRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingVertical: 8,
+    borderBottomWidth: 1,
+    borderBottomColor: '#f1f5f9',
+  },
+  loggedMealLeft: {
+    gap: 2,
+  },
+  loggedMealName: {
+    fontSize: 14,
+    fontWeight: '700',
+    color: '#0f172a',
+  },
+  loggedMealSub: {
+    fontSize: 12,
+    color: '#64748b',
+  },
+  loggedMealCalBadge: {
+    backgroundColor: '#fef3c7',
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 12,
+  },
+  loggedMealCalText: {
+    fontSize: 12,
+    fontWeight: '800',
+    color: '#d97706',
+  },
+  logRecipeDetailBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    backgroundColor: COLORS.primary,
+    paddingVertical: 14,
+    borderRadius: 16,
+    marginTop: 20,
+  },
+  logRecipeDetailBtnText: {
+    color: '#ffffff',
+    fontSize: 15,
+    fontWeight: '800',
+  },
+  addMealModalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    justifyContent: 'flex-end',
+  },
+  addMealModalCard: {
+    backgroundColor: '#ffffff',
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
+    padding: 20,
+    maxHeight: '85%',
+  },
+  addMealModalHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 16,
+  },
+  addMealModalTitle: {
+    fontSize: 18,
+    fontWeight: '800',
+    color: '#0f172a',
+  },
+  addMealTabGroup: {
+    flexDirection: 'row',
+    backgroundColor: '#f1f5f9',
+    borderRadius: 12,
+    padding: 4,
+    marginBottom: 16,
+  },
+  addMealTabBtn: {
+    flex: 1,
+    paddingVertical: 8,
+    alignItems: 'center',
+    borderRadius: 10,
+  },
+  addMealTabBtnActive: {
+    backgroundColor: '#ffffff',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
+    elevation: 2,
+  },
+  addMealTabText: {
+    fontSize: 13,
+    fontWeight: '700',
+    color: '#64748b',
+  },
+  addMealTabTextActive: {
+    color: '#0f172a',
+  },
+  appRecipeRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    paddingVertical: 10,
+    borderBottomWidth: 1,
+    borderBottomColor: '#f1f5f9',
+  },
+  appRecipeThumb: {
+    width: 48,
+    height: 48,
+    borderRadius: 12,
+  },
+  appRecipeTitle: {
+    fontSize: 14,
+    fontWeight: '700',
+    color: '#0f172a',
+  },
+  appRecipeSub: {
+    fontSize: 12,
+    color: '#64748b',
+    marginTop: 2,
+  },
+  logAppRecipeChipBtn: {
+    backgroundColor: '#ccfbf1',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 12,
+  },
+  logAppRecipeChipText: {
+    fontSize: 12,
+    fontWeight: '800',
+    color: '#0f766e',
+  },
+  inputLabel: {
+    fontSize: 13,
+    fontWeight: '700',
+    color: '#475569',
+    marginBottom: 6,
+    marginTop: 10,
+  },
+  customInput: {
+    height: 44,
+    backgroundColor: '#f8fafc',
+    borderWidth: 1,
+    borderColor: '#cbd5e1',
+    borderRadius: 12,
+    paddingHorizontal: 12,
+    fontSize: 14,
+    color: '#0f172a',
+    marginBottom: 10,
+  },
+  submitCustomBtn: {
+    backgroundColor: COLORS.primary,
+    paddingVertical: 14,
+    borderRadius: 14,
+    alignItems: 'center',
+    marginTop: 20,
+    marginBottom: 10,
+  },
+  submitCustomBtnText: {
+    color: '#ffffff',
+    fontSize: 15,
+    fontWeight: '800',
+  },
   container: {
     flex: 1,
     backgroundColor: COLORS.background,
@@ -1469,5 +2106,67 @@ const styles = StyleSheet.create({
     color: '#334155',
     lineHeight: 19,
     fontWeight: '500',
+  },
+  customRecipeCard: {
+    width: '48%',
+    backgroundColor: '#f0fdfa',
+    borderRadius: 16,
+    padding: 10,
+    borderWidth: 2,
+    borderStyle: 'dashed',
+    borderColor: '#00685f',
+    gap: 8,
+  },
+  customRecipeImageWrap: {
+    height: 110,
+    borderRadius: 12,
+    backgroundColor: '#ccfbf1',
+    alignItems: 'center',
+    justifyContent: 'center',
+    position: 'relative',
+  },
+  customFieldHeading: {
+    fontSize: 11,
+    fontWeight: '900',
+    color: '#00685f',
+    letterSpacing: 0.8,
+    marginTop: 4,
+  },
+  customTitleInput: {
+    backgroundColor: '#f8fafc',
+    borderWidth: 1.5,
+    borderColor: '#00685f',
+    borderRadius: 12,
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+    fontSize: 16,
+    fontWeight: '700',
+    color: '#131b2e',
+  },
+  modalMacroColInput: {
+    alignItems: 'center',
+    flex: 1,
+    gap: 4,
+  },
+  macroInputField: {
+    fontSize: 18,
+    fontWeight: '900',
+    color: '#131b2e',
+    textAlign: 'center',
+    paddingVertical: 4,
+    minWidth: 50,
+    borderBottomWidth: 1.5,
+    borderBottomColor: '#cbd5e1',
+  },
+  customNotesInput: {
+    backgroundColor: '#f8fafc',
+    borderWidth: 1,
+    borderColor: '#cbd5e1',
+    borderRadius: 14,
+    padding: 12,
+    fontSize: 13,
+    color: '#131b2e',
+    textAlignVertical: 'top',
+    height: 80,
   },
 });
