@@ -3,7 +3,6 @@ import { StyleSheet, View, SafeAreaView, StatusBar, Platform } from 'react-nativ
 import Header from './src/components/Header';
 import BottomNav from './src/components/BottomNav';
 import DailyMissionsScreen from './src/screens/DailyMissionsScreen';
-import OnboardingScreen from './src/screens/OnboardingScreen';
 import OnboardingQuestionnaireScreen from './src/screens/OnboardingQuestionnaireScreen';
 import LongevityDashboardScreen from './src/screens/LongevityDashboardScreen';
 import LoginScreen from './src/screens/LoginScreen';
@@ -251,9 +250,6 @@ export default function App() {
             xp={xp}
             setXp={setXp}
           />
-        )}
-        {activeTab === 'plan' && (
-          <OnboardingScreen onCompletePlan={() => setActiveTab('schedule')} />
         )}
       </View>
 

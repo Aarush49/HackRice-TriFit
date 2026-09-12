@@ -196,10 +196,6 @@ const RECIPES_DATA = [
 
 export default function LongevityDashboardScreen({ currentUser, userProfile, onOpenCoach, xp, setXp }) {
   // Dynamic Interactive States
-  const [boostClaimed, setBoostClaimed] = useState(false);
-
-export default function LongevityDashboardScreen({ onOpenCoach, xp, setXp }) {
-  // Dynamic Interactive States
   const [waterAmount, setWaterAmount] = useState(2.4);
   const [waterLogged, setWaterLogged] = useState(false);
   const [calories, setCalories] = useState(1840);
