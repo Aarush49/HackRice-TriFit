@@ -27,6 +27,7 @@ export default function OnboardingQuestionnaireScreen({ onComplete, onBackToLogi
   const [isFirstTime, setIsFirstTime] = useState(null);
   const [previousTime, setPreviousTime] = useState('');
 
+  const [age, setAge] = useState('25');
   const [fitnessLevel, setFitnessLevel] = useState(null);
   const [trainingDays, setTrainingDays] = useState(4);
   const [equipment, setEquipment] = useState([]);
@@ -78,6 +79,9 @@ export default function OnboardingQuestionnaireScreen({ onComplete, onBackToLogi
     }
 
     if (currentStep === 2) {
+      if (!age || isNaN(parseInt(age, 10)) || parseInt(age, 10) < 14 || parseInt(age, 10) > 99) {
+        return 'Please enter a valid age between 14 and 99.';
+      }
       if (!fitnessLevel) {
         return 'Please select your current fitness level.';
       }
@@ -134,6 +138,7 @@ export default function OnboardingQuestionnaireScreen({ onComplete, onBackToLogi
         user_id: currentUser?.id,
         race_type: raceType,
         race_date: raceDate,
+        age: age,
         is_first_time: isFirstTime,
         previous_time: previousTime || null,
         fitness_level: fitnessLevel,
@@ -327,6 +332,24 @@ export default function OnboardingQuestionnaireScreen({ onComplete, onBackToLogi
     return (
       <View style={styles.stepContainer}>
         <Text style={styles.sectionTitle}>Section 2: Starting Point</Text>
+
+        <Text style={styles.questionLabel}>How old are you? *</Text>
+        <View style={styles.inputWrapper}>
+          <MaterialCommunityIcons name="cake-variant" size={18} color="#94a3b8" style={styles.inputIcon} />
+          <TextInput
+            style={styles.inputField}
+            placeholder="e.g. 28"
+            placeholderTextColor="#94a3b8"
+            keyboardType="number-pad"
+            maxLength={3}
+            value={age}
+            onChangeText={(val) => {
+              setValidationError('');
+              setAge(val.replace(/[^0-9]/g, ''));
+            }}
+          />
+          <Text style={{ fontSize: 14, color: '#64748b', paddingRight: 8 }}>years old</Text>
+        </View>
 
         <Text style={styles.questionLabel}>How would you describe your current fitness level? *</Text>
         {[

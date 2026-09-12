@@ -266,7 +266,14 @@ export default function App() {
       {/* Bottom Navigation */}
       <BottomNav
         activeTab={activeTab}
-        setActiveTab={setActiveTab}
+        setActiveTab={(tab) => {
+          // Stop any playing voiceover when switching tabs
+          if (typeof window !== 'undefined' && window.speechSynthesis) {
+            window.speechSynthesis.cancel();
+          }
+          setCoachVisible(false);
+          setActiveTab(tab);
+        }}
         onOpenCoach={() => setCoachVisible(true)}
       />
 

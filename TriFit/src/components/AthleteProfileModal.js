@@ -117,7 +117,7 @@ export default function AthleteProfileModal({
               <View style={styles.avatarContainer}>
                 <Image
                   source={{
-                    uri: 'https://lh3.googleusercontent.com/aida-public/AB6AXuCNF6DrCWxMm5Lv1YkzwT2KVsurMoDrkDXgPAkoqmIC1Hcawc03Tu0S4b5z4t8OxsjsvqazCQkgNUKUOPKGxly21xtC-gahcc4q0ouhxWImTdz35f8wcCPy33ybK6REvfjcZkTPtS-r0yOcaRp1m6dt7AfXcD3D_RYh4JqLpuD0NRX4Jl0NKoPHuUkL8fTyeFOi6PSebBb2Ipdg5QMjLrHtCuiA_P2bFXg5n9nXK_yZ3L8lkwLSiWrj',
+                    uri: 'https://cdn-icons-png.flaticon.com/512/847/847969.png',
                   }}
                   style={styles.avatarImage}
                 />
@@ -299,9 +299,9 @@ export default function AthleteProfileModal({
               </View>
               <View style={styles.pbInfo}>
                 <Text style={styles.pbTitle}>5k Zone 2 Tempo Run</Text>
-                <Text style={styles.pbSub}>Pace: 3:57 / km • Zone 2</Text>
+                <Text style={styles.pbSub}>Pace: -- / km • Log workout to set</Text>
               </View>
-              <Text style={styles.pbValue}>19:45</Text>
+              <Text style={styles.pbValue}>--:--</Text>
             </View>
             <View style={styles.dividerLine} />
 
@@ -311,9 +311,9 @@ export default function AthleteProfileModal({
               </View>
               <View style={styles.pbInfo}>
                 <Text style={styles.pbTitle}>Hyrox Sled Push (50m)</Text>
-                <Text style={styles.pbSub}>Pro weight standard</Text>
+                <Text style={styles.pbSub}>Log workout to set PR</Text>
               </View>
-              <Text style={styles.pbValue}>175 kg</Text>
+              <Text style={styles.pbValue}>-- kg</Text>
             </View>
             <View style={styles.dividerLine} />
 
@@ -323,9 +323,9 @@ export default function AthleteProfileModal({
               </View>
               <View style={styles.pbInfo}>
                 <Text style={styles.pbTitle}>750m Open Water Swim</Text>
-                <Text style={styles.pbSub}>Low-impact joint conditioning</Text>
+                <Text style={styles.pbSub}>Log workout to set PR</Text>
               </View>
-              <Text style={styles.pbValue}>12:30</Text>
+              <Text style={styles.pbValue}>--:--</Text>
             </View>
           </View>
 

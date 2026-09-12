@@ -37,10 +37,8 @@ export default function Header({ onOpenProfile, onOpenCoach, onOpenAuth, current
           activeOpacity={0.8}
         >
           <Image
-            source={coachMayaAvatar}
-            defaultSource={{
-              uri: 'https://lh3.googleusercontent.com/aida/AEtjO1VR4ud4NrEUCaCWlQGD4c8eO2MrSv_6iYhnM2zStshG0169JigIilqBI804BakKIqYsc4DudCRGLgD43AwKvhxYvTzeypmlZrJKwITjHERcX8pzi6a-IolGYS3wz-so_zxhnJIzzPb7oZ-G9WK7CFLki1I3PidjtySauGDogkX0J2LOzcKUGvQaFTJQwvbtxxpByJd0bA7yQSigP-vIhgIKTkjrgW5-9e75QQigtO-USq2wrK8ScpQuT7A',
-            }}
+            source={{ uri: 'https://cdn-icons-png.flaticon.com/512/847/847969.png' }}
+            defaultSource={{ uri: 'https://cdn-icons-png.flaticon.com/512/847/847969.png' }}
             style={styles.avatarImg}
           />
           <View style={[styles.dotIndicator, currentUser && { backgroundColor: '#10b981' }]} />

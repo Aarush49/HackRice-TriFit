@@ -29,6 +29,15 @@ export default function CoachMayaModal({ visible, onClose, onLogout, currentUser
   const [isTyping, setIsTyping] = useState(false);
 
   const [playingId, setPlayingId] = useState(null);
+
+  React.useEffect(() => {
+    if (!visible) {
+      stopCurrentAudio();
+    }
+    return () => {
+      stopCurrentAudio();
+    };
+  }, [visible]);
   const [audioObj, setAudioObj] = useState(null);
 
   const stopCurrentAudio = () => {
@@ -207,18 +216,7 @@ export default function CoachMayaModal({ visible, onClose, onLogout, currentUser
               </View>
 
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-                {onLogout && (
-                  <TouchableOpacity
-                    style={styles.closeBtn}
-                    onPress={() => {
-                      onClose();
-                      onLogout();
-                    }}
-                    title="Log Out"
-                  >
-                    <Ionicons name="log-out-outline" size={18} color="#94a3b8" />
-                  </TouchableOpacity>
-                )}
+                
                 <TouchableOpacity style={styles.closeBtn} onPress={onClose}>
                   <Ionicons name="close" size={22} color={COLORS.onSurfaceVariant} />
                 </TouchableOpacity>

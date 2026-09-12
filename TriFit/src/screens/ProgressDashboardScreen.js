@@ -18,10 +18,10 @@ const PERSONAL_BESTS = [
     iconColor: '#ea580c',
     iconBg: '#ffedd5',
     label: '5k Tempo Run',
-    value: '21:30',
-    improvement: '+1:45 faster',
-    improvColor: '#ea580c',
-    tag: 'Gold PR',
+    value: '--:--',
+    improvement: 'No PR logged yet',
+    improvColor: '#64748b',
+    tag: 'Unset',
   },
   {
     id: 'sled',
@@ -30,10 +30,10 @@ const PERSONAL_BESTS = [
     iconColor: '#9d4300',
     iconBg: '#ffdbca',
     label: 'Hyrox Sled Push',
-    value: '152 kg',
-    improvement: '+24 kg gain',
-    improvColor: '#ea580c',
-    tag: 'Strength PR',
+    value: '-- kg',
+    improvement: 'No PR logged yet',
+    improvColor: '#64748b',
+    tag: 'Unset',
   },
   {
     id: 'swim',
@@ -42,10 +42,10 @@ const PERSONAL_BESTS = [
     iconColor: '#00628d',
     iconBg: '#c9e6ff',
     label: '1,000m Swim Pace',
-    value: '1:38/100m',
-    improvement: '-6s improvement',
-    improvColor: '#0f766e',
-    tag: 'Aerobic PR',
+    value: '--:--',
+    improvement: 'No PR logged yet',
+    improvColor: '#64748b',
+    tag: 'Unset',
   },
   {
     id: 'vo2',
@@ -53,11 +53,11 @@ const PERSONAL_BESTS = [
     iconFamily: 'MaterialCommunityIcons',
     iconColor: '#00685f',
     iconBg: '#89f5e7',
-    label: 'VO\u2082 Max Est.',
-    value: '54.2',
-    improvement: '+4.1 pts increase',
-    improvColor: '#00685f',
-    tag: 'Longevity',
+    label: 'VO₂ Max Est.',
+    value: '--',
+    improvement: 'No PR logged yet',
+    improvColor: '#64748b',
+    tag: 'Unset',
   },
 ];
 
@@ -178,7 +178,7 @@ export default function ProgressDashboardScreen({ currentUser, userProfile, xp =
               <Ionicons name="flash" size={13} color="#00628d" />
               <Text style={styles.microStatLabelText}>PRs Broken</Text>
             </View>
-            <Text style={styles.microStatValue}>12</Text>
+            <Text style={styles.microStatValue}>0</Text>
             <Text style={[styles.microStatSub, { color: '#00628d' }]}>This Block</Text>
           </View>
         </View>
@@ -188,23 +188,23 @@ export default function ProgressDashboardScreen({ currentUser, userProfile, xp =
       <View style={styles.newPBCard}>
         <View style={styles.newPBHeader}>
           <View style={styles.newPBTitleRow}>
-            <Text style={styles.newPBEmoji}>🎉</Text>
-            <Text style={styles.newPBTitle}>NEW PERSONAL BEST!</Text>
+            <Text style={styles.newPBEmoji}>🎯</Text>
+            <Text style={styles.newPBTitle}>BENCHMARK YOUR PRs</Text>
           </View>
           <View style={styles.newPBDateBadge}>
-            <Text style={styles.newPBDate}>Yesterday</Text>
+            <Text style={styles.newPBDate}>Get Started</Text>
           </View>
         </View>
-        <Text style={styles.newPBMetric}>5K Tempo Pace: 4:18 /km</Text>
-        <Text style={styles.newPBImprovement}>Improved by -12s vs starting baseline (4:30 /km)</Text>
+        <Text style={styles.newPBMetric}>Ready to log your first activity?</Text>
+        <Text style={styles.newPBImprovement}>Complete your daily mission or sync your wearables to log personal bests!</Text>
         <View style={styles.newPBTags}>
           <View style={styles.newPBTag}>
             <Ionicons name="shield-checkmark" size={13} color={COLORS.primary} />
-            <Text style={styles.newPBTagText}>Joint Strain: Safe</Text>
+            <Text style={styles.newPBTagText}>Tendon Shield Active</Text>
           </View>
           <View style={styles.newPBTag}>
             <Ionicons name="checkmark-circle" size={13} color="#00628d" />
-            <Text style={styles.newPBTagText}>Lactate: Balanced</Text>
+            <Text style={styles.newPBTagText}>Pacing Guard On</Text>
           </View>
         </View>
       </View>

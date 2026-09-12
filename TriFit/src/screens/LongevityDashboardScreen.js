@@ -502,6 +502,32 @@ export default function LongevityDashboardScreen({ currentUser, userProfile, onO
     return true;
   });
 
+
+  // Biological Age Computation
+  const chronoAge = parseInt(userProfile?.age, 10) || 25;
+  const fitnessLevel = userProfile?.fitness_level || '';
+  const trainingDays = parseInt(userProfile?.training_days, 10) || 4;
+
+  const getBioAgeAdjustment = () => {
+    let adj = 0;
+    // Fitness level adjustment
+    if (fitnessLevel.includes('race-trained') || fitnessLevel.includes('Already')) adj -= 5;
+    else if (fitnessLevel.includes('regularly') || fitnessLevel.includes('regular')) adj -= 3;
+    else if (fitnessLevel.includes('occasionally') || fitnessLevel.includes('Train occ')) adj -= 1;
+    else if (fitnessLevel.includes('New') || fitnessLevel.includes('new')) adj += 2;
+    // Training days adjustment
+    if (trainingDays >= 6) adj -= 3;
+    else if (trainingDays >= 4) adj -= 2;
+    else if (trainingDays >= 3) adj -= 1;
+    else adj += 1;
+    return adj;
+  };
+
+  const bioAgeAdj = getBioAgeAdjustment();
+  const biologicalAge = Math.max(15, chronoAge + bioAgeAdj);
+  const bioAgeLabel = bioAgeAdj < 0 ? `${Math.abs(bioAgeAdj)} yrs younger` : bioAgeAdj > 0 ? `${bioAgeAdj} yrs older` : 'Same as chrono age';
+  const bioAgeColor = bioAgeAdj < -2 ? '#00685f' : bioAgeAdj < 0 ? '#16a34a' : bioAgeAdj > 2 ? '#dc2626' : '#d97706';
+
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
       {/* 1. Top Hero Header & Race Phase Badge */}
@@ -521,6 +547,23 @@ export default function LongevityDashboardScreen({ currentUser, userProfile, onO
         <View style={styles.titleRow}>
           <Text style={styles.mainTitle}>Recovery</Text>
           <Text style={styles.targetSub}>Target: {calorieTarget.toLocaleString()} kcal</Text>
+        </View>
+      </View>
+
+      {/* Biological Age Card */}
+      <View style={styles.bioAgeCard}>
+        <View style={styles.bioAgeLeft}>
+          <View style={styles.bioAgeIconCircle}>
+            <MaterialCommunityIcons name="dna" size={22} color="#00685f" />
+          </View>
+          <View>
+            <Text style={styles.bioAgeTitle}>Biological Age</Text>
+            <Text style={styles.bioAgeSubtitle}>Based on fitness & activity level</Text>
+          </View>
+        </View>
+        <View style={styles.bioAgeRight}>
+          <Text style={[styles.bioAgeBigNum, { color: bioAgeColor }]}>{biologicalAge}</Text>
+          <Text style={[styles.bioAgeTag, { color: bioAgeColor }]}>{bioAgeLabel}</Text>
         </View>
       </View>
 
@@ -2169,4 +2212,64 @@ const styles = StyleSheet.create({
     textAlignVertical: 'top',
     height: 80,
   },
+  bioAgeCard: {
+    backgroundColor: '#ffffff',
+    borderRadius: 16,
+    padding: 14,
+    borderWidth: 1,
+    borderColor: '#ccfbf1',
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    shadowColor: '#00685f',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.07,
+    shadowRadius: 8,
+    elevation: 2,
+  },
+  bioAgeLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    flex: 1,
+  },
+  bioAgeIconCircle: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: '#f0fdfa',
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: '#99f6e4',
+  },
+  bioAgeTitle: {
+    fontSize: 14,
+    fontWeight: '800',
+    color: '#131b2e',
+    letterSpacing: -0.2,
+  },
+  bioAgeSubtitle: {
+    fontSize: 11,
+    fontWeight: '500',
+    color: '#64748b',
+    marginTop: 1,
+  },
+  bioAgeRight: {
+    alignItems: 'flex-end',
+    gap: 2,
+  },
+  bioAgeBigNum: {
+    fontSize: 32,
+    fontWeight: '900',
+    letterSpacing: -1,
+    lineHeight: 34,
+  },
+  bioAgeTag: {
+    fontSize: 10,
+    fontWeight: '700',
+    letterSpacing: 0.2,
+    textTransform: 'uppercase',
+  },
+
 });

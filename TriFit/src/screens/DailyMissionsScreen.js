@@ -79,7 +79,7 @@ export default function DailyMissionsScreen({
     readiness_score: 88,
     hrv_ms: 64,
     sleep_hours: 8.2,
-    steps: 6400,
+    steps: 0,
     active_calories: 480,
     zone2_minutes: 45
   });
@@ -253,7 +253,7 @@ export default function DailyMissionsScreen({
   const isStepsDone = (wearableData.steps || 0) >= 8000 || !!completedHabits['habit_2'];
   const completedCount = 1 + Object.values(completedHabits).filter(Boolean).length + (isStepsDone && !completedHabits['habit_2'] ? 1 : 0);
   const targetRace = userProfile?.race_type ? userProfile.race_type.toUpperCase() : 'HYROX BUILD';
-  const planDay = streakDays > 0 ? streakDays : 14;
+  const planDay = streakDays > 0 ? streakDays : 1;
 
   return (
     <ScrollView
@@ -269,7 +269,7 @@ export default function DailyMissionsScreen({
               <Ionicons name="flash" size={11} color="#0f766e" />
               <Text style={styles.categoryPillText}>{targetRace}</Text>
             </View>
-            <Text style={styles.categorySub}>Zone 2 &amp; Power</Text>
+            
           </View>
           <Text style={styles.headingTitle}>Today's Mission</Text>
         </View>
@@ -471,7 +471,7 @@ export default function DailyMissionsScreen({
       <View style={styles.habitsSection}>
         <View style={styles.habitsHeader}>
           <Text style={styles.habitsTitle}>DAILY HABITS &amp; SIDE QUESTS</Text>
-          <Text style={styles.habitsSub}>+50 XP remaining</Text>
+          <Text style={styles.habitsSub}>+90 XP remaining</Text>
         </View>
 
         <View style={styles.habitsGrid}>
@@ -515,7 +515,7 @@ export default function DailyMissionsScreen({
             </TouchableOpacity>
           </View>
 
-          {/* Habit Card 2 */}
+          {/* Habit Card 2: Steps */}
           <View style={[styles.habitCard, isStepsDone && { borderColor: '#bbf7d0', backgroundColor: '#f0fdf4' }]}>
             <View style={styles.habitContent}>
               <View style={styles.habitTopRow}>
@@ -556,6 +556,86 @@ export default function DailyMissionsScreen({
               />
               <Text style={[styles.habitActionText, { color: isSyncing ? '#ea580c' : (isStepsDone ? '#15803d' : '#c2410c') }]}>
                 {isSyncing ? 'Syncing...' : (isStepsDone ? 'Completed' : 'Sync')}
+              </Text>
+            </TouchableOpacity>
+          </View>
+
+          {/* Habit Card 3: Hydration */}
+          <View style={styles.habitCard}>
+            <View style={styles.habitContent}>
+              <View style={styles.habitTopRow}>
+                <View style={[styles.habitIconBox, { backgroundColor: '#e0f2fe' }]}>
+                  <Ionicons name="water" size={15} color="#0284c7" />
+                </View>
+                <View style={styles.habitXpBadge}>
+                  <Text style={styles.habitXpText}>+15 XP</Text>
+                </View>
+              </View>
+
+              <Text style={styles.habitCardTitle}>3L Hydration</Text>
+              <Text style={styles.habitCardSub}>Electrolytes &amp; Minerals</Text>
+            </View>
+
+            <TouchableOpacity
+              onPress={() => toggleHabit('habit_3', 15)}
+              activeOpacity={0.8}
+              style={[
+                styles.habitActionBtn,
+                completedHabits['habit_3'] && styles.habitActionBtnActive,
+              ]}
+            >
+              <Ionicons
+                name={completedHabits['habit_3'] ? 'checkmark-circle' : 'add'}
+                size={13}
+                color={completedHabits['habit_3'] ? '#15803d' : '#0284c7'}
+              />
+              <Text
+                style={[
+                  styles.habitActionText,
+                  completedHabits['habit_3'] && { color: '#15803d' },
+                ]}
+              >
+                {completedHabits['habit_3'] ? 'Completed' : 'Done'}
+              </Text>
+            </TouchableOpacity>
+          </View>
+
+          {/* Habit Card 4: Mobility */}
+          <View style={styles.habitCard}>
+            <View style={styles.habitContent}>
+              <View style={styles.habitTopRow}>
+                <View style={[styles.habitIconBox, { backgroundColor: '#f3e8ff' }]}>
+                  <MaterialCommunityIcons name="spa" size={15} color="#7c3aed" />
+                </View>
+                <View style={styles.habitXpBadge}>
+                  <Text style={styles.habitXpText}>+25 XP</Text>
+                </View>
+              </View>
+
+              <Text style={styles.habitCardTitle}>Post-Run Mobility</Text>
+              <Text style={styles.habitCardSub}>10m Foam Roll &amp; Stretch</Text>
+            </View>
+
+            <TouchableOpacity
+              onPress={() => toggleHabit('habit_4', 25)}
+              activeOpacity={0.8}
+              style={[
+                styles.habitActionBtn,
+                completedHabits['habit_4'] && styles.habitActionBtnActive,
+              ]}
+            >
+              <Ionicons
+                name={completedHabits['habit_4'] ? 'checkmark-circle' : 'add'}
+                size={13}
+                color={completedHabits['habit_4'] ? '#15803d' : '#7c3aed'}
+              />
+              <Text
+                style={[
+                  styles.habitActionText,
+                  completedHabits['habit_4'] && { color: '#15803d' },
+                ]}
+              >
+                {completedHabits['habit_4'] ? 'Completed' : 'Done'}
               </Text>
             </TouchableOpacity>
           </View>
@@ -1097,10 +1177,11 @@ const styles = StyleSheet.create({
   },
   habitsGrid: {
     flexDirection: 'row',
+    flexWrap: 'wrap',
     gap: 10,
   },
   habitCard: {
-    flex: 1,
+    width: '47.5%',
     backgroundColor: '#ffffff',
     borderRadius: 14,
     padding: 12,
