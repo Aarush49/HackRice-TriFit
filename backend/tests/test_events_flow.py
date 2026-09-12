@@ -5,7 +5,7 @@ BASE_URL = "http://localhost:8000"
 
 def test_events_flow():
     # 1. Reset/seed month of events for DemoAccount
-    r = requests.post(f"{BASE_URL}/api/events/seed", json={"username": "DemoAccount", "month": 9})
+    r = requests.post(f"{BASE_URL}/api/events/seed", json={"username": "DemoAccount", "month": 9, "reset_all": True})
     assert r.status_code == 200, f"Seed failed: {r.text}"
     data = r.json()
     assert data["success"] is True
@@ -76,7 +76,7 @@ def test_events_flow():
     print(f"Day 13 updated: completed={day13_after['is_completed']}, workout={day13_after['workout_type']}")
 
     # 6. Finally, reset month so initially no events are completed, as requested by user
-    requests.post(f"{BASE_URL}/api/events/seed", json={"username": "DemoAccount", "month": 9})
+    requests.post(f"{BASE_URL}/api/events/seed", json={"username": "DemoAccount", "month": 9, "reset_all": True})
     print("ALL TESTS PASSED! Re-seeded fresh month with 0 completed events.")
 
 if __name__ == "__main__":

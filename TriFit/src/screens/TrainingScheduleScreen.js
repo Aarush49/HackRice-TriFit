@@ -16,6 +16,7 @@ import { MaterialCommunityIcons, Ionicons, Feather, FontAwesome5 } from '@expo/v
 import { LinearGradient } from 'expo-linear-gradient';
 import { COLORS } from '../theme';
 import { PopInView, ScrollPopView, BouncyButton } from '../components/AnimatedComponents';
+import API_BASE_URL from '../config';
 
 const toISODate = (dateStr) => {
   if (!dateStr) return '';
@@ -399,7 +400,7 @@ export default function TrainingScheduleScreen({
 
     // Persist to backend database for permanent sync
     const username = currentUser?.username || 'DemoAccount';
-    fetch('http://localhost:8000/api/plan/save', {
+    fetch(`${API_BASE_URL}/api/plan/save`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -414,7 +415,7 @@ export default function TrainingScheduleScreen({
         if (onRefreshEvents) onRefreshEvents();
       })
       .catch((err) => {
-        console.error('Failed to save updated plan to backend:', err);
+        console.log('Plan save offline fallback:', err?.message || err);
       });
   };
 
@@ -436,11 +437,11 @@ export default function TrainingScheduleScreen({
       setIsLoading(true);
       const username = currentUser?.username || 'DemoAccount';
       try {
-        let res = await fetch(`http://localhost:8000/api/plan/current?username=${username}`);
+        let res = await fetch(`${API_BASE_URL}/api/plan/current?username=${username}`);
         let data = await res.json();
         
         if (!data.success || !data.plan || !data.plan.plan_data) {
-          res = await fetch(`http://localhost:8000/api/plan/generate?username=${username}&race_type=${encodeURIComponent(targetRace)}&race_date=${encodeURIComponent(targetDate)}`, {
+          res = await fetch(`${API_BASE_URL}/api/plan/generate?username=${username}&race_type=${encodeURIComponent(targetRace)}&race_date=${encodeURIComponent(targetDate)}`, {
             method: 'POST'
           });
           data = await res.json();
@@ -452,7 +453,7 @@ export default function TrainingScheduleScreen({
           setAiPlan(getSportTrainingPlan(targetRace, targetDate));
         }
       } catch (e) {
-        console.error("Failed to fetch plan, using fallback:", e);
+        console.log('Plan fetch fallback:', e?.message || e);
         setAiPlan(getSportTrainingPlan(targetRace, targetDate));
       } finally {
         setIsLoading(false);
@@ -470,13 +471,13 @@ export default function TrainingScheduleScreen({
     }
     const username = currentUser?.username || 'DemoAccount';
     try {
-      const res = await fetch(`http://localhost:8000/api/events?username=${username}&month=9`);
+      const res = await fetch(`${API_BASE_URL}/api/events?username=${username}&month=9`);
       const data = await res.json();
       if (data.success && data.events) {
         setLocalDbEvents(data.events);
       }
     } catch (e) {
-      console.error('Failed to fetch scheduled events:', e);
+      console.log('Fetch events fallback:', e?.message || e);
     }
   };
 
@@ -488,7 +489,7 @@ export default function TrainingScheduleScreen({
     const username = currentUser?.username || 'DemoAccount';
     const endpoint = complete ? '/api/events/complete' : '/api/events/uncomplete';
     try {
-      const res = await fetch(`http://localhost:8000${endpoint}`, {
+      const res = await fetch(`${API_BASE_URL}${endpoint}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -519,7 +520,19 @@ export default function TrainingScheduleScreen({
         }
       }
     } catch (err) {
-      console.error('Failed to toggle event completion:', err);
+      console.log('Toggle event completion offline fallback:', err?.message || err);
+      // Still update UI locally so user gets immediate visual gratification!
+      setLocalDbEvents(prev => prev.map(e => {
+        if (e.day_number === dayToMark) {
+          return {
+            ...e,
+            status: complete ? 'completed' : 'planned',
+            is_completed: complete,
+            completed_at: complete ? new Date().toISOString() : null,
+          };
+        }
+        return e;
+      }));
     }
   };
 
@@ -809,7 +822,7 @@ export default function TrainingScheduleScreen({
     setIsAdapting(true);
     const username = currentUser?.username || 'DemoAccount';
     try {
-      const res = await fetch(`http://localhost:8000/api/plan/adjust`, {
+      const res = await fetch(`${API_BASE_URL}/api/plan/adjust`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -826,7 +839,7 @@ export default function TrainingScheduleScreen({
         fetchDbEvents();
       }
     } catch (e) {
-      console.error("Failed to adapt plan:", e);
+      console.log("Adapt plan fallback:", e?.message || e);
     } finally {
       setIsAdapting(false);
     }

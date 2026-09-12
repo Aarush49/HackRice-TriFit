@@ -14,6 +14,7 @@ import AuthModal from './src/components/AuthModal';
 import TrainingScheduleScreen, { getSportTrainingPlan } from './src/screens/TrainingScheduleScreen';
 import ProgressDashboardScreen from './src/screens/ProgressDashboardScreen';
 import { COLORS } from './src/theme';
+import API_BASE_URL from './src/config';
 
 export default function App() {
   const [showSplash, setShowSplash] = useState(true);
@@ -42,13 +43,13 @@ export default function App() {
   const fetchDbEvents = async () => {
     const username = currentUser?.username || 'DemoAccount';
     try {
-      const res = await fetch(`http://localhost:8000/api/events?username=${username}&month=9`);
+      const res = await fetch(`${API_BASE_URL}/api/events?username=${username}&month=9`);
       const data = await res.json();
       if (data.success && data.events) {
         setDbEvents(data.events);
       }
     } catch (e) {
-      console.error('Failed to fetch scheduled events:', e);
+      console.log('Fetch DB events fallback:', e?.message || e);
     }
   };
 
@@ -63,14 +64,14 @@ export default function App() {
     const fetchSharedPlan = async () => {
       const username = currentUser?.username || 'DemoAccount';
       try {
-        let res = await fetch(`http://localhost:8000/api/plan/current?username=${username}`);
+        let res = await fetch(`${API_BASE_URL}/api/plan/current?username=${username}`);
         let data = await res.json();
         if (data.success && data.plan?.plan_data) {
           setTrainingPlan(data.plan.plan_data);
           return;
         }
       } catch (e) {
-        console.log('Could not fetch shared plan from backend:', e);
+        console.log('Could not fetch shared plan from backend:', e?.message || e);
       }
       const race = userProfile?.race_type || 'Hyrox Open / Pro';
       const date = userProfile?.race_date || 'November 15, 2026';
@@ -82,7 +83,7 @@ export default function App() {
   const fetchUserStats = async (username) => {
     if (!username) return;
     try {
-      const res = await fetch(`http://localhost:8000/api/user-stats?username=${encodeURIComponent(username)}`);
+      const res = await fetch(`${API_BASE_URL}/api/user-stats?username=${encodeURIComponent(username)}`);
       if (res.ok) {
         const data = await res.json();
         if (data.user) {
@@ -102,7 +103,7 @@ export default function App() {
         }
       }
     } catch (e) {
-      console.log('Error fetching user stats:', e);
+      console.log('Error fetching user stats:', e?.message || e);
     }
   };
 
@@ -164,7 +165,7 @@ export default function App() {
   const handleFinishRun = async () => {
     const username = currentUser?.username || 'DemoAccount';
     try {
-      const res = await fetch('http://localhost:8000/api/events/complete', {
+      const res = await fetch(`${API_BASE_URL}/api/events/complete`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -183,7 +184,7 @@ export default function App() {
         setStreakDays((prev) => (prev === 0 ? 1 : prev));
       }
     } catch (err) {
-      console.log('Error completing event from run modal:', err);
+      console.log('Error completing event from run modal:', err?.message || err);
       setXp((prev) => prev + 120);
       setStreakDays((prev) => (prev === 0 ? 1 : prev));
     } finally {

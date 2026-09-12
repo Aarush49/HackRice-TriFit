@@ -15,6 +15,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { COLORS } from '../theme';
 import { PopInView, ScrollPopView, BouncyButton } from '../components/AnimatedComponents';
 import { getSportTrainingPlan } from './TrainingScheduleScreen';
+import API_BASE_URL from '../config';
 
 const getWorkoutTags = (workout_type) => {
   const wtype = (workout_type || '').toLowerCase();
@@ -107,13 +108,13 @@ export default function DailyMissionsScreen({
   const fetchWearableData = async () => {
     const username = currentUser?.username || 'DemoAccount';
     try {
-      const res = await fetch(`http://localhost:8000/api/wearables/current?username=${username}`);
+      const res = await fetch(`${API_BASE_URL}/api/wearables/current?username=${username}`);
       const data = await res.json();
       if (data.success && data.metrics) {
         setWearableData(data.metrics);
       }
     } catch (e) {
-      console.error('Failed to fetch wearable metrics:', e);
+      console.log('Wearable metrics fallback used:', e?.message || e);
     }
   };
 
@@ -121,13 +122,13 @@ export default function DailyMissionsScreen({
     setIsSyncing(true);
     const username = currentUser?.username || 'DemoAccount';
     try {
-      const res = await fetch(`http://localhost:8000/api/wearables/sync-simulated?username=${username}`, { method: 'POST' });
+      const res = await fetch(`${API_BASE_URL}/api/wearables/sync-simulated?username=${username}`, { method: 'POST' });
       const data = await res.json();
       if (data.success && data.wearable) {
         setWearableData(data.wearable);
       }
     } catch (e) {
-      console.error('Failed to sync wearables:', e);
+      console.log('Wearable sync fallback:', e?.message || e);
     } finally {
       setIsSyncing(false);
     }
@@ -137,12 +138,12 @@ export default function DailyMissionsScreen({
     const fetchOrGeneratePlan = async () => {
       const username = currentUser?.username || 'DemoAccount';
       try {
-        let res = await fetch(`http://localhost:8000/api/plan/current?username=${username}`);
+        let res = await fetch(`${API_BASE_URL}/api/plan/current?username=${username}`);
         let data = await res.json();
         if (!data.success || !data.plan || !data.plan.plan_data) {
           const race = userProfile?.race_type || 'Hyrox Open / Pro';
           const date = userProfile?.race_date || 'November 15, 2026';
-          res = await fetch(`http://localhost:8000/api/plan/generate?username=${username}&race_type=${encodeURIComponent(race)}&race_date=${encodeURIComponent(date)}`, { method: 'POST' });
+          res = await fetch(`${API_BASE_URL}/api/plan/generate?username=${username}&race_type=${encodeURIComponent(race)}&race_date=${encodeURIComponent(date)}`, { method: 'POST' });
           data = await res.json();
         }
         if (data.success && data.plan && data.plan.plan_data) {
@@ -156,7 +157,7 @@ export default function DailyMissionsScreen({
           if (onUpdatePlan) onUpdatePlan(fallbackPlan);
         }
       } catch (e) {
-        console.error('Failed to fetch plan:', e);
+        console.log('Plan fetch fallback:', e?.message || e);
         const race = userProfile?.race_type || 'Hyrox Open / Pro';
         const date = userProfile?.race_date || 'November 15, 2026';
         setAiPlan(getSportTrainingPlan(race, date));
