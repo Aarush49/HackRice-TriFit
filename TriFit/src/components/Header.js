@@ -12,9 +12,11 @@ export default function Header({ onOpenProfile, onOpenCoach, onOpenAuth, current
     <View style={styles.container}>
       {/* Brand Title */}
       <View style={styles.brandRow}>
-        <View style={styles.logoBadge}>
-          <MaterialCommunityIcons name="lightning-bolt" size={20} color="#ffffff" />
-        </View>
+        <Image
+          source={require('../../assets/trifit_logo.png')}
+          style={styles.logoImage}
+          resizeMode="contain"
+        />
         <Text style={styles.brandText}>TriFit</Text>
       </View>
 
@@ -69,15 +71,11 @@ const styles = StyleSheet.create({
   brandRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
+    gap: 4,
   },
-  logoBadge: {
-    width: 32,
-    height: 32,
-    borderRadius: 10,
-    backgroundColor: COLORS.primary,
-    alignItems: 'center',
-    justifyContent: 'center',
+  logoImage: {
+    width: 38,
+    height: 38,
   },
   brandText: {
     fontSize: 22,

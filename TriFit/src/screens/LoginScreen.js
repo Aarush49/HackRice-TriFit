@@ -8,6 +8,7 @@ import {
   TextInput,
   KeyboardAvoidingView,
   Platform,
+  Image,
 } from 'react-native';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -147,9 +148,11 @@ export default function LoginScreen({ onLoginSuccess }) {
           <PopInView delay={0}>
             <View style={styles.topHeader}>
               <View style={styles.brandRow}>
-                <View style={styles.logoBadge}>
-                  <MaterialCommunityIcons name="lightning-bolt" size={22} color="#ffffff" />
-                </View>
+                <Image
+                  source={require('../../assets/trifit_logo.png')}
+                  style={styles.logoImage}
+                  resizeMode="contain"
+                />
                 <View>
                   <Text style={styles.brandTitle}>
                     Tri<Text style={styles.brandTitleTeal}>Fit</Text>
@@ -399,20 +402,11 @@ const styles = StyleSheet.create({
   brandRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 10,
+    gap: 4,
   },
-  logoBadge: {
-    width: 40,
-    height: 40,
-    borderRadius: 14,
-    backgroundColor: '#0d9488',
-    alignItems: 'center',
-    justifyContent: 'center',
-    shadowColor: '#0d9488',
-    shadowOffset: { width: 0, height: 3 },
-    shadowOpacity: 0.25,
-    shadowRadius: 6,
-    elevation: 3,
+  logoImage: {
+    width: 52,
+    height: 52,
   },
   brandTitle: {
     fontSize: 24,
