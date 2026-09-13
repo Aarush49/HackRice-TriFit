@@ -6,7 +6,6 @@ import { PopInView } from '../AnimatedComponents';
 import styles from '../../screens/styles/DailyMissionsScreen.styles';
 
 export default function ViewingDayBanner({
-  targetRace,
   isTodaySelected,
   selectedDay,
   todayDay,
@@ -14,16 +13,10 @@ export default function ViewingDayBanner({
 }) {
   return (
     <>
-      {/* 1. Subheader: Category Pill + Headline */}
+      {/* 1. Mission headline */}
       <PopInView delay={0}>
         <View style={styles.headerRow}>
           <View style={styles.headerLeft}>
-            <View style={styles.categoryRow}>
-              <View style={styles.categoryPill}>
-                <Ionicons name="flash" size={11} color="#0f766e" />
-                <Text style={styles.categoryPillText}>{targetRace}</Text>
-              </View>
-            </View>
             <Text style={styles.headingTitle}>
               {isTodaySelected ? "Today's Mission" : `Day ${selectedDay} Mission`}
             </Text>

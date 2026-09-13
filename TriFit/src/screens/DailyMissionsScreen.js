@@ -283,11 +283,6 @@ export default function DailyMissionsScreen({
   };
 
   const isStepsDone = (wearableData.steps || 0) >= 8000 || !!completedHabits['habit_2'];
-  const targetRace = (
-    userProfile?.race_type ||
-    (effectivePlan?.goal ? effectivePlan.goal.replace('Prepare for ', '').split(' by ')[0] : 'HYROX OPEN / PRO')
-  ).toUpperCase();
-
   return (
     <ScrollView
       style={styles.container}
@@ -295,7 +290,6 @@ export default function DailyMissionsScreen({
       showsVerticalScrollIndicator={false}
     >
       <ViewingDayBanner
-        targetRace={targetRace}
         isTodaySelected={isTodaySelected}
         selectedDay={selectedDay}
         todayDay={todayDay}

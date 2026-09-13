@@ -33,7 +33,7 @@ export default function ReadinessCard({
                 stroke="#008378"
                 strokeWidth="4.5"
                 strokeDasharray="125.66"
-                strokeDashoffset="15"
+                strokeDashoffset={125.66 * (1 - Math.min(100, Math.max(0, wearableData.readiness_score || 0)) / 100)}
                 strokeLinecap="round"
                 fill="none"
                 transform="rotate(-90 24 24)"
@@ -56,11 +56,11 @@ export default function ReadinessCard({
             <View style={styles.metricPillsRow}>
               <View style={styles.metricPillGreen}>
                 <Ionicons name="heart" size={11} color="#15803d" />
-                <Text style={styles.metricPillGreenText}>HRV {wearableData.hrv_ms}ms</Text>
+                <Text style={styles.metricPillGreenText}>HRV {wearableData.hrv_ms ?? 0}ms</Text>
               </View>
               <View style={styles.metricPillTeal}>
                 <Ionicons name="moon" size={11} color="#0f766e" />
-                <Text style={styles.metricPillTealText}>{wearableData.sleep_hours}h Sleep</Text>
+                <Text style={styles.metricPillTealText}>{wearableData.sleep_hours ?? 0}h Sleep</Text>
               </View>
             </View>
           </View>
@@ -86,11 +86,23 @@ export default function ReadinessCard({
         <View style={styles.microGaugeCol}>
           <View style={styles.microGaugeHeader}>
             <Text style={styles.microGaugeTitle}>CARDIO</Text>
-            <MaterialCommunityIcons name="check-circle" size={13} color="#10b981" />
+            <MaterialCommunityIcons
+              name={(wearableData.zone2_minutes || 0) >= 45 ? 'check-circle' : 'heart-pulse'}
+              size={13}
+              color={(wearableData.zone2_minutes || 0) >= 45 ? '#10b981' : '#64748b'}
+            />
           </View>
-          <Text style={styles.microGaugeVal}>45 / 45m</Text>
+          <Text style={styles.microGaugeVal}>{wearableData.zone2_minutes || 0} / 45m</Text>
           <View style={styles.progressBarTrack}>
-            <View style={[styles.progressBarFill, { width: '100%', backgroundColor: '#10b981' }]} />
+            <View
+              style={[
+                styles.progressBarFill,
+                {
+                  width: `${Math.min(100, Math.round(((wearableData.zone2_minutes || 0) / 45) * 100))}%`,
+                  backgroundColor: '#10b981',
+                },
+              ]}
+            />
           </View>
         </View>
 

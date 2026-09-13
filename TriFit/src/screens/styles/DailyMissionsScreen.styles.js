@@ -27,35 +27,6 @@ const styles = StyleSheet.create({
   headerLeft: {
     flexDirection: 'column',
   },
-  categoryRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-    marginBottom: 2,
-  },
-  categoryPill: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 3,
-    backgroundColor: '#ccfbf1',
-    paddingHorizontal: 8,
-    paddingVertical: 2,
-    borderRadius: 999,
-    borderWidth: 1,
-    borderColor: '#99f6e4',
-  },
-  categoryPillText: {
-    fontSize: 10,
-    fontWeight: '800',
-    color: '#0f766e',
-    textTransform: 'uppercase',
-    letterSpacing: 0.5,
-  },
-  categorySub: {
-    fontSize: 10,
-    fontWeight: '600',
-    color: '#64748b',
-  },
   headingTitle: {
     fontSize: 20,
     fontWeight: '800',
