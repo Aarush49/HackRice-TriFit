@@ -7,6 +7,7 @@ import {
   Animated,
   StatusBar,
   ActivityIndicator,
+  Image,
 } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -64,7 +65,11 @@ export default function SplashScreen({ onFinish }) {
           {/* Logo Badge */}
           <View style={styles.logoCircleOuter}>
             <View style={styles.logoCircleInner}>
-              <MaterialCommunityIcons name="lightning-bolt" size={44} color="#ffffff" />
+              <Image
+                source={require('../../assets/trifit_logo_white.png')}
+                style={styles.splashLogoImage}
+                resizeMode="contain"
+              />
             </View>
           </View>
 
@@ -104,15 +109,15 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   logoCircleOuter: {
-    width: 104,
-    height: 104,
-    borderRadius: 36,
+    width: 116,
+    height: 116,
+    borderRadius: 40,
     backgroundColor: 'rgba(137, 245, 231, 0.15)',
     borderWidth: 2,
     borderColor: 'rgba(137, 245, 231, 0.4)',
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: 20,
+    marginBottom: 12,
     shadowColor: '#89f5e7',
     shadowOffset: { width: 0, height: 6 },
     shadowOpacity: 0.35,
@@ -120,12 +125,16 @@ const styles = StyleSheet.create({
     elevation: 6,
   },
   logoCircleInner: {
-    width: 76,
-    height: 76,
-    borderRadius: 26,
+    width: 88,
+    height: 88,
+    borderRadius: 30,
     backgroundColor: '#0d9488',
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  splashLogoImage: {
+    width: 64,
+    height: 64,
   },
   brandTitle: {
     fontSize: 44,

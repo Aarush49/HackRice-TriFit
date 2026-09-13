@@ -8,6 +8,7 @@ import {
   TextInput,
   ActivityIndicator,
   Alert,
+  Image,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -65,9 +66,11 @@ export default function AuthModal({ visible, onClose, onAuthSuccess }) {
           </TouchableOpacity>
 
           <View style={styles.header}>
-            <LinearGradient colors={['#00685f', '#059669']} style={styles.logoBadge}>
-              <Ionicons name="flash" size={22} color="#ffffff" />
-            </LinearGradient>
+            <Image
+              source={require('../../assets/trifit_logo.png')}
+              style={styles.logoImage}
+              resizeMode="contain"
+            />
             <Text style={styles.title}>
               {isLogin ? 'Welcome Back to TriFit' : 'Create Your TriFit Account'}
             </Text>
@@ -174,13 +177,10 @@ const styles = StyleSheet.create({
     gap: 6,
     marginTop: 10,
   },
-  logoBadge: {
-    width: 44,
-    height: 44,
-    borderRadius: 16,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: 4,
+  logoImage: {
+    width: 58,
+    height: 58,
+    marginBottom: 2,
   },
   title: {
     fontSize: 20,

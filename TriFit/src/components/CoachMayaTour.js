@@ -38,9 +38,9 @@ const TOUR_STEPS = [
   {
     tab: 'schedule',
     icon: 'calendar-outline',
-    eyebrow: 'YOUR TRAINING PLAN',
-    title: 'Plan with Schedule',
-    body: 'Preview upcoming sessions, adjust your target event, and open each day for workout details.',
+    eyebrow: 'YOUR PERSONALIZED PLAN',
+    title: 'Here’s the plan built for you',
+    body: 'This calendar is personalized around your race, fitness level, training days, and equipment. Preview upcoming sessions or open any day for workout details.',
   },
   {
     tab: null,

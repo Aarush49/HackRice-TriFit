@@ -29,10 +29,16 @@ export default function EventConfigModal({
           {...(Platform.OS === 'web' ? { onClick: (e) => e.stopPropagation() } : {})}
         >
           <View style={styles.modalHeader}>
-            <Text style={styles.modalTitle}>Adjust Target Event &amp; Date</Text>
-            <TouchableOpacity onPress={() => setIsAdjustModalOpen(false)}>
-              <Ionicons name="close-circle" size={24} color="#64748b" />
+            <TouchableOpacity
+              style={styles.modalBackButton}
+              onPress={() => setIsAdjustModalOpen(false)}
+              accessibilityRole="button"
+              accessibilityLabel="Back to schedule"
+            >
+              <Ionicons name="chevron-back" size={18} color={COLORS.primary} />
+              <Text style={styles.modalBackButtonText}>Back</Text>
             </TouchableOpacity>
+            <Text style={styles.modalTitle} numberOfLines={1}>Adjust Target Event &amp; Date</Text>
           </View>
 
           <Text style={styles.modalSub}>
