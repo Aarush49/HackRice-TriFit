@@ -42,7 +42,7 @@ def get_scheduled_events(username: str, year: int = 2026, month: int = 9):
             if not u_row:
                 hashed = bcrypt.hashpw('demo123'.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
                 cur.execute(
-                    "INSERT INTO users (username, email, password_hash, xp, streak_days) VALUES (%s, %s, %s, 2450, 7) RETURNING id;",
+                    "INSERT INTO users (username, email, password_hash, xp, streak_days) VALUES (%s, %s, %s, 0, 0) RETURNING id;",
                     (username, f"{username.lower()}@trifit.io", hashed)
                 )
                 u_row = cur.fetchone()

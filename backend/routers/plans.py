@@ -125,7 +125,7 @@ def save_training_plan(data: SavePlanRequest):
             if not user_row:
                 hashed = bcrypt.hashpw('demo123'.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
                 cur.execute(
-                    "INSERT INTO users (username, email, password_hash, xp, streak_days) VALUES (%s, %s, %s, 2450, 7) RETURNING id;",
+                    "INSERT INTO users (username, email, password_hash, xp, streak_days) VALUES (%s, %s, %s, 0, 0) RETURNING id;",
                     (data.username, f"{data.username.lower()}@trifit.io", hashed)
                 )
                 user_row = cur.fetchone()
@@ -218,7 +218,7 @@ Ensure the output is strictly valid JSON with goal and 4 weeks array, each with 
                 else:
                     hashed = bcrypt.hashpw('demo123'.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
                     cur.execute(
-                        "INSERT INTO users (username, email, password_hash, xp, streak_days) VALUES (%s, %s, %s, 2450, 7) RETURNING id;",
+                        "INSERT INTO users (username, email, password_hash, xp, streak_days) VALUES (%s, %s, %s, 0, 0) RETURNING id;",
                         (username, f"{username.lower()}@trifit.io", hashed)
                     )
                     user_id = cur.fetchone()["id"]
@@ -261,7 +261,7 @@ def get_current_plan(username: str):
             if not u_row:
                 hashed = bcrypt.hashpw('demo123'.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
                 cur.execute(
-                    "INSERT INTO users (username, email, password_hash, xp, streak_days) VALUES (%s, %s, %s, 2450, 7) RETURNING id;",
+                    "INSERT INTO users (username, email, password_hash, xp, streak_days) VALUES (%s, %s, %s, 0, 0) RETURNING id;",
                     (username, f"{username.lower()}@trifit.io", hashed)
                 )
                 u_row = cur.fetchone()
@@ -336,7 +336,7 @@ Output the updated plan in the exact same JSON format as the original. Ensure it
             if not u_row:
                 hashed = bcrypt.hashpw('demo123'.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
                 cur.execute(
-                    "INSERT INTO users (username, email, password_hash, xp, streak_days) VALUES (%s, %s, %s, 2450, 7) RETURNING id;",
+                    "INSERT INTO users (username, email, password_hash, xp, streak_days) VALUES (%s, %s, %s, 0, 0) RETURNING id;",
                     (data.username, f"{data.username.lower()}@trifit.io", hashed)
                 )
                 u_row = cur.fetchone()

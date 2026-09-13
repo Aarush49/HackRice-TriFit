@@ -130,9 +130,10 @@ export default function App() {
   };
 
   const handleLoginSuccess = async (userData) => {
-    const name = userData?.username || userData?.name || userData?.email?.split('@')[0] || '';
+    const username = userData?.username || userData?.user?.username || userData?.name || userData?.email?.split('@')[0] || '';
+    const name = userData?.name || username;
     const email = userData?.email || '';
-    activeUsernameRef.current = userData?.username || name;
+    activeUsernameRef.current = username;
 
     setUserProfile({
       name,
@@ -140,7 +141,7 @@ export default function App() {
       race_type: '',
       race_date: '',
     });
-    setCurrentUser(userData || { username: name, email });
+    setCurrentUser(userData ? { ...userData, username, name } : { username, name, email });
     setIsLoggedIn(true);
     setDbEvents([]);
     setXp(0);
@@ -170,9 +171,9 @@ export default function App() {
         is_demo: true,
       });
     } else if (!userData?.isSignup) {
-      await fetchUserStats(userData?.username || name);
+      await fetchUserStats(username);
     }
-    fetchDbEvents(userData?.username || name);
+    fetchDbEvents(username);
 
     // Only show onboarding when creating a new account (signup)
     if (userData?.isSignup) {
@@ -302,7 +303,11 @@ export default function App() {
         <OnboardingQuestionnaireScreen
           currentUser={currentUser}
           token={token}
-          onComplete={() => {
+          onComplete={(profile) => {
+            if (profile) {
+              setUserProfile((previous) => ({ ...previous, ...profile }));
+              setTrainingPlan(null);
+            }
             setNeedsOnboarding(false);
             setActiveTab('today');
             setTourVisible(true);

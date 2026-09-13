@@ -12,18 +12,21 @@ export const toISODate = (dateStr) => {
 };
 
 export const calculateWeeksAway = (dateStr) => {
-  if (!dateStr) return '18 Weeks Away';
+  if (!dateStr) return 'Set Race Date';
   try {
-    const target = new Date(dateStr);
-    if (isNaN(target.getTime())) return '18 Weeks Away';
+    const isoDate = toISODate(dateStr);
+    if (!isoDate) return 'Set Race Date';
+    const [year, month, day] = isoDate.split('-').map(Number);
+    const target = new Date(year, month - 1, day);
     const now = new Date();
+    now.setHours(0, 0, 0, 0);
     const diffTime = target.getTime() - now.getTime();
     const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
     if (diffDays <= 0) return 'Race Week!';
-    const weeks = Math.round(diffDays / 7);
-    return `${weeks} Weeks Away`;
+    const weeks = Math.ceil(diffDays / 7);
+    return `${weeks} ${weeks === 1 ? 'Week' : 'Weeks'} Away`;
   } catch {
-    return '18 Weeks Away';
+    return 'Set Race Date';
   }
 };
 

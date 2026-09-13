@@ -178,7 +178,7 @@ export default function OnboardingQuestionnaireScreen({ onComplete, onBackToLogi
         console.log('Error saving onboarding data to database:', err);
       } finally {
         setIsSaving(false);
-        onComplete();
+        onComplete(payload);
       }
     }
   };
