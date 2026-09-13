@@ -10,6 +10,7 @@ export default function TodayWorkoutCard({
   isLoading,
   isTodaySelected,
   selectedDay,
+  todayDay,
   cardTheme,
   activeIcon,
   selectedDayData,
@@ -32,7 +33,7 @@ export default function TodayWorkoutCard({
         </View>
         <View style={[styles.todayPill, !isTodaySelected && { backgroundColor: '#f1f5f9' }]}>
           <Text style={[styles.todayPillText, !isTodaySelected && { color: '#64748b' }]}>
-            {isTodaySelected ? 'Today • Wed, Nov 12' : `Day ${selectedDay} • Scheduled`}
+            {isTodaySelected ? `Day ${todayDay} • Today` : `Day ${selectedDay} • Scheduled`}
           </Text>
         </View>
       </View>
@@ -124,7 +125,7 @@ export default function TodayWorkoutCard({
                   </View>
                   <TouchableOpacity
                     style={{ alignSelf: 'center', marginTop: 8, paddingVertical: 4, paddingHorizontal: 12 }}
-                    onPress={() => handleToggleComplete(false, 12)}
+                    onPress={() => handleToggleComplete(false, todayDay)}
                     activeOpacity={0.7}
                   >
                     <Text style={{ fontSize: 12, color: '#64748b', textDecorationLine: 'underline' }}>
@@ -144,7 +145,7 @@ export default function TodayWorkoutCard({
                   </BouncyButton>
                   <TouchableOpacity
                     style={[styles.startWorkoutBtn, { backgroundColor: 'rgba(255, 255, 255, 0.88)', borderWidth: 1, borderColor: cardTheme.btnBorder }]}
-                    onPress={() => handleToggleComplete(true, 12)}
+                    onPress={() => handleToggleComplete(true, todayDay)}
                     activeOpacity={0.8}
                   >
                     <Ionicons name="checkmark-done" size={18} color={cardTheme.btnBg} />
@@ -159,7 +160,7 @@ export default function TodayWorkoutCard({
                   </View>
                   <TouchableOpacity
                     style={[styles.startWorkoutBtn, { backgroundColor: 'rgba(255, 255, 255, 0.88)', borderWidth: 1, borderColor: '#0f766e' }]}
-                    onPress={() => handleToggleComplete(true, 12)}
+                    onPress={() => handleToggleComplete(true, todayDay)}
                     activeOpacity={0.8}
                   >
                     <Ionicons name="checkmark-done" size={18} color="#0f766e" />
@@ -167,7 +168,7 @@ export default function TodayWorkoutCard({
                   </TouchableOpacity>
                 </View>
               )
-            ) : selectedDay < 12 ? (
+            ) : selectedDay < todayDay ? (
               selectedDayData?.isCompleted ? (
                 <View style={{ width: '100%' }}>
                   <View style={[styles.startWorkoutBtn, styles.disabledPastBtn]}>
@@ -211,7 +212,7 @@ export default function TodayWorkoutCard({
                 </View>
                 <TouchableOpacity
                   style={styles.jumpToTodayBtn}
-                  onPress={() => setSelectedDay(12)}
+                  onPress={() => setSelectedDay(todayDay)}
                   activeOpacity={0.8}
                 >
                   <Ionicons name="calendar" size={14} color={COLORS.primary} />

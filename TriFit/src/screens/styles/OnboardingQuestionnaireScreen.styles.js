@@ -138,6 +138,27 @@ const styles = StyleSheet.create({
     color: '#0f172a',
     paddingVertical: 0,
   },
+  dateInputs: {
+    flex: 1,
+    height: 48,
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  dateYearInput: {
+    flex: 0,
+    width: 56,
+    textAlign: 'center',
+  },
+  dateShortInput: {
+    flex: 0,
+    width: 34,
+    textAlign: 'center',
+  },
+  dateSeparator: {
+    color: '#64748b',
+    fontSize: 16,
+    fontWeight: '600',
+  },
   daysRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',

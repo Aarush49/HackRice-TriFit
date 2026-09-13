@@ -9,6 +9,7 @@ export default function ViewingDayBanner({
   targetRace,
   isTodaySelected,
   selectedDay,
+  todayDay,
   onSelectDay,
 }) {
   return (
@@ -31,7 +32,7 @@ export default function ViewingDayBanner({
           <View style={styles.dayBadge}>
             <Ionicons name="calendar-outline" size={13} color={COLORS.primary} />
             <Text style={styles.dayBadgeText}>
-              {isTodaySelected ? 'Day 12 • Today' : `Day ${selectedDay} • Scheduled`}
+              {isTodaySelected ? `Day ${todayDay} • Today` : `Day ${selectedDay} • Scheduled`}
             </Text>
           </View>
         </View>
@@ -43,12 +44,12 @@ export default function ViewingDayBanner({
           <View style={styles.notTodayBannerLeft}>
             <Ionicons name="calendar" size={16} color="#00685f" />
             <Text style={styles.notTodayBannerText}>
-              Viewing Day {selectedDay} • {selectedDay < 12 ? 'Past Day (Completed)' : 'Future Day (Locked)'}
+              Viewing Day {selectedDay} • {selectedDay < todayDay ? 'Past Day (Completed)' : 'Future Day (Locked)'}
             </Text>
           </View>
           <TouchableOpacity
             style={styles.switchTodayBtn}
-            onPress={() => onSelectDay && onSelectDay(12)}
+            onPress={() => onSelectDay && onSelectDay(todayDay)}
             activeOpacity={0.8}
           >
             <Ionicons name="arrow-undo" size={13} color="#ffffff" style={{ marginRight: 4 }} />

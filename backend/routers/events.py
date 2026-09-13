@@ -10,6 +10,28 @@ from services.event_service import seed_month_events_in_db
 
 router = APIRouter(prefix="/api/events", tags=["events"])
 
+def get_current_streak(cur, username: str) -> int:
+    """Return consecutive distinct completion days ending today."""
+    cur.execute("""
+        WITH completion_days AS (
+            SELECT DISTINCT completed_at::date AS activity_date
+            FROM scheduled_events
+            WHERE username = %s
+              AND is_completed = TRUE
+              AND completed_at IS NOT NULL
+              AND completed_at::date <= CURRENT_DATE
+        ), ranked_days AS (
+            SELECT activity_date,
+                   ROW_NUMBER() OVER (ORDER BY activity_date DESC) - 1 AS days_ago
+            FROM completion_days
+        )
+        SELECT COUNT(*) AS streak
+        FROM ranked_days
+        WHERE activity_date = CURRENT_DATE - (days_ago::int);
+    """, (username,))
+    row = cur.fetchone()
+    return int(row["streak"] or 0)
+
 @router.get("")
 def get_scheduled_events(username: str, year: int = 2026, month: int = 9):
     conn = get_db()
@@ -139,12 +161,13 @@ def complete_event(data: CompleteEventRequest):
                 raise HTTPException(status_code=404, detail="Event not found to mark completed")
 
             xp_inc = data.xp_awarded if data.xp_awarded is not None else 120
+            streak_days = get_current_streak(cur, data.username)
             cur.execute("""
                 UPDATE users
-                SET xp = COALESCE(xp, 0) + %s, streak_days = COALESCE(streak_days, 0) + 1
+                SET xp = COALESCE(xp, 0) + %s, streak_days = %s
                 WHERE username = %s
                 RETURNING id, username, xp, streak_days;
-            """, (xp_inc, data.username))
+            """, (xp_inc, streak_days, data.username))
             user_stats = cur.fetchone()
             conn.commit()
 
@@ -177,9 +200,17 @@ def uncomplete_event(data: UncompleteEventRequest):
                     RETURNING *;
                 """, (data.username, data.day_number))
             event = cur.fetchone()
+            streak_days = get_current_streak(cur, data.username)
+            cur.execute("""
+                UPDATE users
+                SET streak_days = %s
+                WHERE username = %s
+                RETURNING id, username, xp, streak_days;
+            """, (streak_days, data.username))
+            user_stats = cur.fetchone()
             conn.commit()
             if event and "event_date" in event and event["event_date"]:
                 event["event_date"] = str(event["event_date"])
-            return {"success": True, "event": event}
+            return {"success": True, "event": event, "user": user_stats}
     finally:
         conn.close()

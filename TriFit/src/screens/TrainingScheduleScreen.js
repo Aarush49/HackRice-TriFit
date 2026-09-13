@@ -24,7 +24,7 @@ export default function TrainingScheduleScreen({
   userProfile,
   trainingPlan,
   adaptedPlan: parentAdaptedPlan,
-  selectedDay: parentSelectedDay = 12,
+  selectedDay: parentSelectedDay = 1,
   onSelectDay,
   onUpdatePlan,
   onUpdateAdaptedPlan,
@@ -34,8 +34,10 @@ export default function TrainingScheduleScreen({
   dbEvents: propDbEvents,
   onRefreshEvents,
 }) {
+  const isNewUser = currentUser?.isSignup && !currentUser?.isDemo;
+  const todayDay = isNewUser ? 1 : 12;
   const [viewMode, setViewMode] = useState('week'); // 'week' | 'month'
-  const [selectedDay, setSelectedDayState] = useState(parentSelectedDay || 12);
+  const [selectedDay, setSelectedDayState] = useState(parentSelectedDay || todayDay);
   const [adaptedPlan, setAdaptedPlan] = useState(parentAdaptedPlan || null);
 
   React.useEffect(() => {
@@ -190,7 +192,9 @@ export default function TrainingScheduleScreen({
   }, [currentUser]);
 
   const [localDbEvents, setLocalDbEvents] = useState([]);
-  const dbEvents = (propDbEvents && propDbEvents.length > 0) ? propDbEvents : localDbEvents;
+  const dbEvents = isNewUser
+    ? localDbEvents
+    : ((propDbEvents && propDbEvents.length > 0) ? propDbEvents : localDbEvents);
 
   const fetchDbEvents = async () => {
     if (onRefreshEvents) {
@@ -209,8 +213,27 @@ export default function TrainingScheduleScreen({
   };
 
   React.useEffect(() => {
-    fetchDbEvents();
+    if (!isNewUser) {
+      fetchDbEvents();
+    }
   }, [currentUser]);
+
+  const updateLocalCompletion = (dayToMark, complete) => {
+    setLocalDbEvents((previousEvents) => {
+      const existingEvent = previousEvents.find((event) => event.day_number === dayToMark);
+      const updatedEvent = {
+        ...(existingEvent || {}),
+        day_number: dayToMark,
+        status: complete ? 'completed' : 'planned',
+        is_completed: complete,
+        completed_at: complete ? new Date().toISOString() : null,
+      };
+
+      return existingEvent
+        ? previousEvents.map((event) => event.day_number === dayToMark ? updatedEvent : event)
+        : [...previousEvents, updatedEvent];
+    });
+  };
 
   const handleToggleComplete = async (complete = true, dayToMark = selectedDay) => {
     const username = currentUser?.username || 'DemoAccount';
@@ -228,17 +251,7 @@ export default function TrainingScheduleScreen({
       });
       const data = await res.json();
       if (data.success) {
-        setLocalDbEvents(prev => prev.map(e => {
-          if (e.day_number === dayToMark) {
-            return {
-              ...e,
-              status: complete ? 'completed' : 'planned',
-              is_completed: complete,
-              completed_at: complete ? new Date().toISOString() : null,
-            };
-          }
-          return e;
-        }));
+        updateLocalCompletion(dayToMark, complete);
         if (onRefreshEvents) {
           onRefreshEvents();
         }
@@ -248,37 +261,23 @@ export default function TrainingScheduleScreen({
       }
     } catch (err) {
       console.log('Toggle event completion offline fallback:', err?.message || err);
-      // Still update UI locally so user gets immediate visual gratification!
-      setLocalDbEvents(prev => prev.map(e => {
-        if (e.day_number === dayToMark) {
-          return {
-            ...e,
-            status: complete ? 'completed' : 'planned',
-            is_completed: complete,
-            completed_at: complete ? new Date().toISOString() : null,
-          };
-        }
-        return e;
-      }));
+      updateLocalCompletion(dayToMark, complete);
     }
   };
 
-  const days = [
-    { day: 'M', date: 7, isToday: false },
-    { day: 'T', date: 8, isToday: false },
-    { day: 'W', date: 9, isToday: false },
-    { day: 'T', date: 10, isToday: false },
-    { day: 'F', date: 11, isToday: false },
-    { day: 'S', date: 12, isToday: true },
-    { day: 'S', date: 13, isToday: false },
-  ];
+  const weekStartDay = isNewUser ? 1 : 7;
+  const days = ['M', 'T', 'W', 'T', 'F', 'S', 'S'].map((day, index) => ({
+    day,
+    date: weekStartDay + index,
+    isToday: weekStartDay + index === todayDay,
+  }));
 
   const monthDays = [
     // Week 1 (Aug 31 - Sep 6)
     { date: 31, isOtherMonth: true },
     { date: 1 }, { date: 2 }, { date: 3 }, { date: 4 }, { date: 5 }, { date: 6 },
     // Week 2 (Sep 7 - Sep 13)
-    { date: 7 }, { date: 8 }, { date: 9 }, { date: 10 }, { date: 11 }, { date: 12, isToday: true }, { date: 13 },
+    { date: 7 }, { date: 8 }, { date: 9 }, { date: 10 }, { date: 11 }, { date: 12 }, { date: 13 },
     // Week 3 (Sep 14 - Sep 20)
     { date: 14 }, { date: 15 }, { date: 16 }, { date: 17 }, { date: 18 }, { date: 19 }, { date: 20 },
     // Week 4 (Sep 21 - Sep 27)
@@ -373,7 +372,7 @@ export default function TrainingScheduleScreen({
 
     const ev = dbEvents.find(e => e.day_number === d.date);
     const isCompleted = ev ? (ev.status === 'completed' || ev.is_completed) : false;
-    const isToday = d.date === 12;
+    const isToday = d.date === todayDay;
 
     let workoutType = ev?.workout_type;
     let workoutDesc = ev?.description;
@@ -438,11 +437,11 @@ export default function TrainingScheduleScreen({
 
   let selectedDayData = null;
   if (viewMode === 'week') {
-    selectedDayData = dynamicDays.find(d => d.date === selectedDay) || dynamicDays[5];
+    selectedDayData = dynamicDays.find(d => d.date === selectedDay) || dynamicDays.find(d => d.date === todayDay);
   } else {
-    selectedDayData = dynamicMonthDays.find(d => !d.isOtherMonth && d.date === selectedDay) || dynamicMonthDays.find(d => !d.isOtherMonth && d.date === 12);
+    selectedDayData = dynamicMonthDays.find(d => !d.isOtherMonth && d.date === selectedDay) || dynamicMonthDays.find(d => !d.isOtherMonth && d.date === todayDay);
   }
-  const isTodaySelected = selectedDay === 12 || Boolean(selectedDayData?.isToday);
+  const isTodaySelected = selectedDay === todayDay || Boolean(selectedDayData?.isToday);
 
   const getScheduleTags = (workout_type) => {
     const wtype = (workout_type || '').toLowerCase();
@@ -604,6 +603,7 @@ export default function TrainingScheduleScreen({
         isLoading={isLoading}
         isTodaySelected={isTodaySelected}
         selectedDay={selectedDay}
+        todayDay={todayDay}
         cardTheme={cardTheme}
         activeIcon={activeIcon}
         selectedDayData={selectedDayData}

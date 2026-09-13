@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useRef } from 'react';
 import { View, Text, TouchableOpacity, TextInput, Platform } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import styles from '../../screens/styles/OnboardingQuestionnaireScreen.styles';
@@ -22,6 +22,22 @@ export default function QuestionnaireStep1({
   setPreviousTime,
   setValidationError,
 }) {
+  const monthInputRef = useRef(null);
+  const dayInputRef = useRef(null);
+  const [raceYear = '', raceMonth = '', raceDay = ''] = raceDate.split('-');
+
+  const updateAndroidDatePart = (part, value) => {
+    setValidationError('');
+    const digits = value.replace(/\D/g, '');
+    const nextParts = {
+      year: raceYear,
+      month: raceMonth,
+      day: raceDay,
+      [part]: digits,
+    };
+    setRaceDate(`${nextParts.year}-${nextParts.month}-${nextParts.day}`);
+  };
+
   return (
     <View style={styles.stepContainer}>
       <Text style={styles.sectionTitle}>Section 1: Race Details</Text>
@@ -91,6 +107,51 @@ export default function QuestionnaireStep1({
               setRaceDate(val);
             }}
           />
+        ) : Platform.OS === 'android' ? (
+          <View style={styles.dateInputs}>
+            <TextInput
+              style={[styles.inputField, styles.dateYearInput]}
+              placeholder="YYYY"
+              placeholderTextColor="#94a3b8"
+              keyboardType="number-pad"
+              maxLength={4}
+              value={raceYear}
+              onChangeText={(value) => {
+                updateAndroidDatePart('year', value);
+                if (value.length === 4) monthInputRef.current?.focus();
+              }}
+              returnKeyType="next"
+              onSubmitEditing={() => monthInputRef.current?.focus()}
+            />
+            <Text style={styles.dateSeparator}>-</Text>
+            <TextInput
+              ref={monthInputRef}
+              style={[styles.inputField, styles.dateShortInput]}
+              placeholder="MM"
+              placeholderTextColor="#94a3b8"
+              keyboardType="number-pad"
+              maxLength={2}
+              value={raceMonth}
+              onChangeText={(value) => {
+                updateAndroidDatePart('month', value);
+                if (value.length === 2) dayInputRef.current?.focus();
+              }}
+              returnKeyType="next"
+              onSubmitEditing={() => dayInputRef.current?.focus()}
+            />
+            <Text style={styles.dateSeparator}>-</Text>
+            <TextInput
+              ref={dayInputRef}
+              style={[styles.inputField, styles.dateShortInput]}
+              placeholder="DD"
+              placeholderTextColor="#94a3b8"
+              keyboardType="number-pad"
+              maxLength={2}
+              value={raceDay}
+              onChangeText={(value) => updateAndroidDatePart('day', value)}
+              returnKeyType="done"
+            />
+          </View>
         ) : (
           <TextInput
             style={styles.inputField}

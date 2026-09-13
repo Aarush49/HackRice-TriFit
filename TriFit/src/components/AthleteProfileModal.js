@@ -353,29 +353,6 @@ export default function AthleteProfileModal({
             </View>
           </View>
 
-          {/* Connected Gear & Apps */}
-          <Text style={styles.sectionTitle}>Connected Gear &amp; Integrations</Text>
-          <View style={styles.gearCard}>
-            <View style={styles.gearItem}>
-              <Ionicons name="watch-outline" size={22} color="#0f172a" />
-              <View style={styles.gearInfo}>
-                <Text style={styles.gearName}>Garmin Forerunner 965</Text>
-                <Text style={styles.gearStatus}>Connected • Auto Sync</Text>
-              </View>
-              <View style={styles.activeDot} />
-            </View>
-            <View style={styles.dividerLine} />
-
-            <View style={styles.gearItem}>
-              <Ionicons name="heart-outline" size={22} color="#e11d48" />
-              <View style={styles.gearInfo}>
-                <Text style={styles.gearName}>Apple HealthKit</Text>
-                <Text style={styles.gearStatus}>Synced 5 mins ago</Text>
-              </View>
-              <View style={styles.activeDot} />
-            </View>
-          </View>
-
           {/* Bottom Action Button */}
           <BouncyButton
             style={styles.logoutBtn}
@@ -779,40 +756,6 @@ const styles = StyleSheet.create({
     height: 1,
     backgroundColor: '#f1f5f9',
     marginVertical: 4,
-  },
-  gearCard: {
-    backgroundColor: '#ffffff',
-    borderRadius: 18,
-    padding: 16,
-    borderWidth: 1,
-    borderColor: '#e2e8f0',
-    marginBottom: 24,
-  },
-  gearItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingVertical: 8,
-    gap: 12,
-  },
-  gearInfo: {
-    flex: 1,
-  },
-  gearName: {
-    fontSize: 14,
-    fontWeight: '700',
-    color: '#0f172a',
-  },
-  gearStatus: {
-    fontSize: 11,
-    fontWeight: '500',
-    color: '#64748b',
-    marginTop: 2,
-  },
-  activeDot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-    backgroundColor: '#10b981',
   },
   logoutBtn: {
     flexDirection: 'row',

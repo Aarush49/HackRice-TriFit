@@ -20,15 +20,15 @@ export default function DailyMissionsScreen({
   userProfile,
   trainingPlan,
   adaptedPlan,
-  selectedDay = 12,
+  selectedDay = 1,
   onSelectDay,
   onUpdatePlan,
   onUpdateAdaptedPlan,
   onStartRun,
   onNavigateToSchedule,
-  xp = 420,
+  xp = 0,
   setXp,
-  streakDays = 14,
+  streakDays = 0,
   dbEvents = [],
   onRefreshEvents,
   onUpdateProfile,
@@ -41,13 +41,15 @@ export default function DailyMissionsScreen({
   const [activeScale] = useState(new Animated.Value(1));
   const [aiPlan, setAiPlan] = useState(trainingPlan || null);
   const [isLoading, setIsLoading] = useState(!trainingPlan);
+  const isNewUser = currentUser?.isSignup && !currentUser?.isDemo;
+  const todayDay = isNewUser ? 1 : 12;
   const [wearableData, setWearableData] = useState({
-    readiness_score: 88,
-    hrv_ms: 64,
-    sleep_hours: 8.2,
+    readiness_score: currentUser?.isDemo ? 88 : 0,
+    hrv_ms: currentUser?.isDemo ? 64 : 0,
+    sleep_hours: currentUser?.isDemo ? 8.2 : 0,
     steps: 0,
-    active_calories: 480,
-    zone2_minutes: 45,
+    active_calories: currentUser?.isDemo ? 480 : 0,
+    zone2_minutes: currentUser?.isDemo ? 45 : 0,
   });
   const [isSyncing, setIsSyncing] = useState(false);
 
@@ -121,11 +123,13 @@ export default function DailyMissionsScreen({
     if (!trainingPlan) {
       fetchOrGeneratePlan();
     }
-    fetchWearableData();
+    if (!isNewUser) {
+      fetchWearableData();
+    }
   }, [currentUser, trainingPlan, userProfile?.race_type]);
 
   const effectivePlan = trainingPlan || aiPlan;
-  const isTodaySelected = selectedDay === 12;
+  const isTodaySelected = selectedDay === todayDay;
 
   const currentEvent = dbEvents.find(e => e.day_number === selectedDay);
   const isEventCompleted = currentEvent ? (currentEvent.status === 'completed' || currentEvent.is_completed) : false;
@@ -294,6 +298,7 @@ export default function DailyMissionsScreen({
         targetRace={targetRace}
         isTodaySelected={isTodaySelected}
         selectedDay={selectedDay}
+        todayDay={todayDay}
         onSelectDay={onSelectDay}
       />
 
@@ -312,6 +317,7 @@ export default function DailyMissionsScreen({
         isEventCompleted={isEventCompleted}
         isTodaySelected={isTodaySelected}
         selectedDay={selectedDay}
+        todayDay={todayDay}
         handleStartWorkout={handleStartWorkout}
         onSelectDay={onSelectDay}
       />

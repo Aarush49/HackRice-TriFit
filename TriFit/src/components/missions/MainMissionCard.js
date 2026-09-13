@@ -13,6 +13,7 @@ export default function MainMissionCard({
   isEventCompleted,
   isTodaySelected,
   selectedDay,
+  todayDay,
   handleStartWorkout,
   onSelectDay,
 }) {
@@ -104,7 +105,7 @@ export default function MainMissionCard({
               </LinearGradient>
             </BouncyButton>
           )
-        ) : selectedDay < 12 ? (
+        ) : selectedDay < todayDay ? (
           isEventCompleted ? (
             <View style={styles.disabledPastBtn}>
               <Ionicons name="checkmark-circle" size={16} color="#059669" style={{ marginRight: 6 }} />
@@ -126,7 +127,7 @@ export default function MainMissionCard({
             </View>
             <TouchableOpacity
               style={styles.jumpTodaySecondaryBtn}
-              onPress={() => onSelectDay && onSelectDay(12)}
+              onPress={() => onSelectDay && onSelectDay(todayDay)}
               activeOpacity={0.8}
             >
               <Ionicons name="arrow-undo" size={13} color="#00685f" style={{ marginRight: 5 }} />

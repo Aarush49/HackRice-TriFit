@@ -31,7 +31,7 @@ export default function App() {
   const [token, setToken] = useState(null);
   const [xp, setXp] = useState(0);
   const [streakDays, setStreakDays] = useState(0);
-  const [selectedDay, setSelectedDay] = useState(12);
+  const [selectedDay, setSelectedDay] = useState(1);
   const [trainingPlan, setTrainingPlan] = useState(null);
   const [adaptedPlan, setAdaptedPlan] = useState(null);
   const [dbEvents, setDbEvents] = useState([]);
@@ -142,6 +142,11 @@ export default function App() {
     setCurrentUser(userData || { username: name, email });
     setIsLoggedIn(true);
     setDbEvents([]);
+    setXp(0);
+    setStreakDays(0);
+    setSelectedDay(userData?.isSignup ? 1 : 12);
+    setTrainingPlan(null);
+    setAdaptedPlan(null);
 
     if (userData?.isDemo) {
       // Seed demo stats directly — no backend call needed
@@ -163,7 +168,7 @@ export default function App() {
         resting_hr: 52,
         is_demo: true,
       });
-    } else {
+    } else if (!userData?.isSignup) {
       await fetchUserStats(userData?.username || name);
     }
     fetchDbEvents(userData?.username || name);
@@ -187,6 +192,7 @@ export default function App() {
     setNeedsOnboarding(false);
     setXp(0);
     setStreakDays(0);
+    setSelectedDay(1);
     setDbEvents([]);
     setUserProfile({ name: '', email: '', race_type: '', race_date: '' });
   };
@@ -199,7 +205,7 @@ export default function App() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           username,
-          day_number: 12,
+          day_number: selectedDay,
           event_date: '2026-09-12',
           xp_awarded: 120,
         }),
