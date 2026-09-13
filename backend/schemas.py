@@ -82,7 +82,7 @@ class TTSRequest(BaseModel):
     text: str
     voice_id: Optional[str] = None
 
-# --- Coach Maya Chat Schemas ---
+# --- Coach Jim Chat Schemas ---
 class ChatMessage(BaseModel):
     sender: Optional[str] = "user"
     text: str

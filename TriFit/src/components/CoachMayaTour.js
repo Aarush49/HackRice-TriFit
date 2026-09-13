@@ -11,7 +11,7 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { COLORS } from '../theme';
 
-const coachMayaAvatar = require('../../assets/coach_maya.png');
+const coachJimAvatar = require('../../assets/coach_jim.png');
 
 const TOUR_STEPS = [
   {
@@ -91,9 +91,9 @@ export default function CoachMayaTour({ visible, athleteName, onNavigate, onFini
         <View style={styles.card}>
           <View style={styles.headerRow}>
             <View style={styles.coachRow}>
-              <Image source={coachMayaAvatar} style={styles.avatar} />
+              <Image source={coachJimAvatar} style={styles.avatar} resizeMode="contain" />
               <View>
-                <Text style={styles.coachName}>Coach Maya</Text>
+                <Text style={styles.coachName}>Coach Jim 🦫</Text>
                 <Text style={styles.stepCount}>Quick tour · {stepIndex + 1} of {TOUR_STEPS.length}</Text>
               </View>
             </View>
@@ -189,6 +189,7 @@ const styles = StyleSheet.create({
     borderRadius: 22,
     borderWidth: 2,
     borderColor: '#89f5e7',
+    backgroundColor: '#e6fffa',
   },
   coachName: {
     fontSize: 16,

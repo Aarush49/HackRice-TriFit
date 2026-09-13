@@ -86,16 +86,15 @@ export default function ActiveRunModal({ visible, onClose, onFinishRun }) {
           </View>
         </View>
 
-        {/* Coach Maya Live Audio Feedback Callout */}
+        {/* Coach Jim Live Audio Feedback Callout */}
         <View style={styles.mayaBanner}>
           <Image
-            source={{
-              uri: 'https://lh3.googleusercontent.com/aida-public/AB6AXuDkV_Kd98o6DF09QGU3Gv4u4RHrWKdogf2D9arDcGv7Q2Vk-EFcwI-DUvPk06TqN1p7jMDTnyDAtO9Eut9Gg0SuOHxBLr6fjQZf-jVpL8FXVtywrDY7hIXe-MtvSbm4lJxvH33wjLyLAYHWJF0xAcl7H5IDxuWt2gTWNvt4MrnZiPmCs41s4CuDkgUULkPUD6Kba0pSdzqTetGtAlJdKyark3WqzqdqaCxkkRcLLGwn6YCYWjgbgx1-',
-            }}
+            source={require('../../assets/coach_jim.png')}
             style={styles.mayaAvatarMini}
+            resizeMode="contain"
           />
           <Text style={styles.mayaText}>
-            “Form looking smooth! Rhythm over speed. Breathe through the nose.”
+            “Coach Jim: Form looking smooth! 🦫 Rhythm over speed. Breathe through the nose.”
           </Text>
         </View>
 
@@ -252,6 +251,7 @@ const styles = StyleSheet.create({
     borderRadius: 18,
     borderWidth: 1,
     borderColor: '#10b981',
+    backgroundColor: '#e6fffa',
   },
   mayaText: {
     flex: 1,

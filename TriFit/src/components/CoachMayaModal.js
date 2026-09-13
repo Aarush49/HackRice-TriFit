@@ -30,8 +30,8 @@ export default function CoachMayaModal({ visible, onClose, onLogout, currentUser
   const [messages, setMessages] = useState([
     {
       id: '1',
-      sender: 'maya',
-      text: `Hey ${athleteName}! 🏃‍♀️ I'm Coach Maya, your AI endurance & longevity coach. What questions can I answer about your training, pacing, or recovery today?`,
+      sender: 'jim',
+      text: `Hey ${athleteName}! 🦫 I'm Coach Jim, your athletic capybara endurance & longevity coach. What questions can I answer about your training, pacing, or recovery today?`,
       time: 'Just now',
     },
   ]);
@@ -489,7 +489,7 @@ export default function CoachMayaModal({ visible, onClose, onLogout, currentUser
           username,
           message: query,
           history: updatedHistory.slice(-8).map((m) => ({
-            sender: m.sender === 'user' ? 'user' : 'maya',
+            sender: m.sender === 'user' ? 'user' : 'jim',
             text: m.text,
           })),
         }),
@@ -502,19 +502,20 @@ export default function CoachMayaModal({ visible, onClose, onLogout, currentUser
           ...prev,
           {
             id: mayaMsgId,
-            sender: 'maya',
+            sender: 'jim',
             text: data.reply,
             time: 'Just now',
           },
         ]);
-        // Automatically play Coach Maya's voice response using ElevenLabs
+        // Automatically play Coach Jim's voice response using ElevenLabs
         handlePlayAudio(mayaMsgId, data.reply);
       } else {
         throw new Error(data.detail || 'Failed to get coaching response');
       }
     } catch (err) {
-      console.log('Coach Maya chat fallback:', err?.message || err);
-      let fallbackReply = "I'm monitoring your heart rate drift & tendon load. Keep it steady!";
+      console.log('Coach Jim chat fallback:', err?.message || err);
+      // Smart localized fallback if network is unreachable
+      let fallbackReply = "I'm monitoring your heart rate drift & tendon load. Keep it steady! 🦫⚡";
       if (query.toLowerCase().includes('zone 2') || query.toLowerCase().includes('why')) {
         fallbackReply =
           "Zone 2 builds capillary density & mitochondrial efficiency without burning neural reserves. It keeps your tendons happy for race day! 🫀⚡";
@@ -523,7 +524,7 @@ export default function CoachMayaModal({ visible, onClose, onLogout, currentUser
           'For Hyrox, maintain 80% effort on the run segments so you have explosive power left for the Sled Push & Wall Balls! 🏋️‍♂️💨';
       } else if (query.toLowerCase().includes('legs') || query.toLowerCase().includes('great')) {
         fallbackReply =
-          "Awesome! Enjoy today's aero session. I've enabled real-time coaching cues for your aerobic heart rate zone! 🏃‍♀️✨";
+          "Awesome! Enjoy today's aero session. I've enabled real-time coaching cues for your aerobic heart rate zone! 🏃‍♂️✨";
       } else if (query.toLowerCase().includes('fitness age') || query.toLowerCase().includes('age')) {
         fallbackReply =
           "Your current Fitness Age is 27 (7 years younger than your 34 chronological age)! Keep banking easy aerobic miles to stay in the top 8%! 🧬✨";
@@ -534,7 +535,7 @@ export default function CoachMayaModal({ visible, onClose, onLogout, currentUser
         ...prev,
         {
           id: fallbackId,
-          sender: 'maya',
+          sender: 'jim',
           text: fallbackReply,
           time: 'Just now',
         },
@@ -561,17 +562,16 @@ export default function CoachMayaModal({ visible, onClose, onLogout, currentUser
               <View style={styles.mayaProfileRow}>
                 <View style={styles.avatarWrap}>
                   <Image
-                    source={{
-                      uri: 'https://lh3.googleusercontent.com/aida-public/AB6AXuDkV_Kd98o6DF09QGU3Gv4u4RHrWKdogf2D9arDcGv7Q2Vk-EFcwI-DUvPk06TqN1p7jMDTnyDAtO9Eut9Gg0SuOHxBLr6fjQZf-jVpL8FXVtywrDY7hIXe-MtvSbm4lJxvH33wjLyLAYHWJF0xAcl7H5IDxuWt2gTWNvt4MrnZiPmCs41s4CuDkgUULkPUD6Kba0pSdzqTetGtAlJdKyark3WqzqdqaCxkkRcLLGwn6YCYWjgbgx1-',
-                    }}
+                    source={require('../../assets/coach_jim.png')}
                     style={styles.mayaAvatar}
+                    resizeMode="contain"
                   />
                   <View style={styles.boltBadge}>
                     <Ionicons name="flash" size={10} color="#ffffff" />
                   </View>
                 </View>
                 <View>
-                  <Text style={styles.mayaName}>Coach Maya</Text>
+                  <Text style={styles.mayaName}>Coach Jim</Text>
                 </View>
 
                 {/* Speak / Microphone Button next to Coach Maya */}
@@ -644,7 +644,7 @@ export default function CoachMayaModal({ visible, onClose, onLogout, currentUser
                   >
                     {msg.text}
                   </Text>
-                  {msg.sender === 'maya' && (
+                  {msg.sender === 'jim' && (
                     <TouchableOpacity
                       style={styles.speakerBtn}
                       onPress={() => handlePlayAudio(msg.id, msg.text)}
@@ -672,7 +672,7 @@ export default function CoachMayaModal({ visible, onClose, onLogout, currentUser
             {isTyping && !isTranscribing && (
               <View style={[styles.msgBubble, styles.mayaMsgBubble, styles.statusBubble]}>
                 <Ionicons name="sparkles" size={16} color="#0d9488" />
-                <Text style={styles.typingText}>Coach Maya is thinking & generating voice...</Text>
+                <Text style={styles.typingText}>Coach Jim is thinking & generating voice... 🦫</Text>
               </View>
             )}
           </ScrollView>
@@ -696,7 +696,7 @@ export default function CoachMayaModal({ visible, onClose, onLogout, currentUser
           <View style={styles.inputRow}>
             <TextInput
               style={styles.textInput}
-              placeholder={isRecording ? 'Listening to your voice...' : 'Ask Maya anything about your training...'}
+              placeholder={isRecording ? 'Listening to your voice...' : 'Ask Coach Jim anything about your training...'}
               placeholderTextColor="#94a3b8"
               value={inputText}
               onChangeText={setInputText}
@@ -762,11 +762,12 @@ const styles = StyleSheet.create({
     position: 'relative',
   },
   mayaAvatar: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
+    width: 48,
+    height: 48,
+    borderRadius: 24,
     borderWidth: 2,
     borderColor: '#10b981',
+    backgroundColor: '#e6fffa',
   },
   boltBadge: {
     position: 'absolute',

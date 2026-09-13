@@ -13,7 +13,7 @@ from services.gemini_service import (
 )
 from services.tts_service import generate_tts_stream
 
-router = APIRouter(tags=["Coach Maya AI Chat"])
+router = APIRouter(tags=["Coach Jim AI Chat"])
 
 def get_athlete_context(username: str):
     profile_info = {}
@@ -73,8 +73,8 @@ def get_athlete_context(username: str):
     workout_name = today_event.get("workout_type") or "Compromised Run"
     workout_desc = today_event.get("description") or "4 x 800m run with 100 Wall Balls (6kg) buy-in"
 
-    system_instruction = f"""You are Coach Maya, the elite AI endurance, triathlon, and longevity coach for TriFit.
-Your personality is encouraging, scientifically grounded, high-energy, empathetic, and direct.
+    system_instruction = f"""You are Coach Jim, the friendly, athletic, charismatic capybara mascot and elite AI endurance, triathlon, and longevity coach for TriFit.
+Your personality is encouraging, scientifically grounded, charismatic, supportive, and direct. You have a relaxed, unflappable capybara calmness paired with high-performance endurance expertise.
 
 CURRENT ATHLETE PROFILE & BIOMETRICS:
 - Athlete Name: {athlete_name}
@@ -94,11 +94,12 @@ LIVE BIOMETRIC TELEMETRY:
 - Today's Scheduled Session: {workout_name} ({workout_desc})
 
 COACHING RULES:
-1. Speak directly, warmly, and enthusiastically to the athlete (e.g., "Hey {athlete_name}!").
+1. Speak directly, warmly, and enthusiastically to the athlete (e.g., "Hey {athlete_name}! 🦫").
 2. Answer questions thoroughly using sports science: explain aerobic base (Zone 2), lactate threshold, HR pacing, nutrition/fueling, hydration, tendon health, recovery, and race preparation.
 3. Reference their biometrics (readiness, HRV, sleep, target race) when relevant to contextualize your advice.
-4. Keep responses punchy and focused (around 2 to 3 concise sentences for spoken voice, or short paragraphs for chat).
-5. Never use complex markdown, nested bullets, or unpronounceable characters because your voice will be spoken via ElevenLabs text-to-speech."""
+4. Format responses cleanly for mobile & voice: use short, focused paragraphs, clear highlights, and energetic encouragement.
+5. Use emojis tastefully (🦫, 🏃‍♂️, 🫀, ⚡, 🧬, 🥑, 🚴‍♂️, 🏊‍♂️, 🏋️‍♂️).
+6. Keep responses focused and digestible (around 2 to 3 concise paragraphs max)."""
 
     return {
         "athlete_name": athlete_name,
@@ -111,7 +112,7 @@ COACHING RULES:
 
 @router.post("/api/coach/chat")
 @router.post("/api/chat")
-def chat_with_coach_maya(data: CoachChatRequest):
+def chat_with_coach_jim(data: CoachChatRequest):
     username = data.username or "DemoAccount"
     user_msg = data.message.strip()
     if not user_msg:
@@ -142,20 +143,20 @@ def chat_with_coach_maya(data: CoachChatRequest):
         return {
             "success": True,
             "reply": reply_text,
-            "coach": "Coach Maya",
+            "coach": "Coach Jim",
             "timestamp": "Just now"
         }
     except Exception as e:
         print(f"[CHAT ERROR] Gemini generation error: {e}")
         fallback_reply = (
-            f"Hey {ctx['athlete_name']}! 🏃‍♀️ I'm analyzing your {ctx['race_type']} training plan and telemetry (Readiness: {ctx['readiness']}%, HRV: {ctx['hrv']}ms). "
+            f"Hey {ctx['athlete_name']}! 🦫 Coach Jim here! I'm analyzing your {ctx['race_type']} training plan and telemetry (Readiness: {ctx['readiness']}%, HRV: {ctx['hrv']}ms). "
             f"For today's {ctx['workout_name']} session, focus on smooth aerobic rhythm and nasal breathing to build mitochondrial density. "
             "Let me know if you need pacing targets or recovery advice!"
         )
         return {
             "success": True,
             "reply": fallback_reply,
-            "coach": "Coach Maya",
+            "coach": "Coach Jim",
             "timestamp": "Just now",
             "fallback": True
         }

@@ -77,7 +77,7 @@ export default function AuthModal({ visible, onClose, onAuthSuccess }) {
             <Text style={styles.subtitle}>
               {isLogin
                 ? 'Sign in to sync your longevity stats'
-                : 'Join Coach Maya & start your endurance journey'}
+                : 'Join Coach Jim & start your endurance journey 🦫'}
             </Text>
           </View>
 

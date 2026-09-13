@@ -83,7 +83,7 @@ export default function RecipeDetailModal({
               <View style={styles.coachTipCard}>
                 <Ionicons name="bulb" size={20} color="#f59e0b" />
                 <View style={styles.coachTipTextWrap}>
-                  <Text style={styles.coachTipTitle}>Coach Maya Fuel Cue</Text>
+                  <Text style={styles.coachTipTitle}>Coach Jim's Fuel Cue 🦫</Text>
                   <Text style={styles.coachTipText}>{selectedRecipe.proTip}</Text>
                 </View>
               </View>

@@ -70,7 +70,7 @@ export default function OnboardingScreen({ onCompletePlan }) {
   const handleLockIn = () => {
     Alert.alert(
       'Plan Calibrated! 🎉',
-      `Your custom ${selectedRace.toUpperCase()} training plan has been generated with Coach Maya!`,
+      `Your custom ${selectedRace.toUpperCase()} training plan has been generated with Coach Jim! 🦫`,
       [{ text: 'View Missions', onPress: () => onCompletePlan() }]
     );
   };
@@ -290,13 +290,12 @@ export default function OnboardingScreen({ onCompletePlan }) {
       <View style={styles.mayaCalloutContainer}>
         <View style={styles.mayaAvatarRow}>
           <Image
-            source={{
-              uri: 'https://lh3.googleusercontent.com/aida-public/AB6AXuCAEsNjseeGCE734scFcz96x_HWKdSap5jgR_AYgkz_inJm0s80m7TjPdEAvjo4YSRSXNDCaHnvRdniP6v37kUaaO7pCO-098Goo8frI962Ert8mG3L4xfu60RkRm-eItgMuAufHEAL4xqJWYCYgQKUv9PtHah6rUmXZ9SIc8aMqM09OKVwKbRVI3gGMKOt1rABwPVLAF1JK1lRWRqgF1CSSqhq-27SjIoVbVAJfr9L8bF7qcJjS8Dp',
-            }}
+            source={require('../../assets/coach_jim.png')}
             style={styles.mayaCalloutAvatar}
+            resizeMode="contain"
           />
           <View style={styles.mayaCalloutNameTag}>
-            <Text style={styles.mayaCalloutName}>Coach Maya</Text>
+            <Text style={styles.mayaCalloutName}>Coach Jim 🦫</Text>
           </View>
         </View>
 
@@ -649,6 +648,7 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     borderWidth: 2,
     borderColor: '#ffffff',
+    backgroundColor: '#e6fffa',
   },
   mayaCalloutNameTag: {
     backgroundColor: '#ffffff',

@@ -110,7 +110,7 @@ export default function PlanAdaptationsSection({
         <View style={styles.promiseFooter}>
           <MaterialCommunityIcons name="check-decagram" size={18} color={COLORS.primary} />
           <Text style={styles.promiseText}>
-            Coach Maya automatically rebalances your weekly training volume.
+            Coach Jim automatically rebalances your weekly training volume. 🦫
           </Text>
         </View>
       </View>

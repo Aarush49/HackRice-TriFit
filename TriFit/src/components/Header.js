@@ -5,7 +5,7 @@ import { COLORS } from '../theme';
 
 import { BouncyButton } from './AnimatedComponents';
 
-const coachMayaAvatar = require('../../assets/coach_maya.png');
+const coachJimAvatar = require('../../assets/coach_jim.png');
 
 export default function Header({ onOpenProfile, onOpenCoach, onOpenAuth, currentUser, streakDays = 0, xpPoints = 0 }) {
   return (

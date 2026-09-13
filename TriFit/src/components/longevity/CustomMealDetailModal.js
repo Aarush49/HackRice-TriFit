@@ -80,7 +80,7 @@ export default function CustomMealDetailModal({
               onChangeText={setCustomName}
             />
             <Text style={styles.modalSummary}>
-              Enter your custom nutrition macros below. Coach Maya will track these towards your daily endurance targets.
+              Enter your custom nutrition macros below. Coach Jim will track these towards your daily endurance targets.
             </Text>
 
             {/* Macro Nutrition Summary & Input Cards */}

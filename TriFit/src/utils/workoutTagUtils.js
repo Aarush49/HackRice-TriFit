@@ -9,13 +9,13 @@ export const getWorkoutTags = (workout_type) => {
     return [
       { text: 'Lactate Threshold', bg: '#fff7ed', color: '#c2410c' },
       { text: 'Zone 3/4 Sustained', bg: '#ffedd5', color: '#ea580c' },
-      { text: 'Maya Cues', bg: '#f0fdfa', color: '#0d9488' }
+      { text: 'Jim Cues 🦫', bg: '#f0fdfa', color: '#0d9488' }
     ];
   } else if (wtype.includes('run') || wtype.includes('jog')) {
     return [
       { text: 'Zone 2 Aerobic Base', bg: '#f0fdfa', color: '#0f766e' },
       { text: 'Tendon Adaptations', bg: '#ccfbf1', color: '#0d9488' },
-      { text: 'Maya Cues', bg: '#f0fdfa', color: '#0d9488' }
+      { text: 'Jim Cues 🦫', bg: '#f0fdfa', color: '#0d9488' }
     ];
   } else if (wtype.includes('swim')) {
     return [
@@ -31,7 +31,7 @@ export const getWorkoutTags = (workout_type) => {
     return [
       { text: 'Power Endurance', bg: '#f3e8ff', color: '#7e22ce' },
       { text: 'Grip & Core Strength', bg: '#ede9fe', color: '#6b21a8' },
-      { text: 'Maya Cues', bg: '#f0fdfa', color: '#0d9488' }
+      { text: 'Jim Cues 🦫', bg: '#f0fdfa', color: '#0d9488' }
     ];
   } else {
     return [
