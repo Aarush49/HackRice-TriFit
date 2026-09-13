@@ -66,10 +66,23 @@ export default function OnboardingQuestionnaireScreen({ onComplete, onBackToLogi
       if (!raceDate || !raceDate.trim()) {
         return 'Please select or enter your target race date.';
       }
-      // Validate 4-digit race year
-      const yearStr = raceDate.split('-')[0];
-      if (!yearStr || yearStr.length !== 4 || isNaN(parseInt(yearStr, 10)) || parseInt(yearStr, 10) < 2024 || parseInt(yearStr, 10) > 2099) {
-        return 'Please enter a valid 4-digit race year (e.g. 2026).';
+      const dateMatch = /^(\d{4})-(\d{2})-(\d{2})$/.exec(raceDate);
+      if (!dateMatch) {
+        return 'Please enter the race date as YYYY-MM-DD.';
+      }
+      const [, yearText, monthText, dayText] = dateMatch;
+      const year = Number(yearText);
+      const month = Number(monthText);
+      const day = Number(dayText);
+      const parsedDate = new Date(Date.UTC(year, month - 1, day));
+      const isValidDate =
+        year >= 2024 &&
+        year <= 2099 &&
+        parsedDate.getUTCFullYear() === year &&
+        parsedDate.getUTCMonth() === month - 1 &&
+        parsedDate.getUTCDate() === day;
+      if (!isValidDate) {
+        return 'Please enter a valid race date.';
       }
       if (!isFirstTime) {
         return 'Please indicate if this is your first time doing this type of event.';

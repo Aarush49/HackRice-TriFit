@@ -3,6 +3,14 @@ import { View, Text, TouchableOpacity, TextInput, Platform } from 'react-native'
 import { Ionicons } from '@expo/vector-icons';
 import styles from '../../screens/styles/OnboardingQuestionnaireScreen.styles';
 
+const formatRaceDateInput = (value) => {
+  const digits = value.replace(/\D/g, '').slice(0, 8);
+
+  if (digits.length <= 4) return digits;
+  if (digits.length <= 6) return `${digits.slice(0, 4)}-${digits.slice(4)}`;
+  return `${digits.slice(0, 4)}-${digits.slice(4, 6)}-${digits.slice(6)}`;
+};
+
 export default function QuestionnaireStep1({
   raceType,
   setRaceType,
@@ -88,18 +96,12 @@ export default function QuestionnaireStep1({
             style={styles.inputField}
             placeholder="YYYY-MM-DD"
             placeholderTextColor="#94a3b8"
-            keyboardType="numbers-and-punctuation"
+            keyboardType="number-pad"
             maxLength={10}
             value={raceDate}
             onChangeText={(val) => {
               setValidationError('');
-              let cleaned = val.replace(/[^0-9-]/g, '');
-              const parts = cleaned.split('-');
-              if (parts[0] && parts[0].length > 4) {
-                parts[0] = parts[0].slice(0, 4);
-                cleaned = parts.join('-');
-              }
-              setRaceDate(cleaned);
+              setRaceDate(formatRaceDateInput(val));
             }}
           />
         )}
