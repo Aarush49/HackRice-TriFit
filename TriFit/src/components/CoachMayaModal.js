@@ -327,29 +327,77 @@ export default function CoachMayaModal({ visible, onClose, onLogout, currentUser
     }
   };
 
+  const readNativeRecording = async (recordedUri) => {
+    try {
+      // Load the native file API only when voice recording is used. This keeps
+      // an unavailable native module from preventing the app itself from mounting.
+      const { File } = await import('expo-file-system');
+      const audioFile = new File(recordedUri);
+      if (!audioFile.exists || !audioFile.size || audioFile.size < 1000) {
+        throw new Error('The recording was empty or too short.');
+      }
+
+      const base64Audio = await audioFile.base64();
+      const extension = (audioFile.extension || '').toLowerCase();
+      return {
+        base64Audio,
+        mimeType: extension === '.3gp' ? 'audio/3gpp' : 'audio/mp4',
+      };
+    } catch (fileSystemError) {
+      if (fileSystemError?.message === 'The recording was empty or too short.') {
+        throw fileSystemError;
+      }
+
+      // Compatibility path for Expo clients that do not expose the modern File API.
+      const response = await fetch(recordedUri);
+      const blob = await response.blob();
+      if (!blob.size || blob.size < 1000) {
+        throw new Error('The recording was empty or too short.');
+      }
+
+      const base64Audio = await new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onerror = () => reject(new Error('The recording could not be read.'));
+        reader.onloadend = () => resolve((reader.result || '').toString().split(',')[1] || '');
+        reader.readAsDataURL(blob);
+      });
+
+      return { base64Audio, mimeType: blob.type || 'audio/mp4' };
+    }
+  };
+
   const stopRecording = async () => {
     setIsRecording(false);
 
     if (Platform.OS !== 'web') {
-      if (expoRecorder && expoRecorder.isRecording) {
+      if (expoRecorder) {
         try {
           await expoRecorder.stop();
           const recordedUri = expoRecorder.uri;
-          if (recordedUri) {
-            const res = await fetch(recordedUri);
-            const blob = await res.blob();
-            const reader = new FileReader();
-            reader.readAsDataURL(blob);
-            reader.onloadend = () => {
-              const resUrl = reader.result || '';
-              const b64 = resUrl.split(',')[1];
-              if (b64) {
-                sendVoiceToMaya(b64, blob.type || 'audio/m4a');
-              }
-            };
+          await setAudioModeAsync({
+            allowsRecording: false,
+            playsInSilentMode: true,
+          });
+
+          if (!recordedUri) {
+            throw new Error('Recorder did not return an audio file.');
           }
+
+          const { base64Audio, mimeType } = await readNativeRecording(recordedUri);
+          if (!base64Audio) {
+            throw new Error('The recording could not be read.');
+          }
+          await sendVoiceToMaya(base64Audio, mimeType);
         } catch (err) {
           console.error('Error stopping expo-audio recording:', err);
+          setIsTranscribing(false);
+          setIsTyping(false);
+          Alert.alert(
+            'Voice Message Error',
+            err?.message === 'The recording was empty or too short.'
+              ? 'I could not hear enough audio. Hold the microphone button, speak clearly, then tap Done.'
+              : 'Your voice message could not be processed. Please try recording again.'
+          );
         }
       }
     } else {
@@ -392,6 +440,22 @@ export default function CoachMayaModal({ visible, onClose, onLogout, currentUser
 
       if (!res.ok) {
         throw new Error(`Server returned status ${res.status}`);
+      }
+
+      const responseType = res.headers.get('content-type') || '';
+      if (responseType.includes('application/json')) {
+        const data = await res.json();
+        const transcription = data.transcription || 'Voice check-in';
+        const reply = data.reply || 'I received your message, but could not generate an audio response.';
+        const userMsgId = Date.now().toString();
+        const mayaMsgId = (Date.now() + 1).toString();
+
+        setMessages((prev) => [
+          ...prev,
+          { id: userMsgId, sender: 'user', text: transcription, time: 'Now' },
+          { id: mayaMsgId, sender: 'maya', text: reply, time: 'Just now' },
+        ]);
+        return;
       }
 
       // Read custom response headers

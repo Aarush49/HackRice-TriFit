@@ -6,6 +6,15 @@
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
+    "plugins": [
+      [
+        "expo-audio",
+        {
+          "microphonePermission": "Allow TriFit to use your microphone so you can talk with Coach Maya.",
+          "recordAudioAndroid": true
+        }
+      ]
+    ],
     "ios": {
       "supportsTablet": true
     },

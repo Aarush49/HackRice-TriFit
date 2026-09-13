@@ -74,13 +74,11 @@ def generate_gemini_chat_response(
 
 def transcribe_audio_with_elevenlabs(audio_bytes: bytes, mime_type: str = "audio/webm") -> str:
     """
-    Transcribes spoken audio bytes using ElevenLabs Speech-to-Text API.
+    Transcribes spoken audio bytes using ElevenLabs Speech-to-Text when
+    available, with Gemini audio transcription as a fallback.
     """
     from io import BytesIO
-    from config import eleven_client
-
-    if not eleven_client:
-        raise HTTPException(status_code=500, detail="ELEVENLABS_API_KEY is not configured.")
+    from config import eleven_client, gemini_client, types
 
     # Detect actual audio format from magic bytes
     clean_mime = mime_type or "audio/webm"
@@ -104,29 +102,50 @@ def transcribe_audio_with_elevenlabs(audio_bytes: bytes, mime_type: str = "audio
         "audio/mp3": "audio.mp3",
         "audio/mpeg": "audio.mp3",
         "audio/mp4": "audio.mp4",
+        "audio/m4a": "audio.m4a",
+        "audio/3gpp": "audio.3gp",
         "audio/ogg": "audio.ogg",
     }
     filename = mime_to_ext.get(clean_mime, "audio.webm")
 
     print(f"[STT] Transcribing {len(audio_bytes)} bytes, detected mime={clean_mime}, filename={filename}")
 
-    try:
-        audio_file = BytesIO(audio_bytes)
+    if eleven_client:
+        try:
+            audio_file = BytesIO(audio_bytes)
 
-        result = eleven_client.speech_to_text.convert(
-            model_id="scribe_v1",
-            file=(filename, audio_file, clean_mime),
-            language_code="en",
-        )
+            result = eleven_client.speech_to_text.convert(
+                model_id="scribe_v1",
+                file=(filename, audio_file, clean_mime),
+                language_code="en",
+            )
 
-        transcription = (result.text or "").strip()
-        # Clean any extraneous quotes
-        if transcription.startswith('"') and transcription.endswith('"'):
-            transcription = transcription[1:-1].strip()
-        print(f"[STT] Transcription result: '{transcription[:100]}'")
-        return transcription
-    except Exception as e:
-        print(f"[TRANSCRIBE ERROR] ElevenLabs STT error: {e}")
+            transcription = (result.text or "").strip()
+            if transcription.startswith('"') and transcription.endswith('"'):
+                transcription = transcription[1:-1].strip()
+            if transcription:
+                print(f"[STT] ElevenLabs transcription: '{transcription[:100]}'")
+                return transcription
+        except Exception as e:
+            print(f"[TRANSCRIBE WARN] ElevenLabs STT failed; trying Gemini: {e}")
+
+    if gemini_client and types:
+        try:
+            response = gemini_client.models.generate_content(
+                model="gemini-3.6-flash",
+                contents=[
+                    types.Part.from_bytes(data=audio_bytes, mime_type=clean_mime),
+                    "Transcribe this spoken message exactly. Return only the transcript, with no commentary.",
+                ],
+            )
+            transcription = (response.text or "").strip()
+            if transcription.startswith('"') and transcription.endswith('"'):
+                transcription = transcription[1:-1].strip()
+            if transcription:
+                print(f"[STT] Gemini transcription: '{transcription[:100]}'")
+                return transcription
+        except Exception as e:
+            print(f"[TRANSCRIBE ERROR] Gemini audio transcription failed: {e}")
 
     return ""
 
