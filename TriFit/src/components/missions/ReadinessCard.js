@@ -2,13 +2,11 @@ import React from 'react';
 import { View, Text } from 'react-native';
 import Svg, { Circle } from 'react-native-svg';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
-import { PopInView, BouncyButton } from '../AnimatedComponents';
+import { PopInView } from '../AnimatedComponents';
 import styles from '../../screens/styles/DailyMissionsScreen.styles';
 
 export default function ReadinessCard({
   wearableData,
-  isSyncing,
-  handleSyncWearables,
   completedHabits,
 }) {
   return (
@@ -64,20 +62,6 @@ export default function ReadinessCard({
               </View>
             </View>
           </View>
-        </View>
-
-        {/* Right Quests Progress Indicator & Sync Button */}
-        <View style={styles.questsSummary}>
-          <BouncyButton
-            style={styles.syncBtnPill}
-            onPress={handleSyncWearables}
-            disabled={isSyncing}
-            shakeOnPress={false}
-          >
-            <MaterialCommunityIcons name="sync" size={13} color="#0f766e" />
-            <Text style={styles.syncBtnText}>{isSyncing ? 'Syncing...' : 'Sync Wearables'}</Text>
-          </BouncyButton>
-          <Text style={styles.xpGainedSub}>Open Wearables API</Text>
         </View>
       </View>
 

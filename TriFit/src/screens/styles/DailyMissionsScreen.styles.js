@@ -147,45 +147,6 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     color: '#0f766e',
   },
-  questsSummary: {
-    alignItems: 'flex-end',
-  },
-  questsBadge: {
-    backgroundColor: '#ffedd5',
-    paddingHorizontal: 8,
-    paddingVertical: 2,
-    borderRadius: 999,
-    borderWidth: 1,
-    borderColor: '#fed7aa',
-  },
-  questsBadgeText: {
-    fontSize: 11,
-    fontWeight: '800',
-    color: '#ea580c',
-  },
-  syncBtnPill: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-    backgroundColor: '#ccfbf1',
-    paddingHorizontal: 9,
-    paddingVertical: 5,
-    borderRadius: 999,
-    borderWidth: 1,
-    borderColor: '#99f6e4',
-  },
-  syncBtnText: {
-    fontSize: 10.5,
-    fontWeight: '800',
-    color: '#0f766e',
-  },
-  xpGainedSub: {
-    fontSize: 10,
-    fontWeight: '600',
-    color: '#64748b',
-    marginTop: 3,
-  },
-
   /* Micro-Gauge Strip */
   microGaugeStrip: {
     flexDirection: 'row',

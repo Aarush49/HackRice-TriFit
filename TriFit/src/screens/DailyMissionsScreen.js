@@ -298,8 +298,6 @@ export default function DailyMissionsScreen({
 
       <ReadinessCard
         wearableData={wearableData}
-        isSyncing={isSyncing}
-        handleSyncWearables={handleSyncWearables}
         completedHabits={completedHabits}
       />
 
