@@ -58,6 +58,7 @@ class UncompleteEventRequest(BaseModel):
     username: str
     event_date: Optional[str] = None
     day_number: Optional[int] = None
+    xp_to_remove: Optional[int] = 120
 
 class SeedEventsRequest(BaseModel):
     username: str

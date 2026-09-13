@@ -199,36 +199,6 @@ export default function App() {
     setUserProfile({ name: '', email: '', race_type: '', race_date: '' });
   };
 
-  const handleFinishRun = async () => {
-    const username = currentUser?.username || 'DemoAccount';
-    try {
-      const res = await fetch(`${API_BASE_URL}/api/events/complete`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          username,
-          day_number: selectedDay,
-          event_date: new Date().toISOString().slice(0, 10),
-          xp_awarded: 120,
-        }),
-      });
-      const data = await res.json();
-      if (data.success && data.user) {
-        setXp(data.user.xp);
-        setStreakDays(data.user.streak_days);
-      } else {
-        setXp((prev) => prev + 120);
-        setStreakDays((prev) => (prev === 0 ? 1 : prev));
-      }
-    } catch (err) {
-      console.log('Error completing event from run modal:', err?.message || err);
-      setXp((prev) => prev + 120);
-      setStreakDays((prev) => (prev === 0 ? 1 : prev));
-    } finally {
-      fetchDbEvents();
-    }
-  };
-
   const handleAuthSuccess = (user, authToken) => {
     setCurrentUser(user);
     setToken(authToken);
@@ -447,7 +417,7 @@ export default function App() {
       <ActiveRunModal
         visible={runVisible}
         onClose={() => setRunVisible(false)}
-        onFinishRun={handleFinishRun}
+        onFinishRun={() => {}}
       />
 
       {/* Login & Account Creation Modal */}

@@ -264,22 +264,6 @@ const styles = StyleSheet.create({
     color: '#131b2e',
     lineHeight: 20,
   },
-  xpRewardBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 3,
-    backgroundColor: '#ccfbf1',
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-    borderRadius: 999,
-    borderWidth: 1,
-    borderColor: '#99f6e4',
-  },
-  xpRewardText: {
-    fontSize: 11,
-    fontWeight: '800',
-    color: '#0f766e',
-  },
   highlightsRow: {
     flexDirection: 'row',
     flexWrap: 'wrap',

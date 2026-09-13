@@ -204,24 +204,25 @@ def uncomplete_event(data: UncompleteEventRequest):
                 cur.execute("""
                     UPDATE scheduled_events
                     SET status = 'planned', is_completed = FALSE, completed_at = NULL, updated_at = CURRENT_TIMESTAMP
-                    WHERE username = %s AND event_date = %s
+                    WHERE username = %s AND event_date = %s AND is_completed = TRUE
                     RETURNING *;
                 """, (data.username, data.event_date))
             elif data.day_number:
                 cur.execute("""
                     UPDATE scheduled_events
                     SET status = 'planned', is_completed = FALSE, completed_at = NULL, updated_at = CURRENT_TIMESTAMP
-                    WHERE username = %s AND day_number = %s AND EXTRACT(MONTH FROM event_date) = 9
+                    WHERE username = %s AND day_number = %s AND is_completed = TRUE
                     RETURNING *;
                 """, (data.username, data.day_number))
             event = cur.fetchone()
             streak_days = get_current_streak(cur, data.username)
+            xp_to_remove = max(0, data.xp_to_remove or 0) if event else 0
             cur.execute("""
                 UPDATE users
-                SET streak_days = %s
+                SET xp = GREATEST(0, COALESCE(xp, 0) - %s), streak_days = %s
                 WHERE username = %s
                 RETURNING id, username, xp, streak_days;
-            """, (streak_days, data.username))
+            """, (xp_to_remove, streak_days, data.username))
             user_stats = cur.fetchone()
             conn.commit()
             if event and "event_date" in event and event["event_date"]:

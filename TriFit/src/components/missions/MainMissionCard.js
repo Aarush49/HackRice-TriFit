@@ -50,10 +50,6 @@ export default function MainMissionCard({
             </View>
           </View>
 
-          <View style={styles.xpRewardBadge}>
-            <Ionicons name="flash" size={12} color="#0f766e" />
-            <Text style={styles.xpRewardText}>+85 XP</Text>
-          </View>
         </View>
 
         {/* Workout Highlights Strip (Clickable Button -> Schedule) */}
