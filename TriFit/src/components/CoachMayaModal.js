@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import {
   Modal,
   View,
@@ -10,10 +10,18 @@ import {
   ScrollView,
   KeyboardAvoidingView,
   Platform,
+  Alert,
+  Animated,
 } from 'react-native';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
-import { createAudioPlayer } from 'expo-audio';
+import {
+  createAudioPlayer,
+  useAudioRecorder,
+  RecordingPresets,
+  requestRecordingPermissionsAsync,
+  setAudioModeAsync,
+} from 'expo-audio';
 import { COLORS } from '../theme';
 import API_BASE_URL from '../config';
 
@@ -29,16 +37,76 @@ export default function CoachMayaModal({ visible, onClose, onLogout, currentUser
   ]);
   const [inputText, setInputText] = useState('');
   const [isTyping, setIsTyping] = useState(false);
+  const [isTranscribing, setIsTranscribing] = useState(false);
 
+  // Audio Playback state
   const [playingId, setPlayingId] = useState(null);
-  const currentAudioPlayerRef = React.useRef(null);
+  const currentAudioPlayerRef = useRef(null);
 
-  React.useEffect(() => {
+  // Audio Recording state
+  const [isRecording, setIsRecording] = useState(false);
+  const [recordingSeconds, setRecordingSeconds] = useState(0);
+  const pulseAnim = useRef(new Animated.Value(1)).current;
+  const timerRef = useRef(null);
+
+  // Native expo-audio recorder hook
+  const expoRecorder = useAudioRecorder ? useAudioRecorder(RecordingPresets?.HIGH_QUALITY || {}) : null;
+
+  // Web recording refs
+  const mediaRecorderRef = useRef(null);
+  const audioChunksRef = useRef([]);
+  const mediaStreamRef = useRef(null);
+
+  // Pulse animation for recording state
+  useEffect(() => {
+    let anim;
+    if (isRecording) {
+      anim = Animated.loop(
+        Animated.sequence([
+          Animated.timing(pulseAnim, {
+            toValue: 1.22,
+            duration: 500,
+            useNativeDriver: true,
+          }),
+          Animated.timing(pulseAnim, {
+            toValue: 1,
+            duration: 500,
+            useNativeDriver: true,
+          }),
+        ])
+      );
+      anim.start();
+
+      timerRef.current = setInterval(() => {
+        setRecordingSeconds((prev) => prev + 1);
+      }, 1000);
+    } else {
+      pulseAnim.setValue(1);
+      if (timerRef.current) {
+        clearInterval(timerRef.current);
+        timerRef.current = null;
+      }
+      setRecordingSeconds(0);
+    }
+
+    return () => {
+      if (anim) anim.stop();
+      if (timerRef.current) clearInterval(timerRef.current);
+    };
+  }, [isRecording]);
+
+  useEffect(() => {
     if (!visible) {
       stopCurrentAudio();
+      if (isRecording) {
+        stopRecording();
+      }
     }
     return () => {
       stopCurrentAudio();
+      if (isRecording) {
+        stopRecording();
+      }
     };
   }, [visible]);
 
@@ -60,6 +128,58 @@ export default function CoachMayaModal({ visible, onClose, onLogout, currentUser
           .replace(/\s+/g, ' ')
           .trim()
       : '';
+  };
+
+  // Play audio Data URI (cross-platform with expo-audio on mobile)
+  const playAudioUri = async (msgId, dataUri) => {
+    stopCurrentAudio();
+    setPlayingId(msgId);
+
+    try {
+      if (Platform.OS === 'web') {
+        const audio = new Audio(dataUri);
+        audio.onended = () => {
+          setPlayingId(null);
+          currentAudioPlayerRef.current = null;
+        };
+        audio.onerror = (e) => {
+          console.error('Audio playback error on web:', e);
+          setPlayingId(null);
+        };
+        currentAudioPlayerRef.current = {
+          stop: () => {
+            try {
+              audio.pause();
+              audio.currentTime = 0;
+            } catch (e) {}
+          },
+        };
+        await audio.play();
+      } else {
+        // Mobile (Expo Go on iOS/Android) using expo-audio createAudioPlayer
+        const player = createAudioPlayer(dataUri);
+        currentAudioPlayerRef.current = {
+          stop: () => {
+            try {
+              player.pause();
+              player.remove();
+            } catch (e) {}
+          },
+        };
+
+        if (player.addListener) {
+          player.addListener('playbackStatusUpdate', (status) => {
+            if (status?.didJustFinish || status?.isEnded || status?.status === 'ended') {
+              setPlayingId(null);
+            }
+          });
+        }
+        player.play();
+      }
+    } catch (err) {
+      console.error('Error in playAudioUri:', err);
+      setPlayingId(null);
+    }
   };
 
   const handlePlayAudio = async (msgId, text) => {
@@ -98,50 +218,242 @@ export default function CoachMayaModal({ visible, onClose, onLogout, currentUser
       }
       const base64Str = typeof btoa !== 'undefined' ? btoa(binary) : global.btoa ? global.btoa(binary) : '';
       const dataUri = `data:audio/mpeg;base64,${base64Str}`;
-
-      if (Platform.OS === 'web') {
-        const audio = new Audio(dataUri);
-        audio.onended = () => {
-          setPlayingId(null);
-          currentAudioPlayerRef.current = null;
-        };
-        audio.onerror = (e) => {
-          console.error('Audio playback error:', e);
-          setPlayingId(null);
-        };
-        currentAudioPlayerRef.current = {
-          stop: () => {
-            try {
-              audio.pause();
-              audio.currentTime = 0;
-            } catch (e) {}
-          },
-        };
-        await audio.play();
-      } else {
-        // Mobile (Expo Go on iOS/Android) using expo-audio player
-        const player = createAudioPlayer(dataUri);
-        currentAudioPlayerRef.current = {
-          stop: () => {
-            try {
-              player.pause();
-              player.remove();
-            } catch (e) {}
-          },
-        };
-
-        if (player.addListener) {
-          player.addListener('playbackStatusUpdate', (status) => {
-            if (status?.didJustFinish || status?.isEnded || status?.status === 'ended') {
-              setPlayingId(null);
-            }
-          });
-        }
-        player.play();
-      }
+      await playAudioUri(msgId, dataUri);
     } catch (err) {
       console.error('Error fetching or playing backend TTS audio:', err);
       setPlayingId(null);
+    }
+  };
+
+  // --- Start / Stop Voice Recording ---
+  const startRecording = async () => {
+    stopCurrentAudio();
+
+    if (Platform.OS !== 'web') {
+      // Native iOS / Android with expo-audio
+      try {
+        if (typeof requestRecordingPermissionsAsync === 'function') {
+          const perm = await requestRecordingPermissionsAsync();
+          if (perm && !perm.granted) {
+            Alert.alert(
+              'Microphone Permission',
+              'Please grant microphone permission in device settings to talk directly with Coach Maya.'
+            );
+            return;
+          }
+        }
+        if (typeof setAudioModeAsync === 'function') {
+          await setAudioModeAsync({
+            allowsRecording: true,
+            playsInSilentMode: true,
+          });
+        }
+        if (expoRecorder) {
+          await expoRecorder.prepareToRecordAsync();
+          expoRecorder.record();
+          setIsRecording(true);
+        }
+      } catch (err) {
+        console.error('Failed to start expo-audio recording:', err);
+        Alert.alert('Microphone Error', 'Could not start recording. Please try again.');
+      }
+    } else {
+      // Web browser: MediaRecorder fallback
+      try {
+        if (typeof navigator !== 'undefined' && navigator.mediaDevices?.getUserMedia) {
+          const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+          mediaStreamRef.current = stream;
+
+          let mimeType = 'audio/webm';
+          if (typeof MediaRecorder !== 'undefined' && MediaRecorder.isTypeSupported) {
+            if (MediaRecorder.isTypeSupported('audio/webm')) mimeType = 'audio/webm';
+            else if (MediaRecorder.isTypeSupported('audio/mp4')) mimeType = 'audio/mp4';
+            else if (MediaRecorder.isTypeSupported('audio/wav')) mimeType = 'audio/wav';
+          }
+
+          const recorder = new MediaRecorder(stream, mimeType ? { mimeType } : undefined);
+          mediaRecorderRef.current = recorder;
+          audioChunksRef.current = [];
+
+          recorder.ondataavailable = (e) => {
+            if (e.data && e.data.size > 0) {
+              audioChunksRef.current.push(e.data);
+            }
+          };
+
+          recorder.onstop = () => {
+            setIsRecording(false);
+            if (mediaStreamRef.current) {
+              try {
+                mediaStreamRef.current.getTracks().forEach((t) => t.stop());
+              } catch (e) {}
+              mediaStreamRef.current = null;
+            }
+
+            // Use a short delay to ensure all ondataavailable events have fired
+            setTimeout(() => {
+              if (audioChunksRef.current.length > 0) {
+                const blob = new Blob(audioChunksRef.current, { type: mimeType || 'audio/webm' });
+                console.log(`[CoachMaya] Recording complete: ${audioChunksRef.current.length} chunks, ${blob.size} bytes`);
+                const reader = new FileReader();
+                reader.readAsDataURL(blob);
+                reader.onloadend = () => {
+                  const resUrl = reader.result || '';
+                  const b64 = resUrl.split(',')[1];
+                  if (b64) {
+                    sendVoiceToMaya(b64, mimeType || 'audio/webm');
+                  }
+                };
+              } else {
+                console.warn('[CoachMaya] No audio chunks captured — recording was empty');
+              }
+            }, 100);
+          };
+
+          // Pass timeslice (250ms) so ondataavailable fires periodically
+          // during recording, not just once at stop
+          recorder.start(250);
+          setIsRecording(true);
+        } else {
+          Alert.alert('Browser Unsupported', 'Audio recording is not supported on this browser.');
+        }
+      } catch (err) {
+        console.error('Failed to start web MediaRecorder:', err);
+        Alert.alert(
+          'Microphone Permission',
+          'Please allow microphone access in your browser to speak directly to Coach Maya.'
+        );
+      }
+    }
+  };
+
+  const stopRecording = async () => {
+    setIsRecording(false);
+
+    if (Platform.OS !== 'web') {
+      if (expoRecorder && expoRecorder.isRecording) {
+        try {
+          await expoRecorder.stop();
+          const recordedUri = expoRecorder.uri;
+          if (recordedUri) {
+            const res = await fetch(recordedUri);
+            const blob = await res.blob();
+            const reader = new FileReader();
+            reader.readAsDataURL(blob);
+            reader.onloadend = () => {
+              const resUrl = reader.result || '';
+              const b64 = resUrl.split(',')[1];
+              if (b64) {
+                sendVoiceToMaya(b64, blob.type || 'audio/m4a');
+              }
+            };
+          }
+        } catch (err) {
+          console.error('Error stopping expo-audio recording:', err);
+        }
+      }
+    } else {
+      if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') {
+        try {
+          mediaRecorderRef.current.stop();
+        } catch (err) {}
+      }
+    }
+  };
+
+  const toggleMicRecording = () => {
+    if (isRecording) {
+      stopRecording();
+    } else {
+      startRecording();
+    }
+  };
+
+  // --- Send Recorded Voice Base64 to Coach Maya Endpoint ---
+  const sendVoiceToMaya = async (base64Audio, mimeType) => {
+    setIsTranscribing(true);
+    setIsTyping(true);
+
+    try {
+      const username = currentUser?.username || currentUser?.name || 'DemoAccount';
+      const res = await fetch(`${API_BASE_URL}/api/coach/voice`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          username,
+          audio_base64: base64Audio,
+          mime_type: mimeType || 'audio/webm',
+          history: messages.slice(-6).map((m) => ({
+            sender: m.sender === 'user' ? 'user' : 'maya',
+            text: m.text,
+          })),
+        }),
+      });
+
+      if (!res.ok) {
+        throw new Error(`Server returned status ${res.status}`);
+      }
+
+      // Read custom response headers
+      let transcription =
+        res.headers.get('X-Maya-Transcription') ||
+        res.headers.get('x-maya-transcription') ||
+        '';
+      let reply =
+        res.headers.get('X-Maya-Reply') ||
+        res.headers.get('x-maya-reply') ||
+        '';
+
+      try {
+        if (transcription) transcription = decodeURIComponent(transcription);
+        if (reply) reply = decodeURIComponent(reply);
+      } catch (e) {}
+
+      if (!transcription) transcription = '🎤 Voice check-in';
+      if (!reply) reply = "I've analyzed your telemetry and plan. Keep your pacing smooth in Zone 2 today!";
+
+      setIsTranscribing(false);
+
+      const userMsgId = Date.now().toString();
+      const mayaMsgId = (Date.now() + 1).toString();
+
+      setMessages((prev) => [
+        ...prev,
+        { id: userMsgId, sender: 'user', text: transcription, time: 'Now' },
+        { id: mayaMsgId, sender: 'maya', text: reply, time: 'Just now' },
+      ]);
+
+      // Read returned ElevenLabs MP3 audio stream
+      const arrayBuffer = await res.arrayBuffer();
+      if (arrayBuffer && arrayBuffer.byteLength > 0) {
+        const bytes = new Uint8Array(arrayBuffer);
+        let binary = '';
+        const len = bytes.byteLength;
+        for (let i = 0; i < len; i++) {
+          binary += String.fromCharCode(bytes[i]);
+        }
+        const base64Str = typeof btoa !== 'undefined' ? btoa(binary) : global.btoa ? global.btoa(binary) : '';
+        const dataUri = `data:audio/mpeg;base64,${base64Str}`;
+        await playAudioUri(mayaMsgId, dataUri);
+      }
+    } catch (err) {
+      console.error('Error sending voice to Coach Maya:', err);
+      setIsTranscribing(false);
+      const userMsgId = Date.now().toString();
+      const mayaMsgId = (Date.now() + 1).toString();
+      const fallbackUser = '🎤 Spoken coaching check-in';
+      const fallbackReply =
+        "I heard your voice message! Your heart rate and readiness are looking strong today. Stay consistent with your aerobic base! 🏃‍♀️⚡";
+
+      setMessages((prev) => [
+        ...prev,
+        { id: userMsgId, sender: 'user', text: fallbackUser, time: 'Now' },
+        { id: mayaMsgId, sender: 'maya', text: fallbackReply, time: 'Just now' },
+      ]);
+      handlePlayAudio(mayaMsgId, fallbackReply);
+    } finally {
+      setIsTyping(false);
+      setIsTranscribing(false);
     }
   };
 
@@ -185,21 +497,23 @@ export default function CoachMayaModal({ visible, onClose, onLogout, currentUser
 
       const data = await res.json();
       if (data.success && data.reply) {
+        const mayaMsgId = (Date.now() + 1).toString();
         setMessages((prev) => [
           ...prev,
           {
-            id: (Date.now() + 1).toString(),
+            id: mayaMsgId,
             sender: 'maya',
             text: data.reply,
             time: 'Just now',
           },
         ]);
+        // Automatically play Coach Maya's voice response using ElevenLabs
+        handlePlayAudio(mayaMsgId, data.reply);
       } else {
         throw new Error(data.detail || 'Failed to get coaching response');
       }
     } catch (err) {
       console.log('Coach Maya chat fallback:', err?.message || err);
-      // Smart localized fallback if network is unreachable
       let fallbackReply = "I'm monitoring your heart rate drift & tendon load. Keep it steady!";
       if (query.toLowerCase().includes('zone 2') || query.toLowerCase().includes('why')) {
         fallbackReply =
@@ -215,15 +529,17 @@ export default function CoachMayaModal({ visible, onClose, onLogout, currentUser
           "Your current Fitness Age is 27 (7 years younger than your 34 chronological age)! Keep banking easy aerobic miles to stay in the top 8%! 🧬✨";
       }
 
+      const fallbackId = (Date.now() + 1).toString();
       setMessages((prev) => [
         ...prev,
         {
-          id: (Date.now() + 1).toString(),
+          id: fallbackId,
           sender: 'maya',
           text: fallbackReply,
           time: 'Just now',
         },
       ]);
+      handlePlayAudio(fallbackId, fallbackReply);
     } finally {
       setIsTyping(false);
     }
@@ -257,10 +573,27 @@ export default function CoachMayaModal({ visible, onClose, onLogout, currentUser
                 <View>
                   <Text style={styles.mayaName}>Coach Maya</Text>
                 </View>
+
+                {/* Speak / Microphone Button next to Coach Maya */}
+                <TouchableOpacity
+                  style={[styles.headerVoiceBtn, isRecording && styles.headerVoiceBtnActive]}
+                  onPress={toggleMicRecording}
+                  activeOpacity={0.8}
+                >
+                  <Animated.View style={isRecording ? { transform: [{ scale: pulseAnim }] } : undefined}>
+                    <Ionicons
+                      name={isRecording ? 'stop-circle' : 'mic'}
+                      size={16}
+                      color={isRecording ? '#dc2626' : '#047857'}
+                    />
+                  </Animated.View>
+                  <Text style={[styles.headerVoiceBtnText, isRecording && styles.headerVoiceBtnTextActive]}>
+                    {isRecording ? `Listening ${recordingSeconds}s` : 'Speak'}
+                  </Text>
+                </TouchableOpacity>
               </View>
 
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-                
                 <TouchableOpacity style={styles.closeBtn} onPress={onClose}>
                   <Ionicons name="close" size={22} color={COLORS.onSurfaceVariant} />
                 </TouchableOpacity>
@@ -330,23 +663,58 @@ export default function CoachMayaModal({ visible, onClose, onLogout, currentUser
                 </View>
               </View>
             ))}
-            {isTyping && (
-              <View style={[styles.msgBubble, styles.mayaMsgBubble]}>
-                <Text style={styles.typingText}>Coach Maya is thinking...</Text>
+            {isTranscribing && (
+              <View style={[styles.msgBubble, styles.mayaMsgBubble, styles.statusBubble]}>
+                <Ionicons name="mic" size={16} color="#0d9488" />
+                <Text style={styles.typingText}>Transcribing your speech with Gemini...</Text>
+              </View>
+            )}
+            {isTyping && !isTranscribing && (
+              <View style={[styles.msgBubble, styles.mayaMsgBubble, styles.statusBubble]}>
+                <Ionicons name="sparkles" size={16} color="#0d9488" />
+                <Text style={styles.typingText}>Coach Maya is thinking & generating voice...</Text>
               </View>
             )}
           </ScrollView>
+
+          {/* Live Recording Notice Bar */}
+          {isRecording && (
+            <View style={styles.recordingNoticeBar}>
+              <Animated.View style={{ transform: [{ scale: pulseAnim }] }}>
+                <Ionicons name="radio" size={18} color="#ef4444" />
+              </Animated.View>
+              <Text style={styles.recordingNoticeText}>
+                Listening to you ({recordingSeconds}s)... Tap "Stop" when done speaking!
+              </Text>
+              <TouchableOpacity style={styles.recordingStopBtn} onPress={stopRecording}>
+                <Text style={styles.recordingStopBtnText}>Done</Text>
+              </TouchableOpacity>
+            </View>
+          )}
 
           {/* Input Bar */}
           <View style={styles.inputRow}>
             <TextInput
               style={styles.textInput}
-              placeholder="Ask Maya anything about your training..."
+              placeholder={isRecording ? 'Listening to your voice...' : 'Ask Maya anything about your training...'}
               placeholderTextColor="#94a3b8"
               value={inputText}
               onChangeText={setInputText}
               onSubmitEditing={() => handleSend()}
+              editable={!isRecording}
             />
+            {/* Microphone button inside bottom input row */}
+            <TouchableOpacity
+              style={[styles.inputMicBtn, isRecording && styles.inputMicBtnActive]}
+              onPress={toggleMicRecording}
+              activeOpacity={0.8}
+            >
+              <Ionicons
+                name={isRecording ? 'stop' : 'mic'}
+                size={20}
+                color={isRecording ? '#ffffff' : '#0f766e'}
+              />
+            </TouchableOpacity>
             <TouchableOpacity
               style={styles.sendBtn}
               onPress={() => handleSend()}
@@ -368,7 +736,7 @@ const styles = StyleSheet.create({
     justifyContent: 'flex-end',
   },
   modalContent: {
-    height: '80%',
+    height: '82%',
     backgroundColor: '#faf8ff',
     borderTopLeftRadius: 28,
     borderTopRightRadius: 28,
@@ -387,15 +755,16 @@ const styles = StyleSheet.create({
   mayaProfileRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 12,
+    gap: 10,
+    flex: 1,
   },
   avatarWrap: {
     position: 'relative',
   },
   mayaAvatar: {
-    width: 46,
-    height: 46,
-    borderRadius: 23,
+    width: 44,
+    height: 44,
+    borderRadius: 22,
     borderWidth: 2,
     borderColor: '#10b981',
   },
@@ -403,17 +772,46 @@ const styles = StyleSheet.create({
     position: 'absolute',
     bottom: -2,
     right: -2,
-    width: 18,
-    height: 18,
-    borderRadius: 9,
+    width: 16,
+    height: 16,
+    borderRadius: 8,
     backgroundColor: '#10b981',
     alignItems: 'center',
     justifyContent: 'center',
   },
   mayaName: {
-    fontSize: 18,
+    fontSize: 17,
     fontWeight: '900',
     color: '#131b2e',
+  },
+  headerVoiceBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    backgroundColor: '#ffffff',
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: 14,
+    borderWidth: 1.5,
+    borderColor: '#a7f3d0',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 2,
+    elevation: 1,
+    marginLeft: 4,
+  },
+  headerVoiceBtnActive: {
+    backgroundColor: '#fee2e2',
+    borderColor: '#fca5a5',
+  },
+  headerVoiceBtnText: {
+    fontSize: 12,
+    fontWeight: '800',
+    color: '#047857',
+  },
+  headerVoiceBtnTextActive: {
+    color: '#b91c1c',
   },
   closeBtn: {
     width: 36,
@@ -510,16 +908,50 @@ const styles = StyleSheet.create({
     color: '#ffffff',
     fontWeight: '600',
   },
+  statusBubble: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    paddingVertical: 10,
+  },
   typingText: {
     fontSize: 13,
     fontStyle: 'italic',
     color: '#0d9488',
   },
+  recordingNoticeBar: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: '#fef2f2',
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+    borderTopWidth: 1,
+    borderColor: '#fecaca',
+    gap: 8,
+  },
+  recordingNoticeText: {
+    flex: 1,
+    fontSize: 12,
+    fontWeight: '700',
+    color: '#b91c1c',
+  },
+  recordingStopBtn: {
+    backgroundColor: '#dc2626',
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 6,
+  },
+  recordingStopBtnText: {
+    fontSize: 11,
+    fontWeight: '800',
+    color: '#ffffff',
+  },
   inputRow: {
     flexDirection: 'row',
     alignItems: 'center',
     padding: 12,
-    paddingBottom: 24,
+    paddingBottom: Platform.OS === 'ios' ? 24 : 12,
     backgroundColor: '#ffffff',
     borderTopWidth: 1,
     borderTopColor: '#e2e8f0',
@@ -533,6 +965,20 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     fontSize: 14,
     color: '#131b2e',
+  },
+  inputMicBtn: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: '#f0fdfa',
+    borderWidth: 1.5,
+    borderColor: '#a7f3d0',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  inputMicBtnActive: {
+    backgroundColor: '#dc2626',
+    borderColor: '#b91c1c',
   },
   sendBtn: {
     width: 44,

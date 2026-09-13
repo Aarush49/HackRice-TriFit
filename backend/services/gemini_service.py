@@ -20,43 +20,35 @@ def clean_markdown_for_speech(text: str) -> str:
 def generate_gemini_response(
     prompt: str,
     system_instruction: Optional[str] = None,
-    model: str = "gemini-3.6-flash"
 ) -> str:
     """
-    Generates text using Google Gemini API given a prompt and optional system instruction.
+    Generates text using Google Gemma 4 26B / Gemini API given a prompt and optional system instruction.
     """
     if not gemini_client:
         raise HTTPException(status_code=500, detail="GEMINI_API_KEY is not configured.")
     
     config = types.GenerateContentConfig(system_instruction=system_instruction) if (types and system_instruction) else None
 
-    models_to_try = [model, "gemini-3.6-flash", "gemini-3.6-pro", "gemini-3.7-flash", "gemini-3.5-flash"]
-    # De-duplicate while preserving order
-    models_to_try = list(dict.fromkeys(models_to_try))
-
-    last_err = None
-    for m in models_to_try:
-        try:
-            response = gemini_client.models.generate_content(
-                model=m,
-                contents=prompt,
-                config=config
-            )
-            if response and response.text:
-                return response.text
-        except Exception as e:
-            last_err = e
-            continue
-
-    raise HTTPException(status_code=500, detail=f"Gemini API error: {str(last_err)}")
+    try:
+        response = gemini_client.models.generate_content(
+            model="gemma-4-26b-a4b-it",
+            contents=prompt,
+            config=config
+        )
+        if response and response.text:
+            return response.text
+        raise HTTPException(status_code=500, detail="Gemini API returned empty response.")
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Gemini API error: {str(e)}")
 
 def generate_gemini_chat_response(
     messages: list,
     system_instruction: Optional[str] = None,
-    model: str = "gemini-3.6-flash"
 ) -> str:
     """
-    Generates dynamic multi-turn chat response using Google Gemini API.
+    Generates dynamic multi-turn chat response using Google Gemma 4 26B / Gemini API.
     """
     if not gemini_client:
         raise HTTPException(status_code=500, detail="GEMINI_API_KEY is not configured.")
@@ -66,22 +58,75 @@ def generate_gemini_chat_response(
         temperature=0.7,
     ) if (types and system_instruction) else None
 
-    models_to_try = [model, "gemini-3.6-flash", "gemini-3.6-pro", "gemini-3.7-flash", "gemini-3.5-flash"]
-    models_to_try = list(dict.fromkeys(models_to_try))
+    try:
+        response = gemini_client.models.generate_content(
+            model="gemma-4-26b-a4b-it",
+            contents=messages,
+            config=config
+        )
+        if response and response.text:
+            return response.text
+        raise HTTPException(status_code=500, detail="Gemini Chat API returned empty response.")
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Gemini Chat API error: {str(e)}")
 
-    last_err = None
-    for m in models_to_try:
-        try:
-            response = gemini_client.models.generate_content(
-                model=m,
-                contents=messages,
-                config=config
-            )
-            if response and response.text:
-                return response.text
-        except Exception as e:
-            last_err = e
-            continue
+def transcribe_audio_with_elevenlabs(audio_bytes: bytes, mime_type: str = "audio/webm") -> str:
+    """
+    Transcribes spoken audio bytes using ElevenLabs Speech-to-Text API.
+    """
+    from io import BytesIO
+    from config import eleven_client
 
-    raise HTTPException(status_code=500, detail=f"Gemini Chat API error: {str(last_err)}")
+    if not eleven_client:
+        raise HTTPException(status_code=500, detail="ELEVENLABS_API_KEY is not configured.")
+
+    # Detect actual audio format from magic bytes
+    clean_mime = mime_type or "audio/webm"
+    if len(audio_bytes) >= 12:
+        header = audio_bytes[:12]
+        if header.startswith(b"\x1a\x45\xdf\xa3"):
+            clean_mime = "audio/webm"
+        elif header.startswith(b"RIFF"):
+            clean_mime = "audio/wav"
+        elif header.startswith(b"ID3") or header.startswith(b"\xff\xfb") or header.startswith(b"\xff\xf3"):
+            clean_mime = "audio/mp3"
+        elif b"ftyp" in header:
+            clean_mime = "audio/mp4"
+        elif header.startswith(b"OggS"):
+            clean_mime = "audio/ogg"
+
+    # Map mime type to file extension
+    mime_to_ext = {
+        "audio/webm": "audio.webm",
+        "audio/wav": "audio.wav",
+        "audio/mp3": "audio.mp3",
+        "audio/mpeg": "audio.mp3",
+        "audio/mp4": "audio.mp4",
+        "audio/ogg": "audio.ogg",
+    }
+    filename = mime_to_ext.get(clean_mime, "audio.webm")
+
+    print(f"[STT] Transcribing {len(audio_bytes)} bytes, detected mime={clean_mime}, filename={filename}")
+
+    try:
+        audio_file = BytesIO(audio_bytes)
+
+        result = eleven_client.speech_to_text.convert(
+            model_id="scribe_v1",
+            file=(filename, audio_file, clean_mime),
+            language_code="en",
+        )
+
+        transcription = (result.text or "").strip()
+        # Clean any extraneous quotes
+        if transcription.startswith('"') and transcription.endswith('"'):
+            transcription = transcription[1:-1].strip()
+        print(f"[STT] Transcription result: '{transcription[:100]}'")
+        return transcription
+    except Exception as e:
+        print(f"[TRANSCRIBE ERROR] ElevenLabs STT error: {e}")
+
+    return ""
 

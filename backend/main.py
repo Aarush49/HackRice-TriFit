@@ -1,10 +1,16 @@
+from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from database import init_db
 from routers import auth, onboarding, plans, events, wearables, tts, chat
 
-app = FastAPI(title="TriFit API")
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    init_db()
+    yield
+
+app = FastAPI(title="TriFit API", lifespan=lifespan)
 
 # Enable Cross-Origin Resource Sharing (CORS)
 app.add_middleware(
@@ -13,11 +19,8 @@ app.add_middleware(
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
+    expose_headers=["*"],
 )
-
-@app.on_event("startup")
-def on_startup():
-    init_db()
 
 # Register modular API routers
 app.include_router(auth.router)

@@ -94,3 +94,10 @@ class CoachChatRequest(BaseModel):
     history: Optional[List[ChatMessage]] = []
     user_context: Optional[dict] = {}
 
+class CoachVoiceRequest(BaseModel):
+    username: Optional[str] = "DemoAccount"
+    audio_base64: str
+    mime_type: Optional[str] = "audio/webm"
+    history: Optional[List[ChatMessage]] = []
+    user_context: Optional[dict] = {}
+

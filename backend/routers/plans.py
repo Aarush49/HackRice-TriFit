@@ -191,7 +191,7 @@ def generate_json_training_plan(username: str, race_type: Optional[str] = None, 
         prompt = f"""Create a personalized 4-week training plan for an athlete targeting {target_race} by {target_date}. The plan should be formatted as a valid JSON object.
 Ensure the output is strictly valid JSON with goal and 4 weeks array, each with week_number, focus, and 7 days (day, workout_type, description)."""
         try:
-            gemini_text = generate_gemini_response(prompt, system_instruction=system_instruction, model="gemini-3.5-flash")
+            gemini_text = generate_gemini_response(prompt, system_instruction=system_instruction)
             cleaned_json = gemini_text.strip()
             if cleaned_json.startswith("```json"):
                 cleaned_json = cleaned_json[7:]
@@ -312,7 +312,7 @@ The athlete provided the following feedback/adjustment request:
 Please adjust the training plan to accommodate this feedback while still keeping them on track for their overall goal.
 Output the updated plan in the exact same JSON format as the original. Ensure it is strictly valid JSON."""
             try:
-                gemini_text = generate_gemini_response(prompt, system_instruction=system_instruction, model="gemini-3.5-flash")
+                gemini_text = generate_gemini_response(prompt, system_instruction=system_instruction)
                 cleaned_json = gemini_text.strip()
                 if cleaned_json.startswith("```json"):
                     cleaned_json = cleaned_json[7:]

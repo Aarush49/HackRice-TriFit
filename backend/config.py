@@ -37,6 +37,9 @@ ELEVENLABS_VOICE_ID = os.getenv("ELEVENLABS_VOICE_ID", "21m00Tcm4TlvDq8ikWAM")  
 
 # Optional: Google Gemini
 try:
+    import logging
+    # Suppress internal AFC direct use warnings from google-genai
+    logging.getLogger("google_genai").setLevel(logging.ERROR)
     from google import genai
     from google.genai import types
 except ImportError:
