@@ -33,7 +33,7 @@ except ImportError:
 
 ELEVENLABS_API_KEY = os.getenv("ELEVENLABS_API_KEY")
 eleven_client = ElevenLabs(api_key=ELEVENLABS_API_KEY) if (ElevenLabs and ELEVENLABS_API_KEY) else None
-ELEVENLABS_VOICE_ID = os.getenv("ELEVENLABS_VOICE_ID", "21m00Tcm4TlvDq8ikWAM")  # Default Rachel voice
+ELEVENLABS_VOICE_ID = os.getenv("ELEVENLABS_VOICE_ID", "TxGEqnHWrfWFTfGW9XjX")  # Default Josh voice (male)
 
 # Optional: Google Gemini
 try:
