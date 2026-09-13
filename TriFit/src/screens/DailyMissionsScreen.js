@@ -3,13 +3,7 @@ import {
   ScrollView,
   useWindowDimensions,
   Animated,
-  View,
-  Text,
-  Image,
-  TouchableOpacity,
 } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
-import { LinearGradient } from 'expo-linear-gradient';
 import { getSportTrainingPlan } from './TrainingScheduleScreen';
 import API_BASE_URL from '../config';
 import styles from './styles/DailyMissionsScreen.styles';
@@ -31,7 +25,6 @@ export default function DailyMissionsScreen({
   onUpdatePlan,
   onUpdateAdaptedPlan,
   onStartRun,
-  onOpenCoach,
   onNavigateToSchedule,
   xp = 420,
   setXp,
@@ -310,49 +303,6 @@ export default function DailyMissionsScreen({
         handleSyncWearables={handleSyncWearables}
         completedHabits={completedHabits}
       />
-
-      {/* Coach Maya Live Audio Check-in Banner */}
-      <LinearGradient
-        colors={['#ecfdf5', '#f0fdfa', '#fefce8']}
-        style={styles.coachBanner}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 1, y: 0 }}
-      >
-        <View style={styles.coachBannerLeft}>
-          <View style={styles.coachAvatarWrapper}>
-            <Image
-              source={{
-                uri: 'https://lh3.googleusercontent.com/aida-public/AB6AXuDkV_Kd98o6DF09QGU3Gv4u4RHrWKdogf2D9arDcGv7Q2Vk-EFcwI-DUvPk06TqN1p7jMDTnyDAtO9Eut9Gg0SuOHxBLr6fjQZf-jVpL8FXVtywrDY7hIXe-MtvSbm4lJxvH33wjLyLAYHWJF0xAcl7H5IDxuWt2gTWNvt4MrnZiPmCs41s4CuDkgUULkPUD6Kba0pSdzqTetGtAlJdKyark3WqzqdqaCxkkRcLLGwn6YCYWjgbgx1-',
-              }}
-              style={styles.coachAvatar}
-            />
-            <View style={styles.coachVerifiedDot}>
-              <Ionicons name="flash" size={8} color="#ffffff" />
-            </View>
-          </View>
-          <View style={styles.coachTextGroup}>
-            <View style={styles.coachHeaderRow}>
-              <Text style={styles.coachName}>Coach Maya</Text>
-              <View style={styles.coachFocusBadge}>
-                <Text style={styles.coachFocusText}>AI VOICE COACH</Text>
-              </View>
-            </View>
-            <Text style={styles.coachMessage} numberOfLines={1}>
-              {wearableData.readiness_score >= 80
-                ? "Readiness is optimal. Tap Speak to talk pacing & strategy!"
-                : "Dial into steady Zone 2 effort today. Tap Speak to check in!"}
-            </Text>
-          </View>
-        </View>
-        <TouchableOpacity
-          style={styles.coachAskBtn}
-          onPress={onOpenCoach}
-          activeOpacity={0.8}
-        >
-          <Ionicons name="mic" size={14} color="#00685f" />
-          <Text style={styles.coachAskText}>Speak</Text>
-        </TouchableOpacity>
-      </LinearGradient>
 
       <MainMissionCard
         workoutTheme={workoutTheme}

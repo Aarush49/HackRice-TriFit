@@ -343,7 +343,6 @@ export default function App() {
             onUpdatePlan={setTrainingPlan}
             onUpdateAdaptedPlan={setAdaptedPlan}
             onStartRun={() => setRunVisible(true)}
-            onOpenCoach={() => setCoachVisible(true)}
             onNavigateToSchedule={() => setActiveTab('schedule')}
             xp={xp}
             setXp={setXp}
