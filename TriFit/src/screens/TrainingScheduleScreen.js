@@ -24,7 +24,6 @@ export default function TrainingScheduleScreen({
   userProfile,
   trainingPlan,
   adaptedPlan: parentAdaptedPlan,
-  selectedDay: parentSelectedDay = 1,
   onSelectDay,
   onUpdatePlan,
   onUpdateAdaptedPlan,
@@ -34,17 +33,14 @@ export default function TrainingScheduleScreen({
   dbEvents: propDbEvents,
   onRefreshEvents,
 }) {
-  const isNewUser = currentUser?.isSignup && !currentUser?.isDemo;
-  const todayDay = isNewUser ? 1 : 12;
+  const currentDate = new Date();
+  const currentYear = currentDate.getFullYear();
+  const currentMonthIndex = currentDate.getMonth();
+  const currentMonth = currentMonthIndex + 1;
+  const todayDay = currentDate.getDate();
   const [viewMode, setViewMode] = useState('week'); // 'week' | 'month'
-  const [selectedDay, setSelectedDayState] = useState(parentSelectedDay || todayDay);
+  const [selectedDay, setSelectedDayState] = useState(todayDay);
   const [adaptedPlan, setAdaptedPlan] = useState(parentAdaptedPlan || null);
-
-  React.useEffect(() => {
-    if (parentSelectedDay !== undefined) {
-      setSelectedDayState(parentSelectedDay);
-    }
-  }, [parentSelectedDay]);
 
   const setSelectedDay = (day) => {
     setSelectedDayState(day);
@@ -192,9 +188,12 @@ export default function TrainingScheduleScreen({
   }, [currentUser]);
 
   const [localDbEvents, setLocalDbEvents] = useState([]);
-  const dbEvents = isNewUser
-    ? localDbEvents
-    : ((propDbEvents && propDbEvents.length > 0) ? propDbEvents : localDbEvents);
+  const dbEvents = [...(propDbEvents || []), ...localDbEvents].reduce((events, event) => {
+    const existingIndex = events.findIndex((item) => item.day_number === event.day_number);
+    if (existingIndex >= 0) events[existingIndex] = event;
+    else events.push(event);
+    return events;
+  }, []);
 
   const fetchDbEvents = async () => {
     if (onRefreshEvents) {
@@ -202,7 +201,7 @@ export default function TrainingScheduleScreen({
     }
     const username = currentUser?.username || 'DemoAccount';
     try {
-      const res = await fetch(`${API_BASE_URL}/api/events?username=${username}&month=9`);
+      const res = await fetch(`${API_BASE_URL}/api/events?username=${username}&year=${currentYear}&month=${currentMonth}`);
       const data = await res.json();
       if (data.success && data.events) {
         setLocalDbEvents(data.events);
@@ -213,9 +212,7 @@ export default function TrainingScheduleScreen({
   };
 
   React.useEffect(() => {
-    if (!isNewUser) {
-      fetchDbEvents();
-    }
+    fetchDbEvents();
   }, [currentUser]);
 
   const updateLocalCompletion = (dayToMark, complete) => {
@@ -245,7 +242,7 @@ export default function TrainingScheduleScreen({
         body: JSON.stringify({
           username,
           day_number: dayToMark,
-          event_date: `2026-09-${String(dayToMark).padStart(2, '0')}`,
+          event_date: `${currentYear}-${String(currentMonth).padStart(2, '0')}-${String(dayToMark).padStart(2, '0')}`,
           xp_awarded: 120,
         }),
       });
@@ -265,27 +262,25 @@ export default function TrainingScheduleScreen({
     }
   };
 
-  const weekStartDay = isNewUser ? 1 : 7;
-  const days = ['M', 'T', 'W', 'T', 'F', 'S', 'S'].map((day, index) => ({
-    day,
-    date: weekStartDay + index,
-    isToday: weekStartDay + index === todayDay,
-  }));
+  const weekStartDay = Math.max(1, todayDay - 6);
+  const days = Array.from({ length: todayDay - weekStartDay + 1 }, (_, index) => {
+    const date = weekStartDay + index;
+    return {
+      day: new Date(currentYear, currentMonthIndex, date).toLocaleDateString(undefined, { weekday: 'narrow' }),
+      date,
+      isToday: date === todayDay,
+    };
+  });
 
+  const daysInMonth = new Date(currentYear, currentMonth, 0).getDate();
+  const firstWeekday = new Date(currentYear, currentMonthIndex, 1).getDay();
   const monthDays = [
-    // Week 1 (Aug 31 - Sep 6)
-    { date: 31, isOtherMonth: true },
-    { date: 1 }, { date: 2 }, { date: 3 }, { date: 4 }, { date: 5 }, { date: 6 },
-    // Week 2 (Sep 7 - Sep 13)
-    { date: 7 }, { date: 8 }, { date: 9 }, { date: 10 }, { date: 11 }, { date: 12 }, { date: 13 },
-    // Week 3 (Sep 14 - Sep 20)
-    { date: 14 }, { date: 15 }, { date: 16 }, { date: 17 }, { date: 18 }, { date: 19 }, { date: 20 },
-    // Week 4 (Sep 21 - Sep 27)
-    { date: 21 }, { date: 22 }, { date: 23 }, { date: 24 }, { date: 25 }, { date: 26 }, { date: 27 },
-    // Week 5 (Sep 28 - Oct 4)
-    { date: 28 }, { date: 29 }, { date: 30 },
-    { date: 1, isOtherMonth: true }, { date: 2, isOtherMonth: true }, { date: 3, isOtherMonth: true }, { date: 4, isOtherMonth: true },
+    ...Array.from({ length: firstWeekday }, (_, index) => ({ date: index, isOtherMonth: true })),
+    ...Array.from({ length: daysInMonth }, (_, index) => ({ date: index + 1 })),
   ];
+  while (monthDays.length % 7 !== 0) {
+    monthDays.push({ date: monthDays.length, isOtherMonth: true });
+  }
 
   const getIconData = (workout_type) => {
     let icon = 'run';
@@ -596,6 +591,7 @@ export default function TrainingScheduleScreen({
         selectedDay={selectedDay}
         setSelectedDay={setSelectedDay}
         monthWeeks={monthWeeks}
+        currentDate={currentDate}
       />
 
       {/* 3. What To Do Today Section */}
@@ -612,7 +608,10 @@ export default function TrainingScheduleScreen({
         getScheduleTags={getScheduleTags}
         handleToggleComplete={handleToggleComplete}
         isRestDay={isRestDay}
-        onStartWorkout={onStartWorkout}
+        onStartWorkout={() => {
+          if (onSelectDay) onSelectDay(selectedDay);
+          onStartWorkout();
+        }}
         setSelectedDay={setSelectedDay}
       />
 

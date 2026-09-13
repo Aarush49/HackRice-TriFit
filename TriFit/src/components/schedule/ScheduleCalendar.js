@@ -15,7 +15,13 @@ export default function ScheduleCalendar({
   selectedDay,
   setSelectedDay,
   monthWeeks,
+  currentDate,
 }) {
+  const monthLabel = currentDate.toLocaleDateString(undefined, { month: 'long', year: 'numeric' });
+  const firstWeekDay = dynamicDays[0]?.date;
+  const lastWeekDay = dynamicDays[dynamicDays.length - 1]?.date;
+  const monthName = currentDate.toLocaleDateString(undefined, { month: 'short' });
+
   return (
     <>
       {/* Title & Week/Month Switcher */}
@@ -24,7 +30,7 @@ export default function ScheduleCalendar({
           <View>
             <View style={styles.monthBadgeRow}>
               <Ionicons name="calendar-outline" size={13} color={COLORS.primary} />
-              <Text style={styles.monthBadgeText}>SEPTEMBER 2026</Text>
+              <Text style={styles.monthBadgeText}>{monthLabel.toUpperCase()}</Text>
             </View>
             <Text style={styles.screenTitle}>Training Schedule</Text>
           </View>
@@ -73,7 +79,7 @@ export default function ScheduleCalendar({
               </Text>
             </View>
             <View style={styles.weekDateBadge}>
-              <Text style={styles.weekDateRange}>Nov 10 – Nov 16</Text>
+              <Text style={styles.weekDateRange}>{monthName} {firstWeekDay} – {monthName} {lastWeekDay}</Text>
             </View>
           </View>
 
@@ -123,12 +129,12 @@ export default function ScheduleCalendar({
         <View style={styles.monthCalendarCard}>
           <View style={styles.monthCalendarHeader}>
             <View style={styles.monthHeaderTitleWrap}>
-              <Text style={styles.monthNameTitle}>November 2026</Text>
+              <Text style={styles.monthNameTitle}>{monthLabel}</Text>
               <Text style={styles.monthSubTitle}>18-Week Periodized Plan</Text>
             </View>
             <View style={styles.monthStatBadge}>
               <Ionicons name="flame" size={14} color="#ea580c" />
-              <Text style={styles.monthStatText}>24 Sessions</Text>
+              <Text style={styles.monthStatText}>{currentDate.getDate()} Days</Text>
             </View>
           </View>
 

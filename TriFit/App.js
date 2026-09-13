@@ -50,7 +50,8 @@ export default function App() {
       return;
     }
     try {
-      const res = await fetch(`${API_BASE_URL}/api/events?username=${username}&month=9`);
+      const now = new Date();
+      const res = await fetch(`${API_BASE_URL}/api/events?username=${username}&year=${now.getFullYear()}&month=${now.getMonth() + 1}`);
       const data = await res.json();
       if (data.success && data.events && activeUsernameRef.current === username) {
         setDbEvents(data.events);
@@ -206,7 +207,7 @@ export default function App() {
         body: JSON.stringify({
           username,
           day_number: selectedDay,
-          event_date: '2026-09-12',
+          event_date: new Date().toISOString().slice(0, 10),
           xp_awarded: 120,
         }),
       });
@@ -364,7 +365,6 @@ export default function App() {
             userProfile={userProfile}
             trainingPlan={trainingPlan}
             adaptedPlan={adaptedPlan}
-            selectedDay={selectedDay}
             onSelectDay={setSelectedDay}
             onUpdatePlan={setTrainingPlan}
             onUpdateAdaptedPlan={setAdaptedPlan}

@@ -138,26 +138,41 @@ def complete_event(data: CompleteEventRequest):
                 cur.execute("""
                     UPDATE scheduled_events
                     SET status = 'completed', is_completed = TRUE, completed_at = CURRENT_TIMESTAMP, updated_at = CURRENT_TIMESTAMP
-                    WHERE username = %s AND event_date = %s
+                    WHERE username = %s AND event_date = %s AND COALESCE(is_completed, FALSE) = FALSE
                     RETURNING *;
                 """, (data.username, data.event_date))
             elif data.day_number:
                 cur.execute("""
                     UPDATE scheduled_events
                     SET status = 'completed', is_completed = TRUE, completed_at = CURRENT_TIMESTAMP, updated_at = CURRENT_TIMESTAMP
-                    WHERE username = %s AND day_number = %s AND EXTRACT(MONTH FROM event_date) = 9
+                    WHERE username = %s AND day_number = %s AND COALESCE(is_completed, FALSE) = FALSE
                     RETURNING *;
                 """, (data.username, data.day_number))
             else:
                 cur.execute("""
                     UPDATE scheduled_events
                     SET status = 'completed', is_completed = TRUE, completed_at = CURRENT_TIMESTAMP, updated_at = CURRENT_TIMESTAMP
-                    WHERE username = %s AND event_date = '2026-09-12'
+                    WHERE username = %s AND event_date = CURRENT_DATE AND COALESCE(is_completed, FALSE) = FALSE
                     RETURNING *;
                 """, (data.username,))
 
             event = cur.fetchone()
             if not event:
+                if data.event_date:
+                    cur.execute("SELECT * FROM scheduled_events WHERE username = %s AND event_date = %s;", (data.username, data.event_date))
+                elif data.day_number:
+                    cur.execute("SELECT * FROM scheduled_events WHERE username = %s AND day_number = %s ORDER BY event_date DESC LIMIT 1;", (data.username, data.day_number))
+                else:
+                    cur.execute("SELECT * FROM scheduled_events WHERE username = %s AND event_date = CURRENT_DATE;", (data.username,))
+                event = cur.fetchone()
+                if event and event.get("is_completed"):
+                    cur.execute("SELECT id, username, xp, streak_days FROM users WHERE username = %s;", (data.username,))
+                    user_stats = cur.fetchone()
+                    conn.commit()
+                    for key in ("event_date", "completed_at"):
+                        if event.get(key):
+                            event[key] = str(event[key])
+                    return {"success": True, "event": event, "user": user_stats, "already_completed": True}
                 raise HTTPException(status_code=404, detail="Event not found to mark completed")
 
             xp_inc = data.xp_awarded if data.xp_awarded is not None else 120

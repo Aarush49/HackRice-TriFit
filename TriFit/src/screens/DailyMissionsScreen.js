@@ -131,7 +131,10 @@ export default function DailyMissionsScreen({
   const effectivePlan = trainingPlan || aiPlan;
   const isTodaySelected = selectedDay === todayDay;
 
-  const currentEvent = dbEvents.find(e => e.day_number === selectedDay);
+  const currentDateKey = new Date().toISOString().slice(0, 10);
+  const currentEvent = isNewUser && selectedDay === 1
+    ? dbEvents.find((event) => event.event_date === currentDateKey)
+    : dbEvents.find((event) => event.day_number === selectedDay);
   const isEventCompleted = currentEvent ? (currentEvent.status === 'completed' || currentEvent.is_completed) : false;
 
   // Day 7 = Mon (0), Day 8 = Tue (1), Day 9 = Wed (2), Day 10 = Thu (3), Day 11 = Fri (4), Day 12 = Sat (5 - Today), Day 13 = Sun (6)
