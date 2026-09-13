@@ -146,8 +146,8 @@ export default function DailyMissionsScreen({
   }
 
   const rawDayWorkout = {
-    workout_type: currentEvent?.workout_type || effectivePlan?.weeks?.[0]?.days?.[dayIndex]?.workout_type || 'Compromised Run',
-    description: currentEvent?.description || effectivePlan?.weeks?.[0]?.days?.[dayIndex]?.description || '4 x 800m run with 100 Wall Balls (6kg) buy-in',
+    workout_type: (!isTodaySelected ? currentEvent?.workout_type : null) || effectivePlan?.weeks?.[0]?.days?.[dayIndex]?.workout_type || 'Compromised Run',
+    description: (!isTodaySelected ? currentEvent?.description : null) || effectivePlan?.weeks?.[0]?.days?.[dayIndex]?.description || '4 x 800m run with 100 Wall Balls (6kg) buy-in',
   };
 
   let activeWorkoutType = rawDayWorkout.workout_type;

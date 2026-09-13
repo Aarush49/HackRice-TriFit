@@ -33,6 +33,7 @@ export default function TrainingScheduleScreen({
   dbEvents: propDbEvents,
   onRefreshEvents,
 }) {
+  const isNewUser = currentUser?.isSignup && !currentUser?.isDemo;
   const currentDate = new Date();
   const currentYear = currentDate.getFullYear();
   const currentMonthIndex = currentDate.getMonth();
@@ -188,7 +189,15 @@ export default function TrainingScheduleScreen({
   }, [currentUser]);
 
   const [localDbEvents, setLocalDbEvents] = useState([]);
-  const dbEvents = [...(propDbEvents || []), ...localDbEvents].reduce((events, event) => {
+  const fetchedEvents = isNewUser
+    ? (propDbEvents || []).map((event) => ({
+        ...event,
+        status: 'planned',
+        is_completed: false,
+        completed_at: null,
+      }))
+    : (propDbEvents || []);
+  const dbEvents = [...fetchedEvents, ...localDbEvents].reduce((events, event) => {
     const existingIndex = events.findIndex((item) => item.day_number === event.day_number);
     if (existingIndex >= 0) events[existingIndex] = event;
     else events.push(event);
@@ -212,7 +221,9 @@ export default function TrainingScheduleScreen({
   };
 
   React.useEffect(() => {
-    fetchDbEvents();
+    if (!isNewUser) {
+      fetchDbEvents();
+    }
   }, [currentUser]);
 
   const updateLocalCompletion = (dayToMark, complete) => {
@@ -309,13 +320,20 @@ export default function TrainingScheduleScreen({
     return { icon, iconColor, iconBg, iconType: 'mc' };
   };
 
-  const dynamicDays = days.map((d, idx) => {
+  const homeTodayPlanIndex = isNewUser ? 0 : 5;
+  const getAiDayForCalendarDay = (calendarDay) => {
+    const planIndex = homeTodayPlanIndex + (calendarDay - todayDay);
+    if (planIndex < 0) return null;
+    return aiPlan?.weeks?.[Math.floor(planIndex / 7)]?.days?.[planIndex % 7] || null;
+  };
+
+  const dynamicDays = days.map((d) => {
     const ev = dbEvents.find(e => e.day_number === d.date);
     const isCompleted = ev ? (ev.status === 'completed' || ev.is_completed) : false;
 
-    const aiDay = aiPlan?.weeks?.[0]?.days?.[idx];
-    const workoutType = ev?.workout_type || aiDay?.workout_type || 'Zone 2 Base';
-    const workoutDesc = ev?.description || aiDay?.description || 'Aerobic conditioning';
+    const aiDay = getAiDayForCalendarDay(d.date);
+    const workoutType = (d.isToday ? aiDay?.workout_type : ev?.workout_type || aiDay?.workout_type) || 'Zone 2 Base';
+    const workoutDesc = (d.isToday ? aiDay?.description : ev?.description || aiDay?.description) || 'Aerobic conditioning';
     const iconData = getIconData(workoutType);
 
     if (isCompleted) {
@@ -362,25 +380,16 @@ export default function TrainingScheduleScreen({
     };
   });
 
-  const dynamicMonthDays = monthDays.map((d, idx) => {
+  const dynamicMonthDays = monthDays.map((d) => {
     if (d.isOtherMonth) return d;
 
     const ev = dbEvents.find(e => e.day_number === d.date);
     const isCompleted = ev ? (ev.status === 'completed' || ev.is_completed) : false;
     const isToday = d.date === todayDay;
 
-    let workoutType = ev?.workout_type;
-    let workoutDesc = ev?.description;
-    if (!workoutType && aiPlan && aiPlan.weeks) {
-      const activeIndex = monthDays.slice(0, idx).filter(x => !x.isOtherMonth).length;
-      if (activeIndex < 28) {
-        const weekIdx = Math.floor(activeIndex / 7);
-        const dayIdx = activeIndex % 7;
-        const aiDay = aiPlan.weeks[weekIdx]?.days?.[dayIdx];
-        workoutType = aiDay?.workout_type;
-        workoutDesc = aiDay?.description;
-      }
-    }
+    const aiDay = getAiDayForCalendarDay(d.date);
+    const workoutType = (isToday ? aiDay?.workout_type : ev?.workout_type || aiDay?.workout_type);
+    const workoutDesc = (isToday ? aiDay?.description : ev?.description || aiDay?.description);
     const iconData = getIconData(workoutType || 'run');
 
     if (isCompleted) {
